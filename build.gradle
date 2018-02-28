@@ -1,0 +1,38 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+plugins {
+    id 'pl.allegro.tech.build.axion-release' version '1.7.0'
+}
+
+ext.pluginName = 'Kubernetes Rundeck Plugin'
+ext.pluginDescription = "Kubernetes Rundeck Plugin to manage pods , deployments, etc"
+ext.sopsCopyright = "© 2018, Rundeck, Inc."
+ext.sopsUrl = "http://rundeck.com"
+ext.buildDateString=new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
+ext.archivesBaseName = "kubernetes-plugin"
+ext.pluginBaseFolder = "."
+
+scmVersion {
+    ignoreUncommittedChanges = true
+    tag {
+        prefix = ''
+        versionSeparator = ''
+        def origDeserialize=deserialize
+        //apend .0 to satisfy semver if the tag version is only X.Y
+        deserialize = { config, position, tagName ->
+            def orig = origDeserialize(config, position, tagName)
+            if (orig.split('\\.').length < 3) {
+                orig += ".0"
+            }
+            orig
+        }
+    }
+}
+
+project.version = scmVersion.version
+ext.archiveFilename = ext.archivesBaseName + '-' + version 
+
+apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/master/build.gradle'

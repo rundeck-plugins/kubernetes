@@ -1,0 +1,1489 @@
+name: kubernetes-plugin
+version: 1.0.0
+rundeckPluginVersion: 1.2
+author: Rundeck
+date: Tue Nov 28 2017
+providers:
+  - name: kubernetes-resource-model
+    title: Kubernetes / Pods / Resource Model
+    description: Get Pods as Rundeck Nodes
+    service: ResourceModelSource
+    plugin-type: script
+    resource-format: resourcejson
+    script-interpreter: python -u
+    script-file: pods-resource-model.py
+    config:
+      - type: String
+        name: attributes
+        title: 'Default attributes'
+        description: 'List of key=value pairs, example: username=root'
+        renderingOptions:
+          groupName: Config        
+      - type: String
+        name: mapping
+        title: 'Custom Mapping'
+        description: 'Custom mapping, eg: nodename.selector=default:Name'
+        renderingOptions:
+          groupName: Config
+      - type: String
+        name: tags
+        title: Tags
+        description: 'You can add static and custom tags, eg: tag.selector=default:image'
+        default: 'tag.selector=default:status'
+        renderingOptions:
+          groupName: Config
+      - name: field_selector
+        type: String
+        title: "Field Selector"
+        description: "Filter for a field name (check API response fields https://github.com/kubernetes-client/python/blob/fd5a0c49259e83d928535dd66ab083ddb92ccecf/kubernetes/docs/CoreV1Api.md#return-type-116)"
+        required: false
+        default: 'metadata.namespace=default'
+        renderingOptions:
+          groupName: Config
+      - type: Boolean
+        name: running
+        title: Just Running Pods?
+        description: 'Filter for running pods'
+        renderingOptions:
+          groupName: Config
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters" 
+        required: false
+        renderingOptions:
+          groupName: Authentication        
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"  
+        required: false
+        renderingOptions:
+          groupName: Authentication        
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token" 
+        renderingOptions:
+          groupName: Authentication
+          displayType: PASSWORD
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections" 
+        required: false
+        renderingOptions:
+          groupName: Authentication         
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"  
+        required: false
+        renderingOptions:
+          groupName: Authentication         
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+  - name: Kubernetes-node-executor
+    service: NodeExecutor
+    title: Kubernetes / Pods / Node Executor
+    description: 'dispatch the command to the kubernetes pod'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-node-executor.py
+    script-args: ${node.name}
+    config:
+      - name: shell
+        type: String
+        title: "Shell"
+        description: "Shell used on the POD to run the command" 
+        required: true
+        default: "/bin/bash"
+        renderingOptions:
+          groupName: Config
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters" 
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"  
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token" 
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections" 
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"  
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false 
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Create-Deployment
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Create
+    description: 'Create a Deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-create.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "Kubernetes API Version"
+        required: true
+        default: "extensions/v1beta1"
+        renderingOptions:
+          groupName: Metadata
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Metadata
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: "Deployment Container Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: image
+        type: String
+        title: "Image"
+        description: "Image Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Add a comma for multiples ports"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: environments
+        type: String
+        title: "Environment Variables"
+        description: "List Environment Variables (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: environments_secrets
+        type: String
+        title: "Environment Variables from secret"
+        description: "List Environment Variables from secrets variables. Use key=secret-Name:secret-Key-Name format (AWS-SECRET=awscredentials:accesskey) "
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: liveness_probe
+        type: String
+        title: "Liveness Probe"
+        description: "Configure Liveness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: readiness_probe
+        type: String
+        title: "Readiness Probe"
+        description: "Configure Readiness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: replicas
+        type: String
+        title: "Replicas"
+        description: "Number of replicas of the development"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: container_command
+        type: String
+        title: "Container Command"
+        description: "The command to run in the container"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: container_args
+        type: String
+        title: "Container Arguments"
+        description: "The command arguments"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_requests
+        type: String
+        title: "Resource Requests"
+        description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: volume_mounts
+        type: String
+        title: "Volume Mounts"
+        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: volumes
+        type: String
+        title: "Volumes"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Update-Deployment
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Update
+    description: 'Update a Deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-update.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "Kubernetes API Version"
+        required: true
+        default: "extensions/v1beta1"
+        renderingOptions:
+          groupName: Metadata
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: "Deployment Container Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: image
+        type: String
+        title: "Image"
+        description: "Image Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Add a comma for multiples ports"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: environments
+        type: String
+        title: "Environment Variables"
+        description: "List Environment Variables (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: environments_secrets
+        type: String
+        title: "Environment Variables from secret"
+        description: "List Environment Variables from secrets variables. Use key=secret-Name:secret-Key-Name format (AWS-SECRET=awscredentials:accesskey) "
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: liveness_probe
+        type: String
+        title: "Liveness Probe"
+        description: "Configure Liveness and Readiness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: readiness_probe
+        type: String
+        title: "Readiness Probe"
+        description: "Configure Readiness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: replicas
+        type: String
+        title: "Replicas"
+        description: "Number of replicas of the development"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: container_command
+        type: String
+        title: "Container Command"
+        description: "The command to run in the container"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: container_args
+        type: String
+        title: "Container Arguments"
+        description: "The command arguments"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_requests
+        type: String
+        title: "Resource Requests"
+        description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Delete-Deployment
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Delete
+    description: 'Delete a Deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-delete.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Status-Deployment
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Status
+    description: 'Get Status of the deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-status.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Wait-Deployment
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Waitfor
+    description: 'Waitfor Deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-wait.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: retries
+        type: String
+        title: "Retries"
+        default: "100"
+        description: "Number Retries"
+        required: true
+      - name: sleep
+        type: String
+        title: "Sleep"
+        default: "10"
+        description: "Sleep between retries"
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Create
+    service: WorkflowNodeStep
+    title: Kubernetes / Generic / Create
+    description: 'Create a Deployment / Service / Ingress from YAML string'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: create-from-yaml.py
+    script-args:
+    config:
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: type
+        type: Select
+        title: "Type"
+        description: "Type"
+        required: true
+        values: Deployment,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+      - name: yaml
+        type: String
+        title: "YAML String"
+        description: "YAML Definition"
+        required: true
+        renderingOptions:
+          displayType: CODE
+          codeSyntaxMode: yaml
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Delete
+    service: WorkflowNodeStep
+    title: Kubernetes / Generic / Delete
+    description: 'Delete a generic resource'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: delete.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Name of the kubernetes resource "
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: type
+        type: Select
+        title: "Type"
+        description: "Type"
+        required: true
+        values: Deployment,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Create-Service
+    service: WorkflowNodeStep
+    title: Kubernetes / Service / Create
+    description: 'Create a Service'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: service-create.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "API Version"
+        required: true
+        default: "v1"
+        renderingOptions:
+          groupName: Config
+      - name: name
+        type: String
+        title: "Name"
+        description: "Service Name"
+        required: true
+        renderingOptions:
+          groupName: Config
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Config
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: true
+        renderingOptions:
+          groupName: Config
+      - name: annotations
+        type: String
+        title: "Annotations"
+        description: "Annotations. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Config
+      - name: selectors
+        type: String
+        title: "Selectors"
+        description: "Selectors. Add a comma separeted values (key=value format)"
+        required: true
+        renderingOptions:
+          groupName: Spec
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Use the YAML format (https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services)"
+        required: true
+        renderingOptions:
+          groupName: Spec
+          displayType: CODE
+          codeSyntaxMode: yaml
+      - name: type
+        type: Select
+        title: "Type"
+        description: "Type"
+        required: true
+        values: ClusterIP,NodePort,LoadBalancer,ExternalName
+        renderingOptions:
+          groupName: Spec
+      - name: session_affinity
+        type: String
+        title: "Session Affinity"
+        description: "Session Affinity"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_traffic_policy
+        type: String
+        title: "External Traffic Policy"
+        description: "External Traffic Policy"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_name
+        type: String
+        title: "External Name"
+        description: "External Name"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: load_balancer_ip
+        type: String
+        title: "Load_Balancer IP"
+        description: "Load_Balancer IP"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Update-Service
+    service: WorkflowNodeStep
+    title: Kubernetes / Service / Update
+    description: 'Update a Service'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: service-update.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "API Version"
+        required: true
+        default: "v1"
+        renderingOptions:
+          groupName: Config
+      - name: name
+        type: String
+        title: "Name"
+        description: "Service Name"
+        required: true
+        renderingOptions:
+          groupName: Config
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Config
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Config
+      - name: annotations
+        type: String
+        title: "Annotations"
+        description: "Annotations. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Config
+      - name: selectors
+        type: String
+        title: "Selectors"
+        description: "Selectors. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Use the YAML format (https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services)"
+        required: false
+        renderingOptions:
+          groupName: Spec
+          displayType: CODE
+          codeSyntaxMode: yaml
+      - name: type
+        type: Select
+        title: "Type"
+        description: "Type"
+        required: false
+        values: ClusterIP,NodePort,LoadBalancer,ExternalName
+        renderingOptions:
+          groupName: Spec
+      - name: session_affinity
+        type: String
+        title: "Session Affinity"
+        description: "Session Affinity"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_traffic_policy
+        type: String
+        title: "External Traffic Policy"
+        description: "External Traffic Policy"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_name
+        type: String
+        title: "External Name"
+        description: "External Name"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: load_balancer_ip
+        type: String
+        title: "Load_Balancer IP"
+        description: "Load_Balancer IP"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Delete-Service
+    service: WorkflowNodeStep
+    title: Kubernetes / Service / Delete
+    description: 'Delete a Service'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: service-delete.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Create-Job
+    service: WorkflowNodeStep
+    title: Kubernetes / Job / Create
+    description: 'Create a Job'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: job-create.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "Kubernetes API Version"
+        required: true
+        default: "batch/v1"
+        renderingOptions:
+          groupName: Metadata
+      - name: name
+        type: String
+        title: "Name"
+        description: "Job Name"
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the job will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Metadata
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: selectors
+        type: String
+        title: "Selectors"
+        description: "Selectors. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: job_restart_policy
+        type: Select
+        title: "Restart policy"
+        description: "The restart policy to apply to the job"
+        required: false
+        values: Never,OnFailure
+        renderingOptions:
+          groupName: Metadata
+      - name: completions
+        type: String
+        title: "Completions"
+        description: "Number of pods to wait for success exit before considering the job complete"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: parallelism
+        type: String
+        title: "Parallelism"
+        description: "Number of pods running at any instant"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: active_deadline_seconds
+        type: String
+        title: "active_deadline_seconds"
+        description: "The job deadline (in seconds)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: "Deployment Container Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: container_image
+        type: String
+        title: "Image"
+        description: "Image Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: image_pull_policy
+        type: Select
+        title: "Image Pull Policy"
+        description: "Image Pull Policy"
+        required: true
+        values: Always,Never,IfNotPresent
+        renderingOptions:
+          groupName: Container
+      - name: environments
+        type: String
+        title: "Environment Variables"
+        description: "List Environment Variables (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: environments_secrets
+        type: String
+        title: "Environment Variables from secret"
+        description: "List Environment Variables from secrets variables. Use key=secret-Name:secret-Key-Name format (AWS-SECRET=awscredentials:accesskey) "
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: container_command
+        type: String
+        title: "Container Command"
+        description: "The command to run in the container"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: container_args
+        type: String
+        title: "Container Arguments"
+        description: "The command arguments"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_requests
+        type: String
+        title: "Resource Requests"
+        description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: volumes
+        type: String
+        title: "Persistent Volume"
+        description: "The name of the PVC to use in this job in format <name>=<mountpath>"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Delete-Job
+    service: WorkflowNodeStep
+    title: Kubernetes / Job / Delete
+    description: 'Delete a Job'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: job-delete.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Run-Job
+    service: WorkflowNodeStep
+    title: Kubernetes / Job / Re-Run
+    description: 'Re-Run a Job (it will be deleting and creating again)'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: job-run.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Pods-Logs
+    service: WorkflowNodeStep
+    title: Kubernetes / Pods / Logs
+    description: 'Get Logs from POD'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-read-logs.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Pod Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the deployment will be created "
+        required: true
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
