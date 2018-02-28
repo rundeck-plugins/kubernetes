@@ -96,18 +96,19 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
     startedAt = None
 
     terminated=False
-    for statuses in pod.status.container_statuses:
-        if statuses.state.running is not None:
-            status="running"
-            if statuses.state.running.started_at:
-                startedAt=statuses.state.running.started_at.strftime("%Y-%m-%d %H:%M:%S")
+    if pod.status.container_statuses:
+        for statuses in pod.status.container_statuses:
+            if statuses.state.running is not None:
+                status="running"
+                if statuses.state.running.started_at:
+                    startedAt=statuses.state.running.started_at.strftime("%Y-%m-%d %H:%M:%S")
 
-        if statuses.state.waiting is not None:
-            status = "waiting"
+            if statuses.state.waiting is not None:
+                status = "waiting"
 
-        if statuses.state.terminated is not None:
-            terminated=True
-            status = "terminated"
+            if statuses.state.terminated is not None:
+                terminated=True
+                status = "terminated"
 
     if terminated==False:
         for info in pod.status.conditions:
