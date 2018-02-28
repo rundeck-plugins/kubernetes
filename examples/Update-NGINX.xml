@@ -1,0 +1,46 @@
+<joblist>
+  <job>
+    <context>
+      <options preserveOrder='true'>
+        <option name='replicas' value='4' />
+      </options>
+    </context>
+    <description></description>
+    <executionEnabled>true</executionEnabled>
+    <group>Demo</group>
+    <id>4e20ce6e-e5f4-4b2a-9460-31ce6d059989</id>
+    <loglevel>INFO</loglevel>
+    <name>Update-NGINX</name>
+    <nodeFilterEditable>false</nodeFilterEditable>
+    <scheduleEnabled>true</scheduleEnabled>
+    <sequence keepgoing='false' strategy='node-first'>
+      <command>
+        <node-step-plugin type='Kubernetes-Update-Deployment'>
+          <configuration>
+            <entry key='api_version' value='extensions/v1beta1' />
+            <entry key='container_name' value='nginx' />
+            <entry key='debug' value='false' />
+            <entry key='image' value='055798170027.dkr.ecr.us-east-1.amazonaws.com/nginx-demo:1.0' />
+            <entry key='name' value='demo-nginx' />
+            <entry key='namespace' value='default' />
+            <entry key='replicas' value='${option.replicas}' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <node-step-plugin type='Kubernetes-Wait-Deployment'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='name' value='demo-nginx' />
+            <entry key='namespace' value='default' />
+            <entry key='retries' value='100' />
+            <entry key='sleep' value='10' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+    </sequence>
+    <uuid>4e20ce6e-e5f4-4b2a-9460-31ce6d059989</uuid>
+  </job>
+</joblist>

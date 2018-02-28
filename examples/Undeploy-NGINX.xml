@@ -1,0 +1,49 @@
+<joblist>
+  <job>
+    <description></description>
+    <executionEnabled>true</executionEnabled>
+    <group>Demo</group>
+    <id>553867c9-4de6-4ed5-9e0a-1a30d543d025</id>
+    <loglevel>INFO</loglevel>
+    <name>Undeploy-NGINX</name>
+    <nodeFilterEditable>false</nodeFilterEditable>
+    <scheduleEnabled>true</scheduleEnabled>
+    <sequence keepgoing='false' strategy='node-first'>
+      <command>
+        <description>Deleting-Service</description>
+        <node-step-plugin type='Kubernetes-Delete-Service'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='name' value='demo-nginx-service' />
+            <entry key='namespace' value='default' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <description>Delete-Deployment</description>
+        <node-step-plugin type='Kubernetes-Delete-Deployment'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='name' value='demo-nginx' />
+            <entry key='namespace' value='default' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <description>Deleting-Ingress</description>
+        <node-step-plugin type='Kubernetes-Delete'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='name' value='demo-nginx-ingress' />
+            <entry key='namespace' value='default' />
+            <entry key='type' value='Ingress' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+    </sequence>
+    <uuid>553867c9-4de6-4ed5-9e0a-1a30d543d025</uuid>
+  </job>
+</joblist>

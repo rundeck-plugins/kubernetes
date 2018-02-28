@@ -1,0 +1,79 @@
+<joblist>
+  <job>
+    <description></description>
+    <executionEnabled>true</executionEnabled>
+    <group>Demo</group>
+    <id>30ea01b4-7194-42dc-abf9-f94bb443eba9</id>
+    <loglevel>INFO</loglevel>
+    <name>Deploy-NGINX</name>
+    <nodeFilterEditable>false</nodeFilterEditable>
+    <scheduleEnabled>true</scheduleEnabled>
+    <sequence keepgoing='false' strategy='node-first'>
+      <command>
+        <description>Creating-Deployment</description>
+        <node-step-plugin type='Kubernetes-Create-Deployment'>
+          <configuration>
+            <entry key='api_version' value='extensions/v1beta1' />
+            <entry key='container_name' value='nginx' />
+            <entry key='debug' value='false' />
+            <entry key='environments' value='NGINX_PORT=80&#10;' />
+            <entry key='image' value='nginx' />
+            <entry key='labels' value='k8s-app=demo-nginx' />
+            <entry key='liveness_probe' value='httpGet:&#10;   path: /&#10;   port: 80&#10;initialDelaySeconds: 120&#10;periodSeconds: 120' />
+            <entry key='name' value='demo-nginx' />
+            <entry key='namespace' value='default' />
+            <entry key='ports' value='80, 443' />
+            <entry key='readiness_probe' value='httpGet:&#10;   path: /&#10;   port: 80&#10;initialDelaySeconds: 10&#10;periodSeconds: 30' />
+            <entry key='replicas' value='3' />
+            <entry key='resources_requests' value='cpu=1,memory=512Mi' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <description>Creating-Service</description>
+        <node-step-plugin type='Kubernetes-Create-Service'>
+          <configuration>
+            <entry key='annotations' value='service.beta.kubernetes.io/aws-load-balancer-backend-protocol=http,service.beta.kubernetes.io/aws-load-balancer-proxy-protocol=*' />
+            <entry key='api_version' value='v1' />
+            <entry key='debug' value='false' />
+            <entry key='external_traffic_policy' value='Local' />
+            <entry key='labels' value='k8s-app=demo-nginx' />
+            <entry key='name' value='demo-nginx-service' />
+            <entry key='namespace' value='default' />
+            <entry key='ports' value='- port: 80&#10;  targetPort: 80&#10;  protocol: TCP&#10;  name: http&#10;- port: 443&#10;  targetPort: 443&#10;  protocol: TCP&#10;  name: https' />
+            <entry key='selectors' value='k8s-app=demo-nginx' />
+            <entry key='type' value='LoadBalancer' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <description>Creating-Ingress</description>
+        <node-step-plugin type='Kubernetes-Create'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='namespace' value='default' />
+            <entry key='type' value='Ingress' />
+            <entry key='verify_ssl' value='false' />
+            <entry key='yaml' value='apiVersion: extensions/v1beta1&#10;kind: Ingress&#10;metadata:&#10;  name: demo-nginx-ingress&#10;  namespace: default&#10;  annotations:&#10;    kubernetes.io/ingress.class: "tectonic"&#10;    ingress.kubernetes.io/rewrite-target: /&#10;    ingress.kubernetes.io/ssl-redirect: "true"&#10;    ingress.kubernetes.io/use-port-in-redirects: "true"&#10;spec:&#10;  rules:&#10;    - host: kubernetes-rundeck.awsrundeck.com&#10;      http:&#10;        paths:&#10;          - path: /demo-nginx&#10;            backend:&#10;              serviceName: demo-nginx-service&#10;              servicePort: 80' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+      <command>
+        <description>Wating-For-Nginx-App</description>
+        <node-step-plugin type='Kubernetes-Wait-Deployment'>
+          <configuration>
+            <entry key='debug' value='false' />
+            <entry key='name' value='demo-nginx' />
+            <entry key='namespace' value='default' />
+            <entry key='retries' value='100' />
+            <entry key='sleep' value='3' />
+            <entry key='verify_ssl' value='false' />
+          </configuration>
+        </node-step-plugin>
+      </command>
+    </sequence>
+    <uuid>30ea01b4-7194-42dc-abf9-f94bb443eba9</uuid>
+  </job>
+</joblist>
