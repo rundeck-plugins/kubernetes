@@ -96,6 +96,10 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
     startedAt = None
 
     terminated=False
+    image = None
+    container_id = None
+    container_name = None
+
     if pod.status.container_statuses:
         for statuses in pod.status.container_statuses:
             if statuses.state.running is not None:
@@ -109,6 +113,10 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
             if statuses.state.terminated is not None:
                 terminated=True
                 status = "terminated"
+
+        image =  pod.status.container_statuses[0].image
+        container_id = pod.status.container_statuses[0].container_id
+        container_name = pod.status.container_statuses[0].name
 
     if terminated==False:
         for info in pod.status.conditions:
@@ -127,11 +135,11 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
         'default:name': pod.metadata.name,
         'default:labels': ','.join(labels),
         'default:namespace': pod.metadata.namespace,
-        'default:image': pod.status.container_statuses[0].image,
+        'default:image': image,
         'default:status': status,
         'default:status_message': statusMessage,
-        'default:container_id': pod.status.container_statuses[0].container_id,
-        'default:container_name': pod.status.container_statuses[0].name
+        'default:container_id': container_id,
+        'default:container_name': container_name
     }
 
     mappings = []
