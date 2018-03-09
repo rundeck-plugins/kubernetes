@@ -39,16 +39,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -75,15 +73,13 @@ def connect():
 
 def main():
 
-
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
+    data = {}
 
-    data={}
-
-    data["name"]=os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     connect()
@@ -91,24 +87,32 @@ def main():
     try:
         extensions_v1beta1 = client.ExtensionsV1beta1Api()
 
-        api_response = extensions_v1beta1.read_namespaced_deployment(data["name"], data["namespace"], pretty="True")
+        api_response = extensions_v1beta1.read_namespaced_deployment(
+            data["name"],
+            data["namespace"],
+            pretty="True")
         pprint(api_response.status)
 
         replicas = api_response.status.replicas
-        ready_replicas = api_response.status.ready_replicas
-        unavailable_replicas = api_response.status.unavailable_replicas
+        r_replicas = api_response.status.ready_replicas
+        u_replicas = api_response.status.unavailable_replicas
 
-        if(unavailable_replicas is not None):
-            log.error("unavailable replicas on the deployment: %s\n" % unavailable_replicas)
+        if(u_replicas is not None):
+            log.error(
+                "unavailable replicas on the deployment: %s\n" % u_replicas
+            )
             sys.exit(1)
 
-        if (replicas != ready_replicas):
-            log.error("ready replicas doesn't match with replicas: %s\n" % ready_replicas)
+        if (replicas != r_replicas):
+            log.error(
+                "ready replicas doesn't match with replicas: %s\n" % r_replicas
+            )
             sys.exit(1)
 
     except ApiException as e:
         log.error("Exception deleting deployment: %s\n" % e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

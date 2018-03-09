@@ -39,16 +39,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -75,15 +73,13 @@ def connect():
 
 def main():
 
-
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
+    data = {}
 
-    data={}
-
-    data["name"]=os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     connect()
@@ -95,11 +91,16 @@ def main():
         body = client.V1DeleteOptions()  # V1DeleteOptions |
         pretty = 'pretty_example'
 
-        api_response = k8s_client.delete_namespaced_job( name=data["name"], namespace=data["namespace"],body= body, pretty=pretty)
-        print("Deployment deleted. status='%s'" % str(api_response.status))
+        api_response = k8s_client.delete_namespaced_job(
+            name=data["name"],
+            namespace=data["namespace"],
+            body=body,
+            pretty=pretty
+        )
+        print("Deployment deleted '%s'" % str(api_response.status))
 
     except ApiException as e:
-        log.error("Exception when calling BatchV1Api->delete_namespaced_job: %s\n" % e)
+        log.error("Exception when calling delete_namespaced_job: %s\n" % e)
         sys.exit(1)
 
 

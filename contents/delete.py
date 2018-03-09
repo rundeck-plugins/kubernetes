@@ -38,16 +38,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -71,6 +69,7 @@ def connect():
             log.debug("getting from default config file")
             config.load_kube_config()
 
+
 def main():
 
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
@@ -87,77 +86,85 @@ def main():
     try:
         if data["type"] == "Deployment":
             k8s_beta = client.ExtensionsV1beta1Api()
-            resp = k8s_beta.delete_namespaced_deployment(name=data["name"],
-                                                         namespace=data["namespace"],
-                                                         body=client.V1DeleteOptions(
-                                                             propagation_policy='Foreground',
-                                                             grace_period_seconds=5),
-                                                         pretty="true")
+            resp = k8s_beta.delete_namespaced_deployment(
+                 name=data["name"],
+                 namespace=data["namespace"],
+                 body=client.V1DeleteOptions(
+                     propagation_policy='Foreground',
+                     grace_period_seconds=5),
+                 pretty="true")
 
             print("Deployment deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
-            resp = api_instance.delete_namespaced_service(namespace=data["namespace"],
-                                                          name=data["name"],
-                                                          pretty="true")
+            resp = api_instance.delete_namespaced_service(
+                namespace=data["namespace"],
+                name=data["name"],
+                pretty="true")
             print("Service deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Ingress":
             k8s_beta = client.ExtensionsV1beta1Api()
             body = client.V1DeleteOptions()
-            resp = k8s_beta.delete_namespaced_ingress(name=data["name"],
-                                                      namespace=data["namespace"],
-                                                      body=body,
-                                                      pretty="true")
+            resp = k8s_beta.delete_namespaced_ingress(
+                name=data["name"],
+                namespace=data["namespace"],
+                body=body,
+                pretty="true")
             print("Ingress deleted. status='%s'" % str(resp.status))
-
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
-            resp = api_instance.delete_namespaced_job(namespace=data["namespace"],
-                                                      name=data["name"],
-                                                      pretty="true")
+            resp = api_instance.delete_namespaced_job(
+                namespace=data["namespace"],
+                name=data["name"],
+                pretty="true")
             print("Job deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "StorageClass":
             api_instance = client.StorageV1Api()
 
-            resp = api_instance.delete_storage_class(name = data["name"],
-                                                     body = client.V1DeleteOptions(),
-                                                     pretty = "true")
+            resp = api_instance.delete_storage_class(
+                name=data["name"],
+                body=client.V1DeleteOptions(),
+                pretty="true")
             print("Storage Class deleted. status='%s'" % str(resp))
 
         if data["type"] == "PersistentVolumeClaim":
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.delete_namespaced_persistent_volume_claim(namespace=data["namespace"],
-                                                                          body = client.V1DeleteOptions(),
-                                                                          name=data["name"],
-                                                                          pretty="true")
-            print("Persistent Volume Claim  deleted. status='%s'" % str(resp.status))
+            resp = api_instance.delete_namespaced_persistent_volume_claim(
+                namespace=data["namespace"],
+                body=client.V1DeleteOptions(),
+                name=data["name"],
+                pretty="true")
+            print("PVC  deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Secret":
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.delete_namespaced_secret(namespace=data["namespace"],
-                                                         name=data["name"],
-                                                         body=client.V1DeleteOptions(),
-                                                         pretty="true")
+            resp = api_instance.delete_namespaced_secret(
+                 namespace=data["namespace"],
+                 name=data["name"],
+                 body=client.V1DeleteOptions(),
+                 pretty="true")
             print("Secret  deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "PersistentVolume":
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.delete_persistent_volume(namespace=data["namespace"],
-                                                         name=data["name"],
-                                                         body=client.V1DeleteOptions(),
-                                                         pretty="true")
-            print("Persistent Volume Claim  deleted. status='%s'" % str(resp.status))
+            resp = api_instance.delete_persistent_volume(
+                namespace=data["namespace"],
+                name=data["name"],
+                body=client.V1DeleteOptions(),
+                pretty="true")
+            print("PV deleted. status='%s'" % str(resp.status))
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

@@ -40,16 +40,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -79,18 +77,22 @@ def load_liveness_readiness_probe(data):
 
     httpGet = None
 
-    if probe.has_key("httpGet"):
-        if probe['httpGet'].has_key("port"):
-            httpGet = client.V1HTTPGetAction(port=int(probe['httpGet']['port']))
-            if probe['httpGet'].has_key("path"):
+    if "httpGet" in probe:
+        if "port" in probe['httpGet']:
+            httpGet = client.V1HTTPGetAction(
+                port=int(probe['httpGet']['port'])
+            )
+            if "path" in probe['httpGet']:
                 httpGet.path = probe['httpGet']['path']
-            if probe['httpGet'].has_key("host"):
+            if "host" in probe['httpGet']:
                 httpGet.host = probe['httpGet']['host']
 
     execLiveness = None
-    if probe.has_key("exec"):
+    if "exec" in probe:
         if probe['exec']['command']:
-            execLiveness = client.V1ExecAction(command=probe['exec']['command'])
+            execLiveness = client.V1ExecAction(
+                command=probe['exec']['command']
+            )
 
     v1Probe = client.V1Probe()
     if httpGet:
@@ -98,54 +100,65 @@ def load_liveness_readiness_probe(data):
     if execLiveness:
         v1Probe._exec = execLiveness
 
-    if probe.has_key("initialDelaySeconds"):
+    if "initialDelaySeconds" in probe:
         v1Probe.initial_delay_seconds = probe["initialDelaySeconds"]
 
-    if probe.has_key("periodSeconds"):
+    if "periodSeconds" in probe:
         v1Probe.period_seconds = probe["periodSeconds"]
 
-    if probe.has_key("timeoutSeconds"):
+    if "timeoutSeconds" in probe:
         v1Probe.timeout_seconds = probe["timeoutSeconds"]
 
     return v1Probe
+
 
 def create_deployment_object(data):
     # Configureate Pod template container
 
     ports = []
 
-    if data.has_key("ports"):
+    if "ports" in data:
         for port in data["ports"].split(','):
-            portDefinition = client.V1ContainerPort(container_port=int(port))
+            portDefinition = client.V1ContainerPort(
+                container_port=int(port)
+            )
             ports.append(portDefinition)
 
     envs = []
 
-    if data.has_key("environments"):
+    if "environments" in data:
         envs_array = data["environments"].splitlines()
         tmp_envs = dict(s.split('=') for s in envs_array)
 
         for key in tmp_envs:
-            envs.append(client.V1EnvVar(name=key, value=tmp_envs[key]))
+            envs.append(client.V1EnvVar(
+                name=key,
+                value=tmp_envs[key])
+            )
 
-    if data.has_key("environments_secrets"):
+    if "environments_secrets" in data:
         envs_array = data["environments_secrets"].splitlines()
         tmp_envs = dict(s.split('=') for s in envs_array)
 
         for key in tmp_envs:
 
             if(":" in tmp_envs[key]):
-                #passing secret env
+                # passing secret env
                 value = tmp_envs[key]
                 secrets = value.split(':')
-                secrect_key=secrets[1]
+                secrect_key = secrets[1]
                 secrect_name = secrets[0]
 
-                envs.append(client.V1EnvVar(name=key,
-                                            value="",
-                                            value_from=client.V1EnvVarSource(
-                                                secret_key_ref=client.V1SecretKeySelector(key=secrect_key,
-                                                                              name=secrect_name))))
+                envs.append(client.V1EnvVar(
+                    name=key,
+                    value="",
+                    value_from=client.V1EnvVarSource(
+                        secret_key_ref=client.V1SecretKeySelector(
+                            key=secrect_key,
+                            name=secrect_name)
+                    )
+                )
+                )
 
     container = client.V1Container(
         name=data["container_name"],
@@ -154,26 +167,32 @@ def create_deployment_object(data):
         env=envs
     )
 
-    if data.has_key("liveness_probe"):
-        container.liveness_probe=load_liveness_readiness_probe(data["liveness_probe"])
+    if "liveness_probe" in data:
+        container.liveness_probe = load_liveness_readiness_probe(
+            data["liveness_probe"]
+        )
 
-    if data.has_key("readiness_probe"):
-        container.readiness_probe=load_liveness_readiness_probe(data["readiness_probe"])
+    if "readiness_probe" in data:
+        container.readiness_probe = load_liveness_readiness_probe(
+            data["readiness_probe"]
+        )
 
-    if(data.has_key("container_command")):
+    if "container_command" in data:
         container.command = data["container_command"].split(' ')
 
-    if (data.has_key("container_args")):
+    if "container_args" in data:
         args_array = data["container_args"].splitlines()
         container.args = args_array
 
-    if (data.has_key("resources_requests")):
+    if "resources_requests" in data:
         resources_array = data["resources_requests"].split(",")
         tmp_resources = dict(s.split('=', 1) for s in resources_array)
-        container.resources = client.V1ResourceRequirements(requests=tmp_resources)
+        container.resources = client.V1ResourceRequirements(
+            requests=tmp_resources
+        )
 
-    labels=None
-    if data.has_key("labels"):
+    labels = None
+    if "labels" in data:
         labels_array = data["labels"].split(',')
         labels = dict(s.split('=') for s in labels_array)
 
@@ -182,8 +201,7 @@ def create_deployment_object(data):
         spec=client.V1PodSpec(containers=[container])
     )
     if labels:
-        template.metadata=client.V1ObjectMeta(labels=labels)
-
+        template.metadata = client.V1ObjectMeta(labels=labels)
 
     # Create the specification of deployment
     spec = client.ExtensionsV1beta1DeploymentSpec(
@@ -193,13 +211,15 @@ def create_deployment_object(data):
     deployment = client.ExtensionsV1beta1Deployment(
         api_version=data["api_version"],
         kind="Deployment",
-        metadata=client.V1ObjectMeta(labels=labels,namespace=data["namespace"], name=data["name"]),
+        metadata=client.V1ObjectMeta(labels=labels,
+                                     namespace=data["namespace"],
+                                     name=data["name"]),
         spec=spec)
 
     return deployment
 
 
-def update_deployment(api_instance, deployment,data):
+def update_deployment(api_instance, deployment, data):
     # Update the deployment
     api_response = api_instance.patch_namespaced_deployment(
         name=data["name"],
@@ -210,20 +230,18 @@ def update_deployment(api_instance, deployment,data):
 
 def main():
 
-
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
-
-    data={}
+    data = {}
 
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
-    data["name"]=os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["container_name"] = os.environ.get('RD_CONFIG_CONTAINER_NAME')
     data["image"] = os.environ.get('RD_CONFIG_IMAGE')
     if os.environ.get('RD_CONFIG_PORTS'):
-        data["ports"]=os.environ.get('RD_CONFIG_PORTS')
+        data["ports"] = os.environ.get('RD_CONFIG_PORTS')
 
     data["replicas"] = os.environ.get('RD_CONFIG_REPLICAS')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
@@ -232,25 +250,28 @@ def main():
         data["labels"] = os.environ.get('RD_CONFIG_LABELS')
 
     if os.environ.get('RD_CONFIG_ENVIRONMENTS'):
-        data["environments"]=os.environ.get('RD_CONFIG_ENVIRONMENTS')
+        data["environments"] = os.environ.get('RD_CONFIG_ENVIRONMENTS')
 
     if os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS'):
-        data["environments_secrets"]=os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
+        evs = os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
+        data["environments_secrets"] = evs
 
     if os.environ.get('RD_CONFIG_LIVENESS_PROBE'):
-        data["liveness_probe"]=os.environ.get('RD_CONFIG_LIVENESS_PROBE')
+        data["liveness_probe"] = os.environ.get('RD_CONFIG_LIVENESS_PROBE')
 
     if os.environ.get('RD_CONFIG_READINESS_PROBE'):
-        data["readiness_probe"]=os.environ.get('RD_CONFIG_READINESS_PROBE')
+        data["readiness_probe"] = os.environ.get('RD_CONFIG_READINESS_PROBE')
 
     if os.environ.get('RD_CONFIG_CONTAINER_COMMAND'):
-        data["container_command"] = os.environ.get('RD_CONFIG_CONTAINER_COMMAND')
+        cc = os.environ.get('RD_CONFIG_CONTAINER_COMMAND')
+        data["container_command"] = cc
 
     if os.environ.get('RD_CONFIG_CONTAINER_ARGS'):
-        data["container_args"]=os.environ.get('RD_CONFIG_CONTAINER_ARGS')
+        data["container_args"] = os.environ.get('RD_CONFIG_CONTAINER_ARGS')
 
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
-        data["resources_requests"]=os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
+        rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
+        data["resources_requests"] = rr
 
     log.debug("Updating Deployment data:")
     log.debug(data)
@@ -264,11 +285,11 @@ def main():
         log.debug("deployment object: ")
         log.debug(deployment)
 
-
-        update_deployment(extensions_v1beta1, deployment,data)
+        update_deployment(extensions_v1beta1, deployment, data)
     except ApiException as e:
         log.error("Exception updating deployment: %s\n" % e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

@@ -38,16 +38,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -71,6 +69,7 @@ def connect():
             log.debug("getting from default config file")
             config.load_kube_config()
 
+
 def parsePorts(data):
     ports = yaml.load(data)
     portsList = []
@@ -78,18 +77,18 @@ def parsePorts(data):
     if (isinstance(ports, list)):
         for x in ports:
 
-            if x.has_key("port"):
+            if "port" in x:
                 port = client.V1ServicePort(port=int(x["port"]))
 
-                if x.has_key("name"):
+                if "name" in x:
                     port.name = x["name"]
                 else:
                     port.name = str.lower(x["protocol"] + str(x["port"]))
-                if x.has_key("node_port"):
+                if "node_port" in x:
                     port.node_port = x["node_port"]
-                if x.has_key("protocol"):
+                if "protocol" in x:
                     port.protocol = x["protocol"]
-                if x.has_key("targetPort"):
+                if "targetPort" in x:
                     port.target_port = int(x["targetPort"])
 
                 portsList.append(port)
@@ -97,32 +96,35 @@ def parsePorts(data):
         x = ports
         port = client.V1ServicePort(port=int(x["port"]))
 
-        if x.has_key("node_port"):
+        if "node_port" in x:
             port.node_port = x["node_port"]
-        if x.has_key("protocol"):
+        if "protocol" in x:
             port.protocol = x["protocol"]
-        if x.has_key("targetPort"):
+        if "targetPort" in x:
             port.target_port = int(x["targetPort"])
 
         portsList.append(port)
 
     return portsList
 
-def create_service_object(data):
 
+def create_service_object(data):
 
     service = client.V1Service()
     service.api_version = data["api_version"]
     service.kind = "Service"
 
-    metadata = client.V1ObjectMeta(name=data["name"], namespace=data["namespace"])
+    metadata = client.V1ObjectMeta(
+        name=data["name"],
+        namespace=data["namespace"]
+    )
 
-    if data.has_key("labels"):
+    if "labels" in data:
         labels_array = data["labels"].split(',')
         labels = dict(s.split('=') for s in labels_array)
         metadata.labels = labels
 
-    if data.has_key("annotations"):
+    if "annotations" in data:
         annotations_array = data["annotations"].split(',')
         annotations = dict(s.split('=') for s in annotations_array)
         metadata.annotations = annotations
@@ -131,29 +133,30 @@ def create_service_object(data):
 
     spec = client.V1ServiceSpec()
 
-    if data.has_key("ports"):
+    if "ports" in data:
         spec.ports = parsePorts(data["ports"])
 
-    if data.has_key("selectors"):
+    if "selectors" in data:
         selectors_array = data["selectors"].split(',')
         selectors = dict(s.split('=') for s in selectors_array)
         spec.selector = selectors
 
-    if data.has_key("type"):
-        spec.type=data["type"]
+    if "type" in data:
+        spec.type = data["type"]
 
-    if data.has_key("external_traffic_policy"):
-        spec.external_traffic_policy=data["external_traffic_policy"]
-    if data.has_key("session_affinity"):
-        spec.session_affinity=data["session_affinity"]
-    if data.has_key("external_name"):
-        spec.external_name=data["external_name"]
-    if data.has_key("load_balancer_ip"):
-        spec.load_balancer_ip=data["load_balancer_ip"]
+    if "external_traffic_policy" in data:
+        spec.external_traffic_policy = data["external_traffic_policy"]
+    if "session_affinity" in data:
+        spec.session_affinity = data["session_affinity"]
+    if "external_name" in data:
+        spec.external_name = data["external_name"]
+    if "load_balancer_ip" in data:
+        spec.load_balancer_ip = data["load_balancer_ip"]
 
     service.spec = spec
 
     return service
+
 
 def main():
     # Configs can be set in Configuration class directly or using helper
@@ -166,12 +169,12 @@ def main():
 
     data = {}
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
-    data["name"]=os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     # optionals
     if os.environ.get('RD_CONFIG_ANNOTATIONS'):
-        data["annotations"]=os.environ.get('RD_CONFIG_ANNOTATIONS')
+        data["annotations"] = os.environ.get('RD_CONFIG_ANNOTATIONS')
 
     if os.environ.get('RD_CONFIG_TYPE'):
         data["type"] = os.environ.get('RD_CONFIG_TYPE')
@@ -186,7 +189,8 @@ def main():
         data["ports"] = os.environ.get('RD_CONFIG_PORTS')
 
     if os.environ.get('RD_CONFIG_EXTERNAL_TRAFFIC_POLICY'):
-        data["external_traffic_policy"] = os.environ.get('RD_CONFIG_EXTERNAL_TRAFFIC_POLICY')
+        et_policy = os.environ.get('RD_CONFIG_EXTERNAL_TRAFFIC_POLICY')
+        data["external_traffic_policy"] = et_policy
 
     if os.environ.get('RD_CONFIG_SESSION_AFFINITY'):
         data["session_affinity"] = os.environ.get('RD_CONFIG_SESSION_AFFINITY')
@@ -202,18 +206,22 @@ def main():
     log.debug("Updating service from data:")
     log.debug(data)
 
-    service=create_service_object(data)
+    service = create_service_object(data)
 
     log.debug("new service: ")
     log.debug(service)
 
     try:
 
-        resp = api_instance.patch_namespaced_service(name=data["name"],namespace=data["namespace"], body=service)
+        resp = api_instance.patch_namespaced_service(
+            name=data["name"],
+            namespace=data["namespace"],
+            body=service
+        )
         print("Deployment created. status='%s'" % str(resp.status))
 
     except ApiException as e:
-        log.error("Exception when calling CoreV1Api->create_namespaced_service: %s\n" % e)
+        log.error("Exception when calling create_namespaced_service: %s\n" % e)
         sys.exit(1)
 
 

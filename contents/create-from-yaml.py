@@ -39,14 +39,13 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
 
         config.load_kube_config(config_file=config_file)
@@ -72,6 +71,7 @@ def connect():
             log.debug("getting from default config file")
             config.load_kube_config()
 
+
 def main():
 
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
@@ -91,61 +91,82 @@ def main():
             dep = yaml.load(data["yaml"])
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_deployment(
-                body=dep, namespace=data["namespace"] ,pretty="true")
+                    body=dep,
+                    namespace=data["namespace"],
+                    pretty="true")
 
             print("Deployment created. status='%s'" % str(resp.status))
 
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
             dep = yaml.load(data["yaml"])
-            resp = api_instance.create_namespaced_service(namespace=data["namespace"], body=dep, pretty="true")
+            resp = api_instance.create_namespaced_service(
+                    namespace=data["namespace"],
+                    body=dep,
+                    pretty="true")
+
             print("Service created. status='%s'" % str(resp.status))
 
         if data["type"] == "Ingress":
             dep = yaml.load(data["yaml"])
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_ingress(
-                body=dep, namespace=data["namespace"], pretty="true")
+                    body=dep,
+                    namespace=data["namespace"],
+                    pretty="true")
             print("Ingress created. status='%s'" % str(resp.status))
-
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
             dep = yaml.load(data["yaml"])
-            resp = api_instance.create_namespaced_job(namespace=data["namespace"], body=dep, pretty="true")
+            resp = api_instance.create_namespaced_job(
+                    namespace=data["namespace"],
+                    body=dep,
+                    pretty="true")
             print("Job created. status='%s'" % str(resp.status))
 
         if data["type"] == "StorageClass":
             dep = yaml.load(data["yaml"])
             api_instance = client.StorageV1Api()
 
-            resp = api_instance.create_storage_class(body=dep, pretty="true")
-            print("Storage Class created. status='%s'" % str(resp))
+            resp = api_instance.create_storage_class(body=dep,
+                                                     pretty="true")
+            print("Storage Class created '%s'" % str(resp))
 
         if data["type"] == "PersistentVolumeClaim":
             dep = yaml.load(data["yaml"])
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.create_namespaced_persistent_volume_claim(namespace=data["namespace"], body=dep, pretty="true")
-            print("Persistent Volume Claim  created. status='%s'" % str(resp.status))
+            resp = api_instance.create_namespaced_persistent_volume_claim(
+                    namespace=data["namespace"],
+                    body=dep,
+                    pretty="true")
+            print("PVC created ='%s'" % str(resp.status))
 
         if data["type"] == "Secret":
             dep = yaml.load(data["yaml"])
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.create_namespaced_secret(namespace=data["namespace"], body=dep, pretty="true")
-            print("Secret  created. status='%s'" % str(resp.status))
+            resp = api_instance.create_namespaced_secret(
+                    namespace=data["namespace"],
+                    body=dep,
+                    pretty="true")
+            print("Secret created '%s'" % str(resp.status))
 
         if data["type"] == "PersistentVolume":
             dep = yaml.load(data["yaml"])
             api_instance = client.CoreV1Api()
 
-            resp = api_instance.create_persistent_volume(namespace=data["namespace"], body=dep, pretty="true")
-            print("Persistent Volume Claim  created. status='%s'" % str(resp.status))
+            resp = api_instance.create_persistent_volume(
+                    namespace=data["namespace"],
+                    body=dep,
+                    pretty="true")
+            print("PV created '%s'" % str(resp.status))
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

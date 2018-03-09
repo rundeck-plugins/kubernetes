@@ -151,6 +151,68 @@ providers:
         required: false 
         renderingOptions:
           groupName: Config
+  - name: Kubernetes-file-copier
+    service: FileCopier
+    title: Kubernetes / Pods / File Copier
+    description: 'Copy a file to a kubernetes pod'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-copy-file.py
+    script-args: ${node.name}
+    config:
+      - name: shell
+        type: String
+        title: "Shell"
+        description: "Shell used on the POD to run the command"
+        required: true
+        default: "/bin/bash"
+        renderingOptions:
+          groupName: Config
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
   - name: Kubernetes-Create-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Create

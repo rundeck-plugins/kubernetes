@@ -40,16 +40,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -75,6 +73,7 @@ def connect():
 
 
 def wait():
+
     data = {}
 
     data["name"] = os.environ.get('RD_CONFIG_NAME')
@@ -86,14 +85,18 @@ def wait():
     try:
         extensions_v1beta1 = client.ExtensionsV1beta1Api()
 
-        api_response = extensions_v1beta1.read_namespaced_deployment(data["name"], data["namespace"], pretty="True")
+        api_response = extensions_v1beta1.read_namespaced_deployment(
+            data["name"],
+            data["namespace"],
+            pretty="True")
+
         pprint(api_response.status)
 
         unavailable_replicas = api_response.status.unavailable_replicas
         replicas = api_response.status.replicas
         ready_replicas = api_response.status.ready_replicas
 
-        retries_count=0
+        retries_count = 0
 
         if (replicas == ready_replicas):
             log.info("Deployment is ready")
@@ -102,28 +105,29 @@ def wait():
         while (unavailable_replicas is not None):
             log.info("wating for deployment")
             time.sleep(float(sleep))
-            retries_count=retries_count+1
+            retries_count = retries_count+1
 
-            if(retries_count>retries ):
+            if retries_count > retries:
                 log.error("number retries exedded")
                 sys.exit(1)
 
-            api_response = extensions_v1beta1.read_namespaced_deployment(data["name"], data["namespace"], pretty="True")
-            unavailable_replicas = api_response.status.unavailable_replicas
+            api_response = extensions_v1beta1.read_namespaced_deployment(
+                data["name"],
+                data["namespace"],
+                pretty="True")
+            u_replicas = api_response.status.unavailable_replicas
 
-            log.info("unavailable replicas: " + str(unavailable_replicas))
-
-
+            log.info("unavailable replicas: " + str(u_replicas))
 
     except ApiException as e:
         log.error("Exception deleting deployment: %s\n" % e)
         sys.exit(1)
 
+
 def main():
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
-
 
     connect()
     wait()

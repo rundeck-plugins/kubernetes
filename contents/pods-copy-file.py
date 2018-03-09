@@ -3,12 +3,11 @@ import argparse
 import logging
 import sys
 import os
-from pprint import pprint
-
 from kubernetes import client, config
 from kubernetes.client import Configuration
+from kubernetes.client.apis import core_v1_api
 from kubernetes.client.rest import ApiException
-
+from kubernetes.stream import stream
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
@@ -16,6 +15,7 @@ log = logging.getLogger('kubernetes-model-source')
 
 parser = argparse.ArgumentParser(
     description='Execute a command string in the container.')
+parser.add_argument('pod', help='Pod')
 
 args = parser.parse_args()
 
@@ -71,38 +71,67 @@ def connect():
             config.load_kube_config()
 
 
-def delete_deployment(api_instance, data):
-    # Delete deployment
-    api_response = api_instance.delete_namespaced_deployment(
-        name=data["name"],
-        namespace=data["namespace"],
-        body=client.V1DeleteOptions(
-            propagation_policy='Foreground',
-            grace_period_seconds=5))
-
-    print("Deployment deleted. status='%s'" % str(api_response.status))
-
-
 def main():
 
-    if os.environ.get('RD_CONFIG_DEBUG') == 'true':
-        log.setLevel(logging.DEBUG)
-        log.debug("Log level configured for DEBUG")
-
-    data = {}
-
-    data["name"] = os.environ.get('RD_CONFIG_NAME')
-    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
-
     connect()
+    api = core_v1_api.CoreV1Api()
 
+    name = args.pod
+    namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
+
+    log.debug("--------------------------")
+    log.debug("Pod Name:  %s" % name)
+    log.debug("Namespace: %s " % namespace)
+    log.debug("--------------------------")
+
+    resp = None
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
-
-        delete_deployment(extensions_v1beta1, data)
+        resp = api.read_namespaced_pod(name=name,
+                                       namespace=namespace)
     except ApiException as e:
-        log.error("Exception deleting deployment: %s\n" % e)
-        sys.exit(1)
+        if e.status != 404:
+            print("Unknown error: %s" % e)
+            exit(1)
+
+    if not resp:
+        print("Pod %s does not exits." % name)
+        exit(1)
+
+    source_file = os.environ.get('RD_FILE_COPY_FILE')
+    destination_file = os.environ.get('RD_FILE_COPY_DESTINATION')
+    shell = os.environ.get('RD_CONFIG_SHELL')
+
+    log.debug("Copying file from %s to %s" % (source_file, destination_file))
+
+    # Calling exec interactively.
+    exec_command = [shell]
+    resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                  command=exec_command,
+                  stderr=True, stdin=True,
+                  stdout=True, tty=False,
+                  _preload_content=False)
+
+    file = open(source_file, "r")
+
+    commands = []
+    commands.append("cat <<'EOF' >" + destination_file + "\n")
+    commands.append(file.read())
+    commands.append("EOF\n")
+
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            print("STDOUT: %s" % resp.read_stdout())
+        if resp.peek_stderr():
+            print("STDERR: %s" % resp.read_stderr())
+
+        if commands:
+            c = commands.pop(0)
+            resp.write_stdin(c)
+        else:
+            break
+
+    resp.close()
 
 
 if __name__ == '__main__':

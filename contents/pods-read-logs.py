@@ -38,16 +38,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -71,6 +69,7 @@ def connect():
             log.debug("getting from default config file")
             config.load_kube_config()
 
+
 def main():
 
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
@@ -85,12 +84,17 @@ def main():
 
     try:
         v1 = client.CoreV1Api()
-        ret = v1.read_namespaced_pod_log(namespace=data["namespace"], name=data["name"], _preload_content=False)
+        ret = v1.read_namespaced_pod_log(
+            namespace=data["namespace"],
+            name=data["name"],
+            _preload_content=False
+        )
         print ret.read()
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

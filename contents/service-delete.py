@@ -39,16 +39,14 @@ def connect():
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
-        field_selector = os.environ.get('RD_CONFIG_TOKEN')
+        token = os.environ.get('RD_CONFIG_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
     log.debug("-------------------")
 
     if config_file:
-        # Configs can be set in Configuration class directly or using helper utility
         log.debug("getting settings from file %s" % config_file)
-
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -75,15 +73,13 @@ def connect():
 
 def main():
 
-
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
+    data = {}
 
-    data={}
-
-    data["name"]=os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     connect()
@@ -92,11 +88,15 @@ def main():
 
     try:
 
-        api_response =  api_instance.delete_namespaced_service(name=data["name"],namespace=data["namespace"],pretty="true")
-        print("Deployment deleted. status='%s'" % str(api_response.status))
+        api_response = api_instance.delete_namespaced_service(
+            name=data["name"],
+            namespace=data["namespace"],
+            pretty="true"
+        )
+        print("Deployment deleted '%s'" % str(api_response.status))
 
     except ApiException as e:
-        log.error("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
+        log.error("Exception when calling delete_namespaced_service: %s\n" % e)
         sys.exit(1)
 
 
