@@ -1,115 +1,17 @@
 #!/usr/bin/env python -u
-import argparse
 import logging
 import sys
 import os
 import yaml
+import common
 
-
-from kubernetes import client, config
-from kubernetes.client import Configuration
+from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-model-source')
-
-parser = argparse.ArgumentParser(
-    description='Execute a command string in the container.')
-
-args = parser.parse_args()
-
-
-def connect():
-    config_file = None
-    if os.environ.get('RD_CONFIG_CONFIG_FILE'):
-        config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
-
-    url = None
-    if os.environ.get('RD_CONFIG_URL'):
-        url = os.environ.get('RD_CONFIG_URL')
-
-    verify_ssl = None
-    if os.environ.get('RD_CONFIG_VERIFY_SSL'):
-        verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
-
-    ssl_ca_cert = None
-    if os.environ.get('RD_CONFIG_SSL_CA_CERT'):
-        ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
-
-    token = None
-    if os.environ.get('RD_CONFIG_TOKEN'):
-        token = os.environ.get('RD_CONFIG_TOKEN')
-
-    log.debug("config file")
-    log.debug(config_file)
-    log.debug("-------------------")
-
-    if config_file:
-        log.debug("getting settings from file %s" % config_file)
-        config.load_kube_config(config_file=config_file)
-    else:
-
-        if url:
-            log.debug("getting settings from pluing configuration")
-
-            configuration = Configuration()
-            configuration.host = url
-
-            if verify_ssl == 'true':
-                configuration.verify_ssl = args.verify_ssl
-
-            if ssl_ca_cert:
-                configuration.ssl_ca_cert = args.ssl_ca_cert
-
-            configuration.api_key['authorization'] = token
-            configuration.api_key_prefix['authorization'] = 'Bearer'
-
-            client.Configuration.set_default(configuration)
-        else:
-            log.debug("getting from default config file")
-            config.load_kube_config()
-
-
-def load_liveness_readiness_probe(data):
-    probe = yaml.load(data)
-
-    httpGet = None
-
-    if "httpGet" in probe:
-        if "port" in probe['httpGet']:
-            httpGet = client.V1HTTPGetAction(
-                port=int(probe['httpGet']['port'])
-            )
-            if "path" in probe['httpGet']:
-                httpGet.path = probe['httpGet']['path']
-            if "host" in probe['httpGet']:
-                httpGet.host = probe['httpGet']['host']
-
-    execLiveness = None
-    if "exec" in probe:
-        if probe['exec']['command']:
-            execLiveness = client.V1ExecAction(
-                command=probe['exec']['command']
-            )
-
-    v1Probe = client.V1Probe()
-    if httpGet:
-        v1Probe.http_get = httpGet
-    if execLiveness:
-        v1Probe._exec = execLiveness
-
-    if "initialDelaySeconds" in probe:
-        v1Probe.initial_delay_seconds = probe["initialDelaySeconds"]
-
-    if "periodSeconds" in probe:
-        v1Probe.period_seconds = probe["periodSeconds"]
-
-    if "timeoutSeconds" in probe:
-        v1Probe.timeout_seconds = probe["timeoutSeconds"]
-
-    return v1Probe
 
 
 def create_deployment_object(data):
@@ -168,12 +70,12 @@ def create_deployment_object(data):
     )
 
     if "liveness_probe" in data:
-        container.liveness_probe = load_liveness_readiness_probe(
+        container.liveness_probe = common.load_liveness_readiness_probe(
             data["liveness_probe"]
         )
 
     if "readiness_probe" in data:
-        container.readiness_probe = load_liveness_readiness_probe(
+        container.readiness_probe = common.load_liveness_readiness_probe(
             data["readiness_probe"]
         )
 
@@ -225,7 +127,8 @@ def update_deployment(api_instance, deployment, data):
         name=data["name"],
         namespace=data["namespace"],
         body=deployment)
-    print("Deployment updated. status='%s'" % str(api_response.status))
+
+    print common.print_deployment_status(api_response)
 
 
 def main():
@@ -276,7 +179,7 @@ def main():
     log.debug("Updating Deployment data:")
     log.debug(data)
 
-    connect()
+    common.connect()
 
     try:
         extensions_v1beta1 = client.ExtensionsV1beta1Api()

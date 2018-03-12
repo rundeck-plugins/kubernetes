@@ -1,12 +1,12 @@
 #!/usr/bin/env python -u
-import argparse
 import logging
 import sys
 import os
-from kubernetes import client, config
-from kubernetes.client import Configuration
+import common
 import json
 import shlex
+
+from kubernetes import client
 
 
 class JsonQuery(dict):
@@ -34,58 +34,6 @@ logging.basicConfig(stream=sys.stderr,
                     format='%(levelname)s: %(name)s: %(message)s'
                     )
 log = logging.getLogger('kubernetes-model-source')
-
-
-def connect():
-    config_file = None
-    if os.environ.get('RD_CONFIG_CONFIG_FILE'):
-        config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
-
-    url = None
-    if os.environ.get('RD_CONFIG_URL'):
-        url = os.environ.get('RD_CONFIG_URL')
-
-    verify_ssl = None
-    if os.environ.get('RD_CONFIG_VERIFY_SSL'):
-        verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
-
-    ssl_ca_cert = None
-    if os.environ.get('RD_CONFIG_SSL_CA_CERT'):
-        ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
-
-    token = None
-    if os.environ.get('RD_CONFIG_TOKEN'):
-        token = os.environ.get('RD_CONFIG_TOKEN')
-
-    log.debug("config file")
-    log.debug(config_file)
-    log.debug("-------------------")
-
-    if config_file:
-        log.debug("getting settings from file %s" % config_file)
-
-        config.load_kube_config(config_file=config_file)
-    else:
-
-        if url:
-            log.debug("getting settings from pluing configuration")
-
-            configuration = Configuration()
-            configuration.host = url
-
-            if verify_ssl == 'true':
-                configuration.verify_ssl = args.verify_ssl
-
-            if ssl_ca_cert:
-                configuration.ssl_ca_cert = args.ssl_ca_cert
-
-            configuration.api_key['authorization'] = token
-            configuration.api_key_prefix['authorization'] = 'Bearer'
-
-            client.Configuration.set_default(configuration)
-        else:
-            log.debug("getting from default config file")
-            config.load_kube_config()
 
 
 def nodeCollectData(pod, defaults, taglist, mappingList):
@@ -216,57 +164,52 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
     return data
 
 
-parser = argparse.ArgumentParser(
-    description='Execute a command string in the container.')
+def main():
+    if os.environ.get('RD_CONFIG_DEBUG') == 'true':
+        log.setLevel(logging.DEBUG)
+        log.debug("Log level configured for DEBUG")
 
-args = parser.parse_args()
+    common.connect()
 
-config_file = None
+    tags = os.environ.get('RD_CONFIG_TAGS')
+    mappingList = os.environ.get('RD_CONFIG_MAPPING')
+    defaults = os.environ.get('RD_CONFIG_ATTRIBUTES')
 
-if os.environ.get('RD_CONFIG_DEBUG') == 'true':
-    log.setLevel(logging.DEBUG)
-    log.debug("Log level configured for DEBUG")
+    running = False
+    if os.environ.get('RD_CONFIG_RUNNING') == 'true':
+        running = True
 
-connect()
+    field_selector = None
+    if os.environ.get('RD_CONFIG_FIELD_SELECTOR'):
+        field_selector = os.environ.get('RD_CONFIG_FIELD_SELECTOR')
 
-tags = os.environ.get('RD_CONFIG_TAGS')
-mappingList = os.environ.get('RD_CONFIG_MAPPING')
-defaults = os.environ.get('RD_CONFIG_ATTRIBUTES')
+    node_set = []
+    v1 = client.CoreV1Api()
+    ret = v1.list_pod_for_all_namespaces(
+        watch=False,
+        field_selector=field_selector
+    )
 
-running = False
-if os.environ.get('RD_CONFIG_RUNNING') == 'true':
-    running = True
+    for i in ret.items:
+        log.debug("%s\t%s\t%s" % (i.status.pod_ip,
+                                  i.metadata.namespace,
+                                  i.metadata.name))
 
-field_selector = None
-if os.environ.get('RD_CONFIG_FIELD_SELECTOR'):
-    field_selector = os.environ.get('RD_CONFIG_FIELD_SELECTOR')
+        node_data = nodeCollectData(i,
+                                    defaults,
+                                    tags,
+                                    mappingList)
 
-node_set = []
-mappingList = None
-defaults = None
+        if running is False:
+            if(node_data["terminated"] is False):
+                node_set.append(node_data)
 
-v1 = client.CoreV1Api()
-ret = v1.list_pod_for_all_namespaces(
-    watch=False,
-    field_selector=field_selector
-)
+        if running is True:
+            if node_data["status"] == "Running":
+                node_set.append(node_data)
 
-for i in ret.items:
-    log.debug("%s\t%s\t%s" % (i.status.pod_ip,
-                              i.metadata.namespace,
-                              i.metadata.name))
+    print json.dumps(node_set, indent=4, sort_keys=True)
 
-    node_data = nodeCollectData(i,
-                                defaults,
-                                tags,
-                                mappingList)
 
-    if running is False:
-        if(node_data["terminated"] is False):
-            node_set.append(node_data)
-
-    if running is True:
-        if node_data["status"] == "Running":
-            node_set.append(node_data)
-
-print json.dumps(node_set, indent=4, sort_keys=True)
+if __name__ == '__main__':
+    main()
