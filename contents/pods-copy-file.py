@@ -23,7 +23,6 @@ args = parser.parse_args()
 def main():
 
     common.connect()
-
     api = core_v1_api.CoreV1Api()
 
     name = args.pod
@@ -47,36 +46,41 @@ def main():
         print("Pod %s does not exits." % name)
         exit(1)
 
-    command = os.environ.get('RD_EXEC_COMMAND')
+    source_file = os.environ.get('RD_FILE_COPY_FILE')
+    destination_file = os.environ.get('RD_FILE_COPY_DESTINATION')
     shell = os.environ.get('RD_CONFIG_SHELL')
 
-    log.debug("Command: %s " % command)
-
-    # calling exec and wait for response.
-    exec_command = [
-        shell,
-        '-c',
-        command]
+    log.debug("Copying file from %s to %s" % (source_file, destination_file))
 
     # Calling exec interactively.
-    resp = stream(api.connect_get_namespaced_pod_exec,
-                  name=name,
-                  namespace=namespace,
+    exec_command = [shell]
+    resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
                   command=exec_command,
-                  stderr=True,
-                  stdin=True,
-                  stdout=True,
-                  tty=False,
-                  _preload_content=False
-                  )
+                  stderr=True, stdin=True,
+                  stdout=True, tty=False,
+                  _preload_content=False)
 
-    resp.run_forever()
-    if resp.peek_stdout():
-        print(resp.read_stdout())
+    file = open(source_file, "r")
 
-    if resp.peek_stderr():
-        print(resp.read_stderr())
-        sys.exit(1)
+    commands = []
+    commands.append("cat <<'EOF' >" + destination_file + "\n")
+    commands.append(file.read())
+    commands.append("EOF\n")
+
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            print("STDOUT: %s" % resp.read_stdout())
+        if resp.peek_stderr():
+            print("STDERR: %s" % resp.read_stderr())
+
+        if commands:
+            c = commands.pop(0)
+            resp.write_stdin(c)
+        else:
+            break
+
+    resp.close()
 
 
 if __name__ == '__main__':
