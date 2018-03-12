@@ -78,12 +78,23 @@ For example, if you want to add a custom tag for the container's image name, use
 
 
 ## Node Executor
-This plugin allows run commands to a container pod from rundeck.
+This plugin allows run commands/scripts to a container pod from rundeck.
 
 **Configurations:**
 
 * **Shell**: Shell used on the POD to run the command. Default value: /bin/bash
 * **Debug?**: Write debug messages to stderr
+
+
+## File Copier
+This plugin allows copy files from rundeck to a pod. 
+For now just script and text files can be copied to a remote pod.
+
+**Configurations:**
+
+* **Shell**: Shell used on the POD to run the command. Default value: /bin/bash
+* **Debug?**: Write debug messages to stderr
+
 
 ## Workflow Steps
 
