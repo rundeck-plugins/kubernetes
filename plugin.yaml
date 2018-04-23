@@ -106,6 +106,7 @@ providers:
         default: "/bin/bash"
         renderingOptions:
           groupName: Config
+          instance-scope-node-attribute: "kube-pod-shell"
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"

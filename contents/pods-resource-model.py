@@ -76,8 +76,10 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
                 statusMessage = info.message
 
     labels = []
-    for keys, values in pod.metadata.labels.items():
-        labels.append(keys + ":" + values)
+
+    if pod.metadata.labels:
+        for keys, values in pod.metadata.labels.items():
+            labels.append(keys + ":" + values)
 
     default_settings = {
         'default:pod_id': pod.status.pod_ip,

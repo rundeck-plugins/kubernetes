@@ -62,6 +62,10 @@ def connect():
             log.debug("getting from default config file")
             config.load_kube_config()
 
+    c = Configuration()
+    c.assert_hostname = False
+    Configuration.set_default(c)
+
 
 def print_deployment_status(api_response):
 
