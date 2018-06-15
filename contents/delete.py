@@ -44,6 +44,9 @@ def main():
             resp = api_instance.delete_namespaced_service(
                 namespace=data["namespace"],
                 name=data["name"],
+                body=client.V1DeleteOptions(
+                    propagation_policy='Foreground',
+                    grace_period_seconds=5),
                 pretty="true")
             print("Service deleted. status='%s'" % str(resp.status))
 

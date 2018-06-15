@@ -7,6 +7,10 @@ import yaml
 from kubernetes import client, config
 from kubernetes.client import Configuration
 
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-plugin')
@@ -50,6 +54,8 @@ def connect():
 
             if verify_ssl == 'true':
                 configuration.verify_ssl = verify_ssl
+            else:
+                configuration.verify_ssl = None
 
             if ssl_ca_cert:
                 configuration.ssl_ca_cert = ssl_ca_cert

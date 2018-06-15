@@ -32,6 +32,8 @@ def main():
 
         api_response = api_instance.delete_namespaced_service(
             name=data["name"],
+            body=client.V1DeleteOptions(propagation_policy='Foreground',
+                                      grace_period_seconds=5),
             namespace=data["namespace"],
             pretty="true"
         )
