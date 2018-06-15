@@ -44,7 +44,7 @@ Otherwise, you can set the following parameters:
 * **Verify SSL**: Enable/Disable the SSL verification
 * **SSL Certificate Path**: SSL Certificate Path for SSL connections
 
-## Resouce Model
+## Resource Model
 
 This plugin allows getting the container pods from kubernetes as rundeck nodes.
 
