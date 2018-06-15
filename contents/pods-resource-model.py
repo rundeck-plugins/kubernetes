@@ -36,7 +36,7 @@ logging.basicConfig(stream=sys.stderr,
 log = logging.getLogger('kubernetes-model-source')
 
 
-def nodeCollectData(pod, defaults, taglist, mappingList):
+def nodeCollectData(pod,container, defaults, taglist, mappingList):
     tags = []
     tags.extend(taglist.split(','))
 
@@ -45,29 +45,34 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
     startedAt = None
 
     terminated = False
-    image = None
     container_id = None
-    container_name = None
 
     if pod.status.container_statuses:
+
+        log.info("------")
+        log.info("container-name:" + container.name)
+
+
         for statuses in pod.status.container_statuses:
-            if statuses.state.running is not None:
-                status = "running"
-                if statuses.state.running.started_at:
-                    startedAt = statuses.state.running.started_at.strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
+            log.info("pod-container-name:" + statuses.name)
 
-            if statuses.state.waiting is not None:
-                status = "waiting"
+            if (container.name == statuses.name):
+                log.info("entro")
+                if statuses.state.running is not None:
+                    status = "running"
+                    if statuses.state.running.started_at:
+                        startedAt = statuses.state.running.started_at.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
 
-            if statuses.state.terminated is not None:
-                terminated = True
-                status = "terminated"
+                if statuses.state.waiting is not None:
+                    status = "waiting"
 
-        image = pod.status.container_statuses[0].image
-        container_id = pod.status.container_statuses[0].container_id
-        container_name = pod.status.container_statuses[0].name
+                if statuses.state.terminated is not None:
+                    terminated = True
+                    status = "terminated"
+
+                container_id = statuses.container_id
 
     if terminated is False:
         for info in pod.status.conditions:
@@ -88,11 +93,11 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
         'default:name': pod.metadata.name,
         'default:labels': ','.join(labels),
         'default:namespace': pod.metadata.namespace,
-        'default:image': image,
+        'default:image': container.image,
         'default:status': status,
         'default:status_message': statusMessage,
         'default:container_id': container_id,
-        'default:container_name': container_name
+        'default:container_name': container.name
     }
 
     mappings = []
@@ -125,7 +130,7 @@ def nodeCollectData(pod, defaults, taglist, mappingList):
 
     # rundeck attributes
     data = default_settings
-    data['nodename'] = default_settings['default:name']
+    data['nodename'] = default_settings['default:name']+"-"+container.name
     data['hostname'] = default_settings['default:pod_id']
     data['terminated'] = terminated
 
@@ -193,22 +198,26 @@ def main():
     )
 
     for i in ret.items:
-        log.debug("%s\t%s\t%s" % (i.status.pod_ip,
-                                  i.metadata.namespace,
-                                  i.metadata.name))
+        for container in i.spec.containers:
+            log.debug("%s\t%s\t%s\t%s" % (i.status.pod_ip,
+                                          i.metadata.namespace,
+                                          i.metadata.name,
+                                          container.name))
 
-        node_data = nodeCollectData(i,
-                                    defaults,
-                                    tags,
-                                    mappingList)
+            node_data = nodeCollectData(i,
+                                        container,
+                                        defaults,
+                                        tags,
+                                        mappingList
+                                        )
 
-        if running is False:
-            if(node_data["terminated"] is False):
-                node_set.append(node_data)
+            if running is False:
+                if(node_data["terminated"] is False):
+                    node_set.append(node_data)
 
-        if running is True:
-            if node_data["status"] == "Running":
-                node_set.append(node_data)
+            if running is True:
+                if node_data["status"] == "Running":
+                    node_set.append(node_data)
 
     print json.dumps(node_set, indent=4, sort_keys=True)
 

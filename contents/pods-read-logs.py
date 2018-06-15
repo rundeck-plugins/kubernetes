@@ -22,6 +22,7 @@ def main():
     data = {}
     data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
+    data["container"] = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     common.connect()
 
@@ -30,6 +31,7 @@ def main():
         ret = v1.read_namespaced_pod_log(
             namespace=data["namespace"],
             name=data["name"],
+            container=container,
             _preload_content=False
         )
         print ret.read()

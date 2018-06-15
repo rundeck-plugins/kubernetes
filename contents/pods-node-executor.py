@@ -26,12 +26,14 @@ def main():
 
     api = core_v1_api.CoreV1Api()
 
-    name = args.pod
     namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
+    name = os.environ.get('RD_NODE_DEFAULT_NAME')
+    container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     log.debug("--------------------------")
     log.debug("Pod Name:  %s" % name)
     log.debug("Namespace: %s " % namespace)
+    log.debug("Container: %s " % container)
     log.debug("--------------------------")
 
     resp = None
@@ -62,11 +64,12 @@ def main():
     resp = stream(api.connect_get_namespaced_pod_exec,
                   name=name,
                   namespace=namespace,
+                  container=container,
                   command=exec_command,
                   stderr=True,
                   stdin=True,
                   stdout=True,
-                  tty=False,
+                  tty=True,
                   _preload_content=False
                   )
 
