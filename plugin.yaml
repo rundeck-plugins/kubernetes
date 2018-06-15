@@ -18,7 +18,7 @@ providers:
         title: 'Default attributes'
         description: 'List of key=value pairs, example: username=root'
         renderingOptions:
-          groupName: Config        
+          groupName: Config
       - type: String
         name: mapping
         title: 'Custom Mapping'
@@ -49,39 +49,39 @@ providers:
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"
-        description: "Leave empty if you want to pass the connection parameters" 
+        description: "Leave empty if you want to pass the connection parameters"
         required: false
         renderingOptions:
-          groupName: Authentication        
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
-        description: "Kubernetes Cluster URL"  
+        description: "Kubernetes Cluster URL"
         required: false
         renderingOptions:
-          groupName: Authentication        
+          groupName: Authentication
       - name: token
         type: String
         title: "Token"
         required: false
-        description: "Kubernetes API Token" 
+        description: "Kubernetes API Token"
         renderingOptions:
           groupName: Authentication
           displayType: PASSWORD
       - name: verify_ssl
         type: Boolean
         title: "Verify ssl"
-        description: "Verify ssl for SSL connections" 
+        description: "Verify ssl for SSL connections"
         required: false
         renderingOptions:
-          groupName: Authentication         
+          groupName: Authentication
       - name: ssl_ca_cert
         type: String
         title: "SSL Certificate Path"
-        description: "SSL Certificate Path for SSL connections"  
+        description: "SSL Certificate Path for SSL connections"
         required: false
         renderingOptions:
-          groupName: Authentication         
+          groupName: Authentication
       - type: Boolean
         name: debug
         title: Debug?
@@ -101,7 +101,7 @@ providers:
       - name: shell
         type: String
         title: "Shell"
-        description: "Shell used on the POD to run the command" 
+        description: "Shell used on the POD to run the command"
         required: true
         default: "/bin/bash"
         renderingOptions:
@@ -110,14 +110,14 @@ providers:
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"
-        description: "Leave empty if you want to pass the connection parameters" 
+        description: "Leave empty if you want to pass the connection parameters"
         required: false
         renderingOptions:
           groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
-        description: "Kubernetes Cluster URL"  
+        description: "Kubernetes Cluster URL"
         required: false
         renderingOptions:
           groupName: Authentication
@@ -125,7 +125,7 @@ providers:
         type: String
         title: "Token"
         required: false
-        description: "Kubernetes API Token" 
+        description: "Kubernetes API Token"
         renderingOptions:
           groupName: Authentication
           selectionAccessor: "STORAGE_PATH"
@@ -134,14 +134,14 @@ providers:
       - name: verify_ssl
         type: Boolean
         title: "Verify ssl"
-        description: "Verify ssl for SSL connections" 
+        description: "Verify ssl for SSL connections"
         required: false
         renderingOptions:
           groupName: Authentication
       - name: ssl_ca_cert
         type: String
         title: "SSL Certificate Path"
-        description: "SSL Certificate Path for SSL connections"  
+        description: "SSL Certificate Path for SSL connections"
         required: false
         renderingOptions:
           groupName: Authentication
@@ -149,7 +149,7 @@ providers:
         name: debug
         title: Debug?
         description: "Write debug messages to stderr"
-        required: false 
+        required: false
         renderingOptions:
           groupName: Config
   - name: Kubernetes-file-copier
@@ -352,6 +352,13 @@ providers:
           groupName: Container
           displayType: MULTI_LINE
           codeSyntaxMode: yaml
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -511,6 +518,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -569,6 +583,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -627,6 +648,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -697,6 +725,13 @@ providers:
         default: "10"
         description: "Sleep between retries"
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -764,6 +799,13 @@ providers:
         renderingOptions:
           displayType: CODE
           codeSyntaxMode: yaml
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -828,6 +870,13 @@ providers:
         description: "Type"
         required: true
         values: Deployment,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -964,6 +1013,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Spec
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1100,6 +1156,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Spec
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1158,6 +1221,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1338,6 +1408,13 @@ providers:
         renderingOptions:
           groupName: Container
           displayType: MULTI_LINE
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1396,6 +1473,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1454,6 +1538,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
@@ -1512,6 +1603,13 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
       - name: url
         type: String
         title: "Cluster URL"
