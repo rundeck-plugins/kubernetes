@@ -40,7 +40,7 @@ def main():
         job.spec.selector = None
         job.spec.template.metadata = None
 
-        body = client.V1DeleteOptions()
+        body = client.V1DeleteOptions(api_version='v1',kind="DeleteOptions",propagation_policy="Background")
         pretty = 'pretty_example'
 
         api_response = k8s_client.delete_namespaced_job(

@@ -66,7 +66,7 @@ def main():
             resp = api_instance.delete_namespaced_job(
                 name=data["name"],
                 namespace=data["namespace"],
-                body=client.V1DeleteOptions(),
+                body=client.V1DeleteOptions(api_version='v1',kind="DeleteOptions",propagation_policy="Background"),
                 pretty="true"
             )
 
