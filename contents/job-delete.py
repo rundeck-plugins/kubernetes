@@ -29,8 +29,35 @@ def main():
 
     try:
 
+        ## get pods from job
+        label_selector = "job-name="+data["name"]
+        pretty = 'true'
+
+        v1 = client.CoreV1Api()
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            label_selector=label_selector
+        )
+
+        print("pods found: %s" % len(ret.items))
+
+        for i in ret.items:
+            print("Removing pod %s" % (i.metadata.name))
+
+        watch = True
+
+        try:
+            api_response = v1.delete_collection_namespaced_pod(data["namespace"],
+                                                               pretty=pretty,
+                                                               label_selector=label_selector,
+                                                               watch=watch)
+            print("Pods deleted '%s'" % str(api_response))
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->delete_collection_namespaced_pod: %s\n" % e)
+
+
         body = client.V1DeleteOptions()  # V1DeleteOptions |
-        pretty = 'pretty_example'
+
 
         api_response = k8s_client.delete_namespaced_job(
             name=data["name"],
@@ -38,7 +65,8 @@ def main():
             body=body,
             pretty=pretty
         )
-        print("Deployment deleted '%s'" % str(api_response.status))
+
+        print("Job deleted '%s'" % str(api_response.status))
 
     except ApiException as e:
         log.error("Exception when calling delete_namespaced_job: %s\n" % e)

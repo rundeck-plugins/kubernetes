@@ -62,10 +62,14 @@ def main():
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
+
             resp = api_instance.delete_namespaced_job(
-                namespace=data["namespace"],
                 name=data["name"],
-                pretty="true")
+                namespace=data["namespace"],
+                body=client.V1DeleteOptions(),
+                pretty="true"
+            )
+
             print("Job deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "StorageClass":
