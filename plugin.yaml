@@ -1583,6 +1583,14 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - type: Boolean
+        name: force
+        title: Force
+        description: "Continue even if previous run was unsuccessful"
+        required: false
+        default: true
+        renderingOptions:
+          groupName: Config
   - name: Kubernetes-Pods-Logs
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Logs

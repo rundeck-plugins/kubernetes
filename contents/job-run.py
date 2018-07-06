@@ -25,6 +25,7 @@ def main():
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
     data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
+    force = os.environ.get('RD_CONFIG_NAMESPACE')
 
     try:
 
@@ -33,6 +34,9 @@ def main():
             name=data["name"],
             namespace=data["namespace"]
         )
+        if not force and job.status and job.status.active:
+            log.error('Previous job run still active')
+            sys.exit(1)
         job.metadata.creation_timestamp = None
         job.metadata.uid = None
         job.metadata.resource_version = None
