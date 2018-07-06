@@ -1587,7 +1587,6 @@ providers:
         name: force
         title: Force
         description: "Continue even if previous run was unsuccessful"
-        required: false
         default: true
         renderingOptions:
           groupName: Config
