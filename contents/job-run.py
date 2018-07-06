@@ -35,8 +35,8 @@ def main():
             namespace=data["namespace"]
         )
         if not force and job.status and job.status.active:
-            log.error('Previous job run still active')
-            sys.exit(1)
+            log.info('Previous job run still active; not deleting')
+            return
         job.metadata.creation_timestamp = None
         job.metadata.uid = None
         job.metadata.resource_version = None
