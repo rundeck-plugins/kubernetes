@@ -31,10 +31,10 @@ def main():
         ret = v1.read_namespaced_pod_log(
             namespace=data["namespace"],
             name=data["name"],
-            container=container,
+            container=data["container"],
             _preload_content=False
         )
-        print ret.read()
+        print(ret.read())
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)
