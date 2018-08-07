@@ -197,7 +197,7 @@ def main():
             namespace=data["namespace"]
         )
 
-        print("Job created. status='%s'" % str(api_response.status))
+        print(common.parseJson(api_response.status))
 
     except ApiException as e:
         log.error("Exception creating job: %s\n" % e)

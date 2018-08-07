@@ -151,7 +151,7 @@ def create_deployment(api_instance, deployment, data):
         body=deployment,
         namespace=data["namespace"])
 
-    print("Deploymetn created. status='%s'" % str(api_response.status))
+    print(common.parseJson(api_response.status))
 
 
 def main():

@@ -22,7 +22,7 @@ def delete_deployment(api_instance, data):
             propagation_policy='Foreground',
             grace_period_seconds=5))
 
-    print("Deployment deleted. status='%s'" % str(api_response.status))
+    print(common.parseJson(api_response.status))
 
 
 def main():

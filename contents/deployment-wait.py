@@ -33,7 +33,7 @@ def wait():
             data["namespace"],
             pretty="True")
 
-        print common.print_deployment_status(api_response)
+        print common.parseJson(api_response.status)
 
         unavailable_replicas = api_response.status.unavailable_replicas
         replicas = api_response.status.replicas
