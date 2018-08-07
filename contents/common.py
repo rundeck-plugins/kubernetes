@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import yaml
+import datetime
 
 from kubernetes import client, config
 from kubernetes.client import Configuration
@@ -15,6 +16,8 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-plugin')
 
+if os.environ.get('RD_CONFIG_DEBUG') == 'true':
+    log.setLevel(logging.DEBUG)
 
 def connect():
     config_file = None
@@ -71,40 +74,6 @@ def connect():
     c = Configuration()
     c.assert_hostname = False
     Configuration.set_default(c)
-
-
-def print_deployment_status(api_response):
-
-    response = {
-        'available_replicas': api_response.status.available_replicas,
-        'collision_count': api_response.status.collision_count,
-        'observed_generation': api_response.status.observed_generation,
-        'ready_replicas': api_response.status.ready_replicas,
-        'replicas': api_response.status.replicas,
-        'unavailable_replicas': api_response.status.unavailable_replicas,
-        'updated_replicas': api_response.status.updated_replicas
-    }
-
-    if api_response.status.conditions is not None:
-        for condition in api_response.status.conditions:
-            condition_array = {}
-
-            ltt = condition.last_transition_time
-            condition_array['last_transition_time'] = ltt.strftime(
-                  "%Y-%m-%d %H:%M:%S"
-            )
-
-            lut = condition.last_update_time
-            condition_array['last_update_time'] = lut.strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-            condition_array['message'] = condition.message
-            condition_array['reason'] = condition.reason
-            condition_array['status'] = condition.status
-            condition_array['type'] = condition.type
-            response["conditions"] = condition_array
-
-    return json.dumps(response)
 
 
 def load_liveness_readiness_probe(data):
@@ -221,3 +190,14 @@ def create_volume(volume_data):
         return volume
 
     return None
+
+
+class ObjectEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        return {k.lstrip('_'): v for k, v in vars(obj).items()}
+
+
+def parseJson(obj):
+    return json.dumps(obj, cls=ObjectEncoder)

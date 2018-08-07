@@ -50,13 +50,14 @@ def main():
             pretty=pretty
         )
 
-        print("Job deleted. status='%s'" % str(api_response.status))
+        print(common.parseJson(api_response))
 
         api_response = k8s_client.create_namespaced_job(
             body=job,
             namespace=data["namespace"]
         )
-        print("Job created. status='%s'" % str(api_response.status))
+
+        print(common.parseJson(api_response.status))
 
     except ApiException as e:
         log.error("Exception creating job: %s\n" % e)

@@ -51,12 +51,13 @@ def main():
                                                                pretty=pretty,
                                                                label_selector=label_selector,
                                                                watch=watch)
-            print("Pods deleted '%s'" % str(api_response))
+
+            print(common.parseJson(api_response))
         except ApiException as e:
             print("Exception when calling CoreV1Api->delete_collection_namespaced_pod: %s\n" % e)
 
 
-        body = client.V1DeleteOptions(api_version='v1',kind="DeleteOptions",propagation_policy="Background")
+        body = client.V1DeleteOptions(api_version='v1', kind="DeleteOptions", propagation_policy="Background")
 
         api_response = k8s_client.delete_namespaced_job(
             name=data["name"],
@@ -65,7 +66,7 @@ def main():
             pretty=pretty
         )
 
-        print("Job deleted '%s'" % str(api_response.status))
+        print(common.parseJson(api_response.status))
 
     except ApiException as e:
         log.error("Exception when calling delete_namespaced_job: %s\n" % e)

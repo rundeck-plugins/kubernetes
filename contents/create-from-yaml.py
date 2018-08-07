@@ -37,7 +37,7 @@ def main():
                     namespace=data["namespace"],
                     pretty="true")
 
-            print("Deployment created. status='%s'" % str(resp.status))
+            print(common.parseJson(resp.status))
 
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
@@ -47,7 +47,7 @@ def main():
                     body=dep,
                     pretty="true")
 
-            print("Service created. status='%s'" % str(resp.status))
+            print(common.parseJson(resp.status))
 
         if data["type"] == "Ingress":
             dep = yaml.load(data["yaml"])
@@ -56,7 +56,8 @@ def main():
                     body=dep,
                     namespace=data["namespace"],
                     pretty="true")
-            print("Ingress created. status='%s'" % str(resp.status))
+
+            print(common.parseJson(resp.status))
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
@@ -65,7 +66,8 @@ def main():
                     namespace=data["namespace"],
                     body=dep,
                     pretty="true")
-            print("Job created. status='%s'" % str(resp.status))
+
+            print(common.parseJson(resp.status))
 
         if data["type"] == "StorageClass":
             dep = yaml.load(data["yaml"])
@@ -73,7 +75,8 @@ def main():
 
             resp = api_instance.create_storage_class(body=dep,
                                                      pretty="true")
-            print("Storage Class created '%s'" % str(resp))
+
+            print(common.parseJson(resp.metadata))
 
         if data["type"] == "PersistentVolumeClaim":
             dep = yaml.load(data["yaml"])
@@ -83,7 +86,8 @@ def main():
                     namespace=data["namespace"],
                     body=dep,
                     pretty="true")
-            print("PVC created ='%s'" % str(resp.status))
+
+            print(common.parseJson(resp.status))
 
         if data["type"] == "Secret":
             dep = yaml.load(data["yaml"])
@@ -93,7 +97,8 @@ def main():
                     namespace=data["namespace"],
                     body=dep,
                     pretty="true")
-            print("Secret created '%s'" % str(resp.status))
+
+            print(common.parseJson(resp.metadata))
 
         if data["type"] == "PersistentVolume":
             dep = yaml.load(data["yaml"])
@@ -103,7 +108,8 @@ def main():
                     namespace=data["namespace"],
                     body=dep,
                     pretty="true")
-            print("PV created '%s'" % str(resp.status))
+
+            print(common.parseJson(resp.status))
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)

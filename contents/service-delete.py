@@ -37,7 +37,7 @@ def main():
             namespace=data["namespace"],
             pretty="true"
         )
-        print("Service deleted '%s'" % str(api_response.status))
+        print(common.parseJson(api_response))
 
     except ApiException as e:
         log.error("Exception when calling delete_namespaced_service: %s\n" % e)

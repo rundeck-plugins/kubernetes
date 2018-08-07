@@ -37,8 +37,6 @@ def main():
                      grace_period_seconds=5),
                  pretty="true")
 
-            print("Deployment deleted. status='%s'" % str(resp.status))
-
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
             resp = api_instance.delete_namespaced_service(
@@ -48,7 +46,6 @@ def main():
                     propagation_policy='Foreground',
                     grace_period_seconds=5),
                 pretty="true")
-            print("Service deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Ingress":
             k8s_beta = client.ExtensionsV1beta1Api()
@@ -58,7 +55,6 @@ def main():
                 namespace=data["namespace"],
                 body=body,
                 pretty="true")
-            print("Ingress deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
@@ -70,8 +66,6 @@ def main():
                 pretty="true"
             )
 
-            print("Job deleted. status='%s'" % str(resp.status))
-
         if data["type"] == "StorageClass":
             api_instance = client.StorageV1Api()
 
@@ -79,7 +73,6 @@ def main():
                 name=data["name"],
                 body=client.V1DeleteOptions(),
                 pretty="true")
-            print("Storage Class deleted. status='%s'" % str(resp))
 
         if data["type"] == "PersistentVolumeClaim":
             api_instance = client.CoreV1Api()
@@ -89,7 +82,6 @@ def main():
                 body=client.V1DeleteOptions(),
                 name=data["name"],
                 pretty="true")
-            print("PVC  deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "Secret":
             api_instance = client.CoreV1Api()
@@ -99,7 +91,6 @@ def main():
                  name=data["name"],
                  body=client.V1DeleteOptions(),
                  pretty="true")
-            print("Secret  deleted. status='%s'" % str(resp.status))
 
         if data["type"] == "PersistentVolume":
             api_instance = client.CoreV1Api()
@@ -109,7 +100,8 @@ def main():
                 name=data["name"],
                 body=client.V1DeleteOptions(),
                 pretty="true")
-            print("PV deleted. status='%s'" % str(resp.status))
+
+        print(common.parseJson(resp))
 
     except ApiException as e:
         log.error("Exception error creating: %s\n" % e)

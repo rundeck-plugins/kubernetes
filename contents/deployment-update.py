@@ -128,7 +128,7 @@ def update_deployment(api_instance, deployment, data):
         namespace=data["namespace"],
         body=deployment)
 
-    print common.print_deployment_status(api_response)
+    print(common.parseJson(api_response.status))
 
 
 def main():
