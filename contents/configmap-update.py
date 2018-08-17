@@ -57,7 +57,7 @@ def main():
 
     data = {}
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
-    data["name"] = os.environ.get('RD_OPTION_MICROSERVICE')
+    data["name"] = os.environ.get('RD_OPTION_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     # optionals
