@@ -1874,3 +1874,10 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: values
+        type: String
+        title: "Values"
+        description: "Values. Add a comma separeted values (key=value format)"
+        required: true
+        renderingOptions:
+          groupName: Config

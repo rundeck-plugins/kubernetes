@@ -35,6 +35,11 @@ def create_config_map(data):
         annotations = dict(s.split('=') for s in annotations_array)
         metadata.annotations = annotations
 
+    if "values" in data:
+        values = data["values"].split(',')
+        values_as_dict = dict(s.split('=') for s in values)
+        config_map.data = values_as_dict
+
     config_map.metadata = metadata
 
     return config_map
