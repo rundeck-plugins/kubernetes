@@ -11,7 +11,7 @@ from kubernetes.client.rest import ApiException
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
-log = logging.getLogger('kubernetes-service-create')
+log = logging.getLogger('kubernetes-configmap-create')
 
 
 def create_config_map(data):
@@ -57,7 +57,7 @@ def main():
 
     data = {}
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
-    data["name"] = os.environ.get('RD_CONFIG_NAME')
+    data["name"] = os.environ.get('RD_OPTION_MICROSERVICE')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     # optionals
@@ -90,7 +90,7 @@ def main():
         data["load_balancer_ip"] = os.environ.get('RD_CONFIG_LOAD_BALANCER_IP')
 
     if os.environ.get('RD_CONFIG_VALUES'):
-        data["values"] = os.environ.get('RD_CONFIG_VALUES')
+        data["values"] = os.environ.get('RD_OPTION_VALUES')
 
     api_instance = client.CoreV1Api()
 
@@ -113,7 +113,7 @@ def main():
         print(common.parseJson(configmap_resp.data))
 
     except ApiException as e:
-        log.error("Exception when calling create_namespaced_service: %s\n" % e)
+        log.error("Exception when calling patch_namespaced_config_map: %s\n" % e)
         sys.exit(1)
 
 

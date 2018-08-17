@@ -1748,13 +1748,6 @@ providers:
         default: "v1"
         renderingOptions:
           groupName: Config
-      - name: name
-        type: String
-        title: "Name"
-        description: "Service Name"
-        required: true
-        renderingOptions:
-          groupName: Config
       - name: namespace
         type: String
         title: "Namespace"
@@ -1872,12 +1865,5 @@ providers:
         title: Debug?
         description: "Write debug messages to stderr"
         required: false
-        renderingOptions:
-          groupName: Config
-      - name: values
-        type: String
-        title: "Values"
-        description: "Values. Add a comma separeted values (key=value format)"
-        required: true
         renderingOptions:
           groupName: Config
