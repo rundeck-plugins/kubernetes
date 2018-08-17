@@ -89,7 +89,7 @@ def main():
     if os.environ.get('RD_CONFIG_LOAD_BALANCER_IP'):
         data["load_balancer_ip"] = os.environ.get('RD_CONFIG_LOAD_BALANCER_IP')
 
-    if os.environ.get('RD_CONFIG_VALUES'):
+    if os.environ.get('RD_OPTION_VALUES'):
         data["values"] = os.environ.get('RD_OPTION_VALUES')
 
     api_instance = client.CoreV1Api()
