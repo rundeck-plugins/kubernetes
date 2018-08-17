@@ -35,12 +35,12 @@ def create_config_map(data):
         annotations = dict(s.split('=') for s in annotations_array)
         metadata.annotations = annotations
 
+    config_map.metadata = metadata
+
     if "values" in data:
         values = data["values"].split(',')
         values_as_dict = dict(s.split('=') for s in values)
         config_map.data = values_as_dict
-
-    config_map.metadata = metadata
 
     return config_map
 
@@ -89,6 +89,9 @@ def main():
     if os.environ.get('RD_CONFIG_LOAD_BALANCER_IP'):
         data["load_balancer_ip"] = os.environ.get('RD_CONFIG_LOAD_BALANCER_IP')
 
+    if os.environ.get('RD_CONFIG_VALUES'):
+        data["values"] = os.environ.get('RD_CONFIG_VALUES')
+
     api_instance = client.CoreV1Api()
 
     log.debug("Updating config map from data:")
@@ -101,13 +104,13 @@ def main():
 
     try:
 
-        resp = api_instance.patch_namespaced_config_map(
+        configmap_resp = api_instance.patch_namespaced_config_map(
             name=data["name"],
             namespace=data["namespace"],
             body=config_map
         )
 
-        print(common.parseJson(resp.status))
+        print(common.parseJson(configmap_resp.data))
 
     except ApiException as e:
         log.error("Exception when calling create_namespaced_service: %s\n" % e)
