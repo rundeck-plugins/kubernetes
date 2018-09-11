@@ -20,6 +20,10 @@ if os.environ.get('RD_CONFIG_DEBUG') == 'true':
     log.setLevel(logging.DEBUG)
 
 def connect():
+    if os.environ.get('RD_CONFIG_ENV') == 'incluster':
+        config.incluster_config()
+        return
+
     config_file = None
     if os.environ.get('RD_CONFIG_CONFIG_FILE'):
         config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')

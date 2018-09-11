@@ -1731,3 +1731,139 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+  - name: Kubernetes-Update-ConfigMap
+    service: WorkflowNodeStep
+    title: Kubernetes / ConfigMap / Update
+    description: 'Update a ConfigMap'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: configmap-update.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "API Version"
+        required: true
+        default: "v1"
+        renderingOptions:
+          groupName: Config
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Config
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Config
+      - name: annotations
+        type: String
+        title: "Annotations"
+        description: "Annotations. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Config
+      - name: selectors
+        type: String
+        title: "Selectors"
+        description: "Selectors. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Use the YAML format (https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services)"
+        required: false
+        renderingOptions:
+          groupName: Spec
+          displayType: CODE
+          codeSyntaxMode: yaml
+      - name: type
+        type: Select
+        title: "Type"
+        description: "Type"
+        required: false
+        values: ClusterIP,NodePort,LoadBalancer,ExternalName
+        renderingOptions:
+          groupName: Spec
+      - name: session_affinity
+        type: String
+        title: "Session Affinity"
+        description: "Session Affinity"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_traffic_policy
+        type: String
+        title: "External Traffic Policy"
+        description: "External Traffic Policy"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: external_name
+        type: String
+        title: "External Name"
+        description: "External Name"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: load_balancer_ip
+        type: String
+        title: "Load_Balancer IP"
+        description: "Load_Balancer IP"
+        required: false
+        renderingOptions:
+          groupName: Spec
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
