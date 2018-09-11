@@ -21,7 +21,7 @@ if os.environ.get('RD_CONFIG_DEBUG') == 'true':
 
 def connect():
     if os.environ.get('RD_CONFIG_ENV') == 'incluster':
-        config.incluster_config()
+        config.load_incluster_config()
         return
 
     config_file = None
