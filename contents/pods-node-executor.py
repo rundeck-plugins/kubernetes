@@ -1,5 +1,4 @@
 #!/usr/bin/env python -u
-import argparse
 import logging
 import sys
 import os
@@ -7,28 +6,39 @@ import common
 
 from kubernetes.client.apis import core_v1_api
 from kubernetes.client.rest import ApiException
-from kubernetes.stream import stream
+from kubernetes import client
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-model-source')
 
-parser = argparse.ArgumentParser(
-    description='Execute a command string in the container.')
-parser.add_argument('pod', help='Pod')
-
-args = parser.parse_args()
-
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
+    log.setLevel(logging.DEBUG)
 
 def main():
 
     common.connect()
 
     api = core_v1_api.CoreV1Api()
+    container = None
+    name = None
+    namespace = None
 
-    namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
-    name = os.environ.get('RD_NODE_DEFAULT_NAME')
-    container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+    if 'RD_NODE_DEFAULT_NAME' in os.environ and 'RD_NODE_DEFAULT_NAME' and 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
+        namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
+        name = os.environ.get('RD_NODE_DEFAULT_NAME')
+        container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+    else:
+        namespace = os.environ.get('RD_CONFIG_NAMESPACE')
+        name = os.environ.get('RD_CONFIG_NAME')
+
+        core_v1 = client.CoreV1Api()
+        response = core_v1.read_namespaced_pod_status(
+            name=name,
+            namespace=namespace,
+            pretty="True"
+        )
+        container = response.spec.containers[0].name
 
     log.debug("--------------------------")
     log.debug("Pod Name:  %s" % name)
@@ -49,8 +59,12 @@ def main():
         print("Pod %s does not exits." % name)
         exit(1)
 
-    command = os.environ.get('RD_EXEC_COMMAND')
     shell = os.environ.get('RD_CONFIG_SHELL')
+
+    if 'RD_EXEC_COMMAND' in os.environ:
+        command = os.environ['RD_EXEC_COMMAND']
+    else:
+        command = os.environ['RD_CONFIG_COMMAND']
 
     log.debug("Command: %s " % command)
 
@@ -60,25 +74,10 @@ def main():
         '-c',
         command]
 
-    # Calling exec interactively.
-    resp = stream(api.connect_get_namespaced_pod_exec,
-                  name=name,
-                  namespace=namespace,
-                  container=container,
-                  command=exec_command,
-                  stderr=True,
-                  stdin=True,
-                  stdout=True,
-                  tty=True,
-                  _preload_content=False
-                  )
+    resp, error = common.run_interactive_command(name, namespace, container, exec_command)
 
-    resp.run_forever()
-    if resp.peek_stdout():
-        print(resp.read_stdout())
-
-    if resp.peek_stderr():
-        print(resp.read_stderr())
+    if error:
+        log.error("error running script")
         sys.exit(1)
 
 

@@ -1690,6 +1690,7 @@ providers:
         type: String
         title: "Kubernetes Config File Path"
         description: "Leave empty if you want to pass the connection parameters"
+        scope: Instance
         required: false
         renderingOptions:
           groupName: Authentication
@@ -1698,12 +1699,258 @@ providers:
         title: "Cluster URL"
         description: "Kubernetes Cluster URL"
         required: false
+        scope: Instance
         renderingOptions:
           groupName: Authentication
       - name: token
         type: String
         title: "Token"
         required: false
+        description: "Kubernetes API Token"
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
+  - name: Kubernetes-Create-Pod
+    service: WorkflowNodeStep
+    title: Kubernetes / Pod / Create
+    description: 'Create a Deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-create.py
+    script-args:
+    config:
+      - name: api_version
+        type: String
+        title: "API Version"
+        description: "Kubernetes API Version"
+        required: true
+        default: "v1"
+        renderingOptions:
+          groupName: Metadata
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment will be created "
+        required: true
+        default: "default"
+        renderingOptions:
+          groupName: Metadata
+      - name: name
+        type: String
+        title: "Pod Name"
+        description: "Name of the POD "
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: labels
+        type: String
+        title: "Labels"
+        description: "Labels. Add a comma separeted values (key=value format)"
+        required: true
+        renderingOptions:
+          groupName: Metadata
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: "Deployment Container Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: image
+        type: String
+        title: "Image"
+        description: "Image Name"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: ports
+        type: String
+        title: "Container ports"
+        description: "Container ports. Add a comma for multiples ports"
+        required: true
+        renderingOptions:
+          groupName: Container
+      - name: environments
+        type: String
+        title: "Environment Variables"
+        description: "List Environment Variables (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: environments_secrets
+        type: String
+        title: "Environment Variables from secret"
+        description: "List Environment Variables from secrets variables. Use key=secret-Name:secret-Key-Name format (AWS-SECRET=awscredentials:accesskey) "
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: liveness_probe
+        type: String
+        title: "Liveness Probe"
+        description: "Configure Liveness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: readiness_probe
+        type: String
+        title: "Readiness Probe"
+        description: "Configure Readiness Probes (YAML format: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: container_command
+        type: String
+        title: "Container Command"
+        description: "The command to run in the container"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: container_args
+        type: String
+        title: "Container Arguments"
+        description: "The command arguments"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_requests
+        type: String
+        title: "Resource Requests"
+        description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: volume_mounts
+        type: String
+        title: "Volume Mounts"
+        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: volumes
+        type: String
+        title: "Volumes"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+  - name: Kubernetes-Delete-Pod
+    service: WorkflowNodeStep
+    title: Kubernetes / Pod / Delete
+    description: 'Delete a Job'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-delete.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Pod Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the pod will be created "
+        required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
         description: "Kubernetes API Token"
         renderingOptions:
           groupName: Authentication
@@ -1715,6 +1962,7 @@ providers:
         title: "Verify ssl"
         description: "Verify ssl for SSL connections"
         required: false
+        scope: Instance
         renderingOptions:
           groupName: Authentication
       - name: ssl_ca_cert
@@ -1722,12 +1970,245 @@ providers:
         title: "SSL Certificate Path"
         description: "SSL Certificate Path for SSL connections"
         required: false
+        scope: Instance
         renderingOptions:
           groupName: Authentication
-      - type: Boolean
-        name: debug
-        title: Debug?
-        description: "Write debug messages to stderr"
+  - name: Kubernetes-Wait-Pod
+    service: WorkflowNodeStep
+    title: Kubernetes / Pod / Waitfor
+    description: 'Waitfor Pod ready status'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-wait.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Job Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the job was created"
+        required: true
+      - name: retries
+        type: String
+        title: "Retries"
+        default: "100"
+        description: "Number of retries"
+        required: true
+      - name: sleep
+        type: String
+        title: "Sleep"
+        default: "10"
+        description: "Sleep between retries"
+        required: true
+      - name: show_log
+        type: Boolean
+        title: "Show Log"
+        default: true
+        description: "Show job log from kubernetes"
         required: false
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
         renderingOptions:
-          groupName: Config
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+  - name: Kubernetes-Execute-Step
+    service: WorkflowNodeStep
+    title: Kubernetes / Pods / Execute Command
+    description: 'Run a command to a pod'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-node-executor.py
+    script-args: ${config.name}
+    config:
+      - name: name
+        type: String
+        title: "Pod Name"
+        description: "Pod Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the job was created"
+        required: true
+      - name: shell
+        type: String
+        title: "Shell"
+        description: "Shell used on the POD to run the command"
+        required: true
+        default: "/bin/bash"
+      - name: command
+        type: String
+        title: "Command"
+        description: "Command to run"
+        required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+  - name: Kubernetes-InlineScript-Step
+    service: WorkflowNodeStep
+    title: Kubernetes / Pods / Execute Script
+    description: 'Run a script to a pod'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: pods-run-script.py
+    script-args: ${config.name}
+    config:
+      - name: name
+        type: String
+        title: "Pod Name"
+        description: "Pod Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the job was created"
+        required: true
+      - name: script
+        type: String
+        title: "Script"
+        description: "Script to run"
+        required: true
+        renderingOptions:
+          displayType: CODE
+      - name: invocation
+        type: String
+        title: "Invocation String"
+        description: "Invocation String"
+        required: false
+      - name: arguments
+        type: String
+        title: "Arguments"
+        description: "Arguments of the script"
+      - type: Boolean
+        name: deleteOnFail
+        title: Delete POD on fail?
+        description: "Does delete pod if the script fail?"
+        required: false
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
