@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 import logging
 import sys
 import os
@@ -144,7 +144,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     if default_settings['default:status'] == "waiting":
         emoticon = u'\U0000274c'
 
-    data['status'] = emoticon + " " + default_settings['default:status']
+    data['status'] = default_settings['default:status']
 
     desc = emoticon + " " + default_settings['default:status']
     if default_settings['default:status_message']:
@@ -166,7 +166,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     if custom_attributes:
         data = dict(data.items() + custom_attributes.items())
 
-    data.update(dict(token.split('=') for token in shlex.split(defaults)))
+    #data.update(dict(token.split('=') for token in shlex.split(defaults)))
 
     return data
 
@@ -216,7 +216,7 @@ def main():
                     node_set.append(node_data)
 
             if running is True:
-                if node_data["status"] == "Running":
+                if node_data["status"] == "running":
                     node_set.append(node_data)
 
     print json.dumps(node_set, indent=4, sort_keys=True)
