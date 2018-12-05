@@ -1,61 +1,62 @@
 #!/usr/bin/env python -u
+import argparse
 import logging
 import sys
 import os
-import yaml
 import common
 
 from kubernetes import client
 
+from kubernetes.client.apis import core_v1_api
+from kubernetes.client.rest import ApiException
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
+
+logging.basicConfig(stream=sys.stderr,
+                    level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
-log = logging.getLogger('kubernetes-model-source')
+log = logging.getLogger('kubernetes-create-pod')
+
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
+    log.setLevel(logging.DEBUG)
 
 
-def create_deployment_object(data):
-    # Configureate Pod template container
-
-    template_spec = common.create_pod_template_spec(data=data)
-
+def create_pod(data):
     labels_array = data["labels"].split(',')
     labels = dict(s.split('=') for s in labels_array)
 
-    # Create and configurate a spec section
-    template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(labels=labels),
+    metadata = client.V1ObjectMeta(labels=labels,
+                                   namespace=data["namespace"],
+                                   name=data["name"])
+
+    template_spec = common.create_pod_template_spec(data)
+
+    pod = client.V1Pod(
+        api_version=data["api_version"],
+        kind="Pod",
+        metadata=metadata,
         spec=template_spec
     )
-    # Create the specification of deployment
-    spec = client.ExtensionsV1beta1DeploymentSpec(
-        replicas=int(data["replicas"]),
-        template=template)
-    # Instantiate the deployment object
-    deployment = client.ExtensionsV1beta1Deployment(
-        api_version=data["api_version"],
-        kind="Deployment",
-        metadata=client.V1ObjectMeta(labels=labels,
-                                     namespace=data["namespace"],
-                                     name=data["name"]),
-        spec=spec)
 
-    return deployment
+    return pod
 
 
-def create_deployment(api_instance, deployment, data):
-    # Create deployement
-    api_response = api_instance.create_namespaced_deployment(
-        body=deployment,
-        namespace=data["namespace"])
-
-    print(common.parseJson(api_response.status))
 
 
 def main():
 
-    if os.environ.get('RD_CONFIG_DEBUG') == 'true':
-        log.setLevel(logging.DEBUG)
-        log.debug("Log level configured for DEBUG")
+    common.connect()
+
+    api = core_v1_api.CoreV1Api()
+
+    namespace = os.environ.get('RD_CONFIG_NAMESPACE')
+    name = os.environ.get('RD_CONFIG_NAME')
+    container = os.environ.get('RD_CONFIG_CONTAINER_NAME')
+
+    log.debug("--------------------------")
+    log.debug("Pod Name:  %s" % name)
+    log.debug("Namespace: %s " % namespace)
+    log.debug("Container: %s " % container)
+    log.debug("--------------------------")
 
     data = {}
 
@@ -67,7 +68,6 @@ def main():
     data["replicas"] = os.environ.get('RD_CONFIG_REPLICAS')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
     data["labels"] = os.environ.get('RD_CONFIG_LABELS')
-
     if os.environ.get('RD_CONFIG_ENVIRONMENTS'):
         data["environments"] = os.environ.get('RD_CONFIG_ENVIRONMENTS')
 
@@ -98,19 +98,25 @@ def main():
         rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = rr
 
-    log.debug("Creating job from data:")
-    log.debug(data)
+    if os.environ.get('RD_CONFIG_WAITREADY'):
+        data["waitready"] = os.environ.get('RD_CONFIG_WAITREADY')
 
-    common.connect()
+    pod = create_pod(data)
+    resp = None
+    try:
+        resp = api.create_namespaced_pod(namespace=namespace,
+                                         body=pod,
+                                         pretty="True")
 
-    extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        print("Pod Created successfully")
 
-    deployment = create_deployment_object(data)
+    except ApiException as e:
+        log.error("Exception creating pod: %s\n" % e)
+        exit(1)
 
-    log.debug("new deployment: ")
-    log.debug(deployment)
-
-    create_deployment(extensions_v1beta1, deployment, data)
+    if not resp:
+        print("Pod %s does not exits." % name)
+        exit(1)
 
 
 if __name__ == '__main__':
