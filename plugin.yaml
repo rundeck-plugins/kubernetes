@@ -1402,12 +1402,20 @@ providers:
           groupName: Container
       - name: volumes
         type: String
-        title: "Persistent Volume"
-        description: "The name of the PVC to use in this job in format <name>=<mountpath>"
+        title: "Volumes"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
         required: false
         renderingOptions:
           groupName: Container
           displayType: MULTI_LINE
+          codeSyntaxMode: yaml
+      - name: volume_mounts
+        type: String
+        title: "Volume Mounts"
+        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        required: false
+        renderingOptions:
+          groupName: Container
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"

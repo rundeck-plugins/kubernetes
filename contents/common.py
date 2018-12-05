@@ -166,7 +166,7 @@ def create_volume(volume_data):
         )
 
         # persistent claim
-        if "persistentVolumeClaim" in volume_data.has_key:
+        if "persistentVolumeClaim" in volume_data:
             volume_pvc = volume_data["persistentVolumeClaim"]
             if "claimName" in volume_pvc:
                 pvc = client.V1PersistentVolumeClaimVolumeSource(

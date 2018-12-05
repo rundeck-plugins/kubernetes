@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import common
+import yaml
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
@@ -73,8 +74,8 @@ def create_job_object(data):
             requests=tmp
         )
 
-    if "volumes" in data:
-        volumes_array = data["resources_requests"].splitlines()
+    if "volume_mounts" in data:
+        volumes_array = data["volume_mounts"].splitlines()
         tmp = dict(s.split('=', 1) for s in volumes_array)
 
         mounts = []
@@ -91,7 +92,26 @@ def create_job_object(data):
     template_spec = client.V1PodSpec(
         containers=[
             container
-        ], restart_policy=data["job_restart_policy"])
+        ],
+        restart_policy=data["job_restart_policy"])
+
+    if "volumes" in data:
+        volumes_data = yaml.load(data["volumes"])
+        volumes = []
+
+        if (isinstance(volumes_data, list)):
+            for volume_data in volumes_data:
+                volume = common.create_volume(volume_data)
+
+                if volume:
+                    volumes.append(volume)
+        else:
+            volume = common.create_volume(volumes_data)
+
+            if volume:
+                volumes.append(volume)
+
+        template_spec.volumes = volumes
 
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(
@@ -159,6 +179,9 @@ def main():
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
         req = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = req
+
+    if os.environ.get('RD_CONFIG_VOLUME_MOUNTS'):
+        data["volume_mounts"] = os.environ.get('RD_CONFIG_VOLUME_MOUNTS')
 
     if os.environ.get('RD_CONFIG_VOLUMES'):
         data["volumes"] = os.environ.get('RD_CONFIG_VOLUMES')
