@@ -2,11 +2,16 @@ import json
 import logging
 import sys
 import os
+import tarfile
+from tempfile import TemporaryFile
+
 import yaml
 import datetime
 
 from kubernetes import client, config
 from kubernetes.client import Configuration
+from kubernetes.stream import stream
+from kubernetes.client.apis import core_v1_api
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -16,7 +21,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-plugin')
 
-if os.environ.get('RD_CONFIG_DEBUG') == 'true':
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
 def connect():
@@ -161,7 +166,7 @@ def create_volume(volume_data):
         )
 
         # persistent claim
-        if "persistentVolumeClaim" in volume_data.has_key:
+        if "persistentVolumeClaim" in volume_data:
             volume_pvc = volume_data["persistentVolumeClaim"]
             if "claimName" in volume_pvc:
                 pvc = client.V1PersistentVolumeClaimVolumeSource(
@@ -201,3 +206,218 @@ class ObjectEncoder(json.JSONEncoder):
 
 def parseJson(obj):
     return json.dumps(obj, cls=ObjectEncoder)
+
+
+def create_pod_template_spec(data):
+    ports = []
+
+    for port in data["ports"].split(','):
+        portDefinition = client.V1ContainerPort(container_port=int(port))
+        ports.append(portDefinition)
+
+    envs = []
+    if "environments" in data:
+        envs_array = data["environments"].splitlines()
+
+        tmp_envs = dict(s.split('=', 1) for s in envs_array)
+
+        for key in tmp_envs:
+            envs.append(client.V1EnvVar(name=key, value=tmp_envs[key]))
+
+    if "environments_secrets" in data:
+        envs_array = data["environments_secrets"].splitlines()
+        tmp_envs = dict(s.split('=', 1) for s in envs_array)
+
+        for key in tmp_envs:
+
+            if (":" in tmp_envs[key]):
+                # passing secret env
+                value = tmp_envs[key]
+                secrets = value.split(':')
+                secrect_key = secrets[1]
+                secrect_name = secrets[0]
+
+                envs.append(client.V1EnvVar(
+                            name=key,
+                            value="",
+                            value_from=client.V1EnvVarSource(
+                                secret_key_ref=client.V1SecretKeySelector(
+                                    key=secrect_key,
+                                    name=secrect_name))
+                        )
+                )
+
+    container = client.V1Container(
+        name=data["container_name"],
+        image=data["image"],
+        ports=ports,
+        env=envs
+    )
+
+    if "volume_mounts" in data:
+        volume_mounts = []
+
+        vm_array = data["volume_mounts"].split(",")
+        tmp_vm = dict(s.split('=', 1) for s in vm_array)
+
+        for key in tmp_vm:
+            volume_mounts.append(client.V1VolumeMount(
+                name=key,
+                mount_path=tmp_vm[key])
+            )
+
+        container.volume_mounts = volume_mounts
+
+    if "liveness_probe" in data:
+        container.liveness_probe = load_liveness_readiness_probe(
+            data["liveness_probe"]
+        )
+
+    if "readiness_probe" in data:
+        container.readiness_probe = load_liveness_readiness_probe(
+            data["readiness_probe"]
+        )
+
+    if "container_command" in data:
+        container.command = data["container_command"].split(' ')
+
+    if "container_args" in data:
+        args_array = data["container_args"].splitlines()
+        container.args = args_array
+
+    if "resources_requests" in data:
+        resources_array = data["resources_requests"].split(",")
+        tmp_resources = dict(s.split('=', 1) for s in resources_array)
+        container.resources = client.V1ResourceRequirements(
+            requests=tmp_resources
+        )
+
+    template_spec = client.V1PodSpec(
+        containers=[container]
+    )
+
+    if "volumes" in data:
+        volumes_data = yaml.load(data["volumes"])
+        volumes = []
+
+        if (isinstance(volumes_data, list)):
+            for volume_data in volumes_data:
+                volume = create_volume(volume_data)
+
+                if volume:
+                    volumes.append(volume)
+        else:
+            volume = create_volume(volumes_data)
+
+            if volume:
+                volumes.append(volume)
+
+        template_spec.volumes = volumes
+
+    return template_spec
+
+
+def copy_file(name, container, source_file, destination_path, destination_file_name, stdout = False):
+    api = core_v1_api.CoreV1Api()
+
+    # Copying file client -> pod
+    exec_command = ['tar', 'xvf', '-', '-C', '/']
+    resp = stream(api.connect_get_namespaced_pod_exec, name, 'default',
+                  command=exec_command,
+                  container=container,
+                  stderr=False, stdin=True,
+                  stdout=False, tty=False,
+                  _preload_content=False)
+
+    with TemporaryFile() as tar_buffer:
+        with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
+            tar.add(name=source_file, arcname=destination_path + "/" + destination_file_name)
+
+        tar_buffer.seek(0)
+        commands = []
+        commands.append(tar_buffer.read())
+
+        while resp.is_open():
+            resp.update(timeout=1)
+
+            if resp.peek_stdout():
+                if stdout:
+                    log.info("%s" % resp.read_stdout())
+            if resp.peek_stderr():
+                log.error("ERROR: %s" % resp.read_stderr())
+            if commands:
+                c = commands.pop(0)
+                resp.write_stdin(c)
+            else:
+                break
+        resp.close()
+
+
+def run_command(name, namespace, container, command):
+    api = core_v1_api.CoreV1Api()
+
+    # Calling exec interactively.
+    resp = stream(api.connect_get_namespaced_pod_exec,
+                  name=name,
+                  namespace=namespace,
+                  container=container,
+                  command=command,
+                  stderr=True,
+                  stdin=True,
+                  stdout=True,
+                  tty=True,
+                  _preload_content=False
+                  )
+
+    resp.run_forever()
+
+    return resp
+
+
+
+def run_interactive_command(name, namespace, container, command):
+    api = core_v1_api.CoreV1Api()
+
+    # Calling exec interactively.
+    resp = stream(api.connect_get_namespaced_pod_exec,
+                  name=name,
+                  namespace=namespace,
+                  container=container,
+                  command=command,
+                  stderr=True,
+                  stdin=True,
+                  stdout=True,
+                  tty=False,
+                  _preload_content=False
+                  )
+
+    error = False
+    while resp.is_open():
+        resp.update(timeout=1)
+
+        if resp.peek_stdout():
+            print("%s" % resp.read_stdout())
+        if resp.peek_stderr():
+            log.error("%s" % resp.read_stderr())
+            error = True
+
+    return (resp,error)
+
+
+def delete_pod(api, data):
+    body = client.V1DeleteOptions()
+
+    try:
+        resp = api.delete_namespaced_pod(name=data["name"],
+                                         namespace=data["namespace"],
+                                         pretty="True",
+                                         body=body,
+                                         grace_period_seconds=5,
+                                         propagation_policy='Foreground')
+
+        return resp
+
+    except Exception as e:
+        if e.status != 404:
+            print("Unknown error: %s" % e)
+            return None

@@ -105,7 +105,6 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_persistent_volume(
-                    namespace=data["namespace"],
                     body=dep,
                     pretty="true")
 

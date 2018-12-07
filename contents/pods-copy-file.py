@@ -1,21 +1,20 @@
 #!/usr/bin/env python -u
 import argparse
-import logging
 import sys
 import os
 import common
-import tarfile
 import logging
 
 
 from kubernetes.client.apis import core_v1_api
 from kubernetes.client.rest import ApiException
-from kubernetes.stream import stream
-from tempfile import TemporaryFile
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-model-source')
+
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
+    log.setLevel(logging.DEBUG)
 
 parser = argparse.ArgumentParser(
     description='Execute a command string in the container.')
@@ -63,36 +62,7 @@ def main():
     destination_path = os.path.dirname(destination_file)
     destination_file_name = os.path.basename(destination_file)
 
-    # Copying file client -> pod
-    exec_command = ['tar', 'xvf', '-', '-C', '/']
-    resp = stream(api.connect_get_namespaced_pod_exec, name, 'default',
-                  command=exec_command,
-                  container=container,
-                  stderr=True, stdin=True,
-                  stdout=True, tty=False,
-                  _preload_content=False)
-
-    with TemporaryFile() as tar_buffer:
-        with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
-            tar.add(name=source_file, arcname=destination_path + "/" + destination_file_name)
-
-        tar_buffer.seek(0)
-        commands = []
-        commands.append(tar_buffer.read())
-
-        while resp.is_open():
-            resp.update(timeout=1)
-            if resp.peek_stdout():
-                print("STDOUT: %s" % resp.read_stdout())
-            if resp.peek_stderr():
-                print("STDERR: %s" % resp.read_stderr())
-            if commands:
-                c = commands.pop(0)
-                # print("Running command... %s\n" % c)
-                resp.write_stdin(c)
-            else:
-                break
-        resp.close()
+    common.copy_file(name, container, source_file, destination_path, destination_file_name)
 
 
 if __name__ == '__main__':
