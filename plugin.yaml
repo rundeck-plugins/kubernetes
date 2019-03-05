@@ -1,8 +1,12 @@
 name: kubernetes-plugin
-version: 1.0.0
+version: 1.10.0
+description: A set of providers to control Kubernetes resources
 rundeckPluginVersion: 1.2
 author: Rundeck
 date: Tue Nov 28 2017
+tags:
+    - kubernetes
+    - script
 providers:
   - name: kubernetes-resource-model
     title: Kubernetes / Pods / Resource Model
