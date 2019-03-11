@@ -5,8 +5,8 @@ rundeckPluginVersion: 1.2
 author: Rundeck
 date: Tue Nov 28 2017
 tags:
-    - kubernetes
-    - script
+  - kubernetes
+  - script
 providers:
   - name: kubernetes-resource-model
     title: Kubernetes / Pods / Resource Model
@@ -774,6 +774,83 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+  - name: Kubernetes-Wait-StatefulSet
+      service: WorkflowNodeStep
+      title: Kubernetes / StatefulSet / Waitfor
+      description: 'Waitfor StatefulSet'
+      plugin-type: script
+      script-interpreter: python -u
+      script-file: StatefulSet-wait.py
+      script-args:
+      config:
+        - name: name
+          type: String
+          title: "Name"
+          description: "StatefulSet Name"
+          required: true
+        - name: namespace
+          type: String
+          title: "Namespace"
+          default: "default"
+          description: "Namespace where the StatefulSet will be created "
+          required: true
+        - name: retries
+          type: String
+          title: "Retries"
+          default: "100"
+          description: "Number Retries"
+          required: true
+        - name: sleep
+          type: String
+          title: "Sleep"
+          default: "10"
+          description: "Sleep between retries"
+          required: true
+        - name: config_file
+          type: String
+          title: "Kubernetes Config File Path"
+          description: "Leave empty if you want to pass the connection parameters"
+          required: false
+          renderingOptions:
+            groupName: Authentication
+        - name: url
+          type: String
+          title: "Cluster URL"
+          description: "Kubernetes Cluster URL"
+          required: false
+          renderingOptions:
+            groupName: Authentication
+        - name: token
+          type: String
+          title: "Token"
+          required: false
+          description: "Kubernetes API Token"
+          renderingOptions:
+            groupName: Authentication
+            selectionAccessor: "STORAGE_PATH"
+            valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+            storage-path-root: "keys"
+        - name: verify_ssl
+          type: Boolean
+          title: "Verify ssl"
+          description: "Verify ssl for SSL connections"
+          required: false
+          renderingOptions:
+            groupName: Authentication
+        - name: ssl_ca_cert
+          type: String
+          title: "SSL Certificate Path"
+          description: "SSL Certificate Path for SSL connections"
+          required: false
+          renderingOptions:
+            groupName: Authentication
+        - type: Boolean
+          name: debug
+          title: Debug?
+          description: "Write debug messages to stderr"
+          required: false
+          renderingOptions:
+            groupName: Config
   - name: Kubernetes-Create
     service: WorkflowNodeStep
     title: Kubernetes / Generic / Create
@@ -794,7 +871,7 @@ providers:
         title: "Type"
         description: "Type"
         required: true
-        values: Deployment,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+        values: Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
       - name: yaml
         type: String
         title: "YAML String"
@@ -873,7 +950,7 @@ providers:
         title: "Type"
         description: "Type"
         required: true
-        values: Deployment,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+        values: Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"

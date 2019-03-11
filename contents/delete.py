@@ -30,12 +30,32 @@ def main():
         if data["type"] == "Deployment":
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.delete_namespaced_deployment(
-                 name=data["name"],
-                 namespace=data["namespace"],
-                 body=client.V1DeleteOptions(
-                     propagation_policy='Foreground',
-                     grace_period_seconds=5),
-                 pretty="true")
+                name=data["name"],
+                namespace=data["namespace"],
+                body=client.V1DeleteOptions(
+                    propagation_policy='Foreground',
+                    grace_period_seconds=5),
+                pretty="true")
+
+        if data["type"] == "ConfigMap":
+            k8s_beta = client.AppsV1Api()
+            resp = k8s_beta.delete_namespaced_stateful_set(
+                name=data["name"],
+                namespace=data["namespace"],
+                body=client.V1DeleteOptions(
+                    propagation_policy='Foreground',
+                    grace_period_seconds=5),
+                pretty="true")
+
+        if data["type"] == "StatefulSet":
+            k8s_beta = client.ExtensionsV1beta1Api()
+            resp = k8s_beta.(
+                name=data["name"],
+                namespace=data["namespace"],
+                body=client.V1DeleteOptions(
+                    propagation_policy='Foreground',
+                    grace_period_seconds=5),
+                pretty="true")
 
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
@@ -87,10 +107,10 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.delete_namespaced_secret(
-                 namespace=data["namespace"],
-                 name=data["name"],
-                 body=client.V1DeleteOptions(),
-                 pretty="true")
+                namespace=data["namespace"],
+                name=data["name"],
+                body=client.V1DeleteOptions(),
+                pretty="true")
 
         if data["type"] == "PersistentVolume":
             api_instance = client.CoreV1Api()

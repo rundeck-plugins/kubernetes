@@ -238,13 +238,13 @@ def create_pod_template_spec(data):
                 secrect_name = secrets[0]
 
                 envs.append(client.V1EnvVar(
-                            name=key,
-                            value="",
-                            value_from=client.V1EnvVarSource(
-                                secret_key_ref=client.V1SecretKeySelector(
-                                    key=secrect_key,
-                                    name=secrect_name))
-                        )
+                    name=key,
+                    value="",
+                    value_from=client.V1EnvVarSource(
+                        secret_key_ref=client.V1SecretKeySelector(
+                            key=secrect_key,
+                            name=secrect_name))
+                )
                 )
 
     container = client.V1Container(

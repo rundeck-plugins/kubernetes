@@ -33,9 +33,29 @@ def main():
             dep = yaml.load(data["yaml"])
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_deployment(
-                    body=dep,
-                    namespace=data["namespace"],
-                    pretty="true")
+                body=dep,
+                namespace=data["namespace"],
+                pretty="true")
+
+            print(common.parseJson(resp.status))
+
+        if data["type"] == "ConfigMap":
+            api_instance = client.CoreV1Api()
+            dep = yaml.load(data["yaml"])
+            resp = api_instance.create_namespaced_config_map(
+                namespace=data["namespace"],
+                body=dep,
+                pretty="true")
+
+            print(common.parseJson(resp.status))
+
+        if data["type"] == "StatefulSet":
+            dep = yaml.load(data["yaml"])
+            k8s_beta = client.AppsV1Api()
+            resp = k8s_beta.create_namespaced_stateful_set(
+                body=dep,
+                namespace=data["namespace"],
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
@@ -43,9 +63,9 @@ def main():
             api_instance = client.CoreV1Api()
             dep = yaml.load(data["yaml"])
             resp = api_instance.create_namespaced_service(
-                    namespace=data["namespace"],
-                    body=dep,
-                    pretty="true")
+                namespace=data["namespace"],
+                body=dep,
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
@@ -53,9 +73,9 @@ def main():
             dep = yaml.load(data["yaml"])
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_ingress(
-                    body=dep,
-                    namespace=data["namespace"],
-                    pretty="true")
+                body=dep,
+                namespace=data["namespace"],
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
@@ -63,9 +83,9 @@ def main():
             api_instance = client.BatchV1Api()
             dep = yaml.load(data["yaml"])
             resp = api_instance.create_namespaced_job(
-                    namespace=data["namespace"],
-                    body=dep,
-                    pretty="true")
+                namespace=data["namespace"],
+                body=dep,
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
@@ -83,9 +103,9 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_namespaced_persistent_volume_claim(
-                    namespace=data["namespace"],
-                    body=dep,
-                    pretty="true")
+                namespace=data["namespace"],
+                body=dep,
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
@@ -94,9 +114,9 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_namespaced_secret(
-                    namespace=data["namespace"],
-                    body=dep,
-                    pretty="true")
+                namespace=data["namespace"],
+                body=dep,
+                pretty="true")
 
             print(common.parseJson(resp.metadata))
 
@@ -105,8 +125,8 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_persistent_volume(
-                    body=dep,
-                    pretty="true")
+                body=dep,
+                pretty="true")
 
             print(common.parseJson(resp.status))
 
