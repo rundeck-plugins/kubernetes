@@ -1,5 +1,5 @@
 name: kubernetes-plugin
-version: 1.10.0
+version: 1.0.11
 description: A set of providers to control Kubernetes resources
 rundeckPluginVersion: 1.2
 author: Rundeck
