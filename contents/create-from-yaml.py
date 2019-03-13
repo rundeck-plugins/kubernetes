@@ -47,7 +47,7 @@ def main():
                 body=dep,
                 pretty="true")
 
-            print(common.parseJson(resp.status))
+            print(common.parseJson(resp.metadata))
 
         if data["type"] == "StatefulSet":
             dep = yaml.load(data["yaml"])

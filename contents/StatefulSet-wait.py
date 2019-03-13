@@ -45,7 +45,7 @@ def wait():
             log.info("Deployment is ready")
             sys.exit(0)
 
-        while (current_replicas < replicas ):
+        while ( ready_replicas is not None ):
             log.info("wating for StatefulSet")
             time.sleep(float(sleep))
             retries_count = retries_count+1
@@ -59,7 +59,8 @@ def wait():
                 data["namespace"],
                 pretty="True")
             current_replicas = api_response.status.current_replicas
-            replicas = api_response.status.replicas
+            ready_replicas = api_response.status.ready_replicas
+            print common.parseJson(api_response.status)
 
 
         log.info("current_replicas" + str(replicas))
