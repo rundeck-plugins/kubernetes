@@ -350,7 +350,7 @@ providers:
       - name: volumes
         type: String
         title: "Volumes"
-        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath, nfs, secret and configMap allowed"
         required: false
         renderingOptions:
           groupName: Container
@@ -1407,7 +1407,7 @@ providers:
       - name: volumes
         type: String
         title: "Volumes"
-        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath, nfs, secret and configMap allowed"
         required: false
         renderingOptions:
           groupName: Container
@@ -1873,7 +1873,7 @@ providers:
       - name: volumes
         type: String
         title: "Volumes"
-        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath and nfs allowed"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath, nfs, secret and configMap allowed"
         required: false
         renderingOptions:
           groupName: Container
