@@ -1345,6 +1345,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Metadata
+      - name: backoff_limit
+        type: String
+        title: "Backoff Limit"
+        description: "Specifies the number of retries before marking this job failed, defaults to 6"
+        required: false
+        renderingOptions:
+          groupName: Metadata          
       - name: container_name
         type: String
         title: "Container Name"
