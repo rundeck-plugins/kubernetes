@@ -17,11 +17,13 @@ log = logging.getLogger('kubernetes-model-source')
 def create_job_object(data):
     meta = client.V1ObjectMeta(name=data["name"], namespace=data["namespace"])
 
+    labels = None
     if "labels" in data:
         labels_array = data["labels"].split(',')
         labels = dict(s.split('=') for s in labels_array)
         meta.labels = labels
 
+    annotations = None
     if "annotations" in data:
         annotations_array = data["annotations"].split(',')
         annotations = dict(s.split('=') for s in annotations_array)
