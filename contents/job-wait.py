@@ -45,7 +45,7 @@ def wait():
 
             if api_response.status.conditions:
                 for condition in api_response.status.conditions:
-                    if condition['type'] == "Failed":
+                    if condition.type == "Failed":
                         completed = True
 
             if api_response.status.completion_time:
