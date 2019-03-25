@@ -43,9 +43,10 @@ def wait():
                 log.error("Number of retries exceeded")
                 completed = True
 
-            for condition in api_response.status.conditions:
-                if condition['type'] == "Failed":
-                    completed = True
+            if api_response.status.conditions:
+                for condition in api_response.status.conditions:
+                    if condition['type'] == "Failed":
+                        completed = True
 
             if api_response.status.completion_time:
                 completed = True
