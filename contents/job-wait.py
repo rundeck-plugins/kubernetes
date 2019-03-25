@@ -27,29 +27,34 @@ def wait():
         batch_v1 = client.BatchV1Api()
         core_v1 = client.CoreV1Api()
 
-        log.debug("Checking job status")
-        api_response = batch_v1.read_namespaced_job_status(
-            name,
-            namespace,
-            pretty="True"
-        )
-        log.debug(api_response)
-
         # Poll for completion if retries
         retries_count = 0
-        while not api_response.status.completion_time:
-            retries_count = retries_count + 1
-            if retries_count > retries:
-                log.error("Number of retries exceeded")
-                sys.exit(1)
-
-            log.info("Wating for job completion")
-            time.sleep(sleep)
+        completed = False
+        while True:
             api_response = batch_v1.read_namespaced_job_status(
                 name,
                 namespace,
                 pretty="True"
             )
+            log.debug(api_response)
+
+            retries_count = retries_count + 1
+            if retries_count > retries:
+                log.error("Number of retries exceeded")
+                completed = True
+
+            for condition in api_response.status.conditions:
+                if condition['type'] == "Failed":
+                    completed = True
+
+            if api_response.status.completion_time:
+                completed = True
+
+            if completed:
+                break
+
+            log.info("Wating for job completion")
+            time.sleep(sleep)
 
         if show_log:
             log.debug("Searching for pod associated with job")
