@@ -1481,6 +1481,7 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
       - name: resources_requests
         type: String
         title: "Resource Requests"
