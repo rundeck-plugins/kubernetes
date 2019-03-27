@@ -192,6 +192,18 @@ def create_volume(volume_data):
                 server=volume_data["nfs"]["server"]
             )
 
+        # secret
+        if "secret" in volume_data:
+            volume.secret = client.V1SecretVolumeSource(
+                secret_name=volume_data["secret"]["secretName"]
+            )
+
+        # configMap 
+        if "configMap" in volume_data:
+            volume.config_map = client.V1ConfigMapVolumeSource(
+                name=volume_data["configMap"]["name"]
+            )
+
         return volume
 
     return None
