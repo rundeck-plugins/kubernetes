@@ -17,10 +17,17 @@ log = logging.getLogger('kubernetes-model-source')
 def create_job_object(data):
     meta = client.V1ObjectMeta(name=data["name"], namespace=data["namespace"])
 
+    labels = None
     if "labels" in data:
         labels_array = data["labels"].split(',')
         labels = dict(s.split('=') for s in labels_array)
         meta.labels = labels
+
+    annotations = None
+    if "annotations" in data:
+        annotations_array = data["annotations"].split(',')
+        annotations = dict(s.split('=') for s in annotations_array)
+        meta.annotations = annotations
 
     envs = []
     if "environments" in data:
@@ -115,7 +122,9 @@ def create_job_object(data):
 
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(
-                    name=data["name"]
+                    name=data["name"],
+                    labels=labels,
+                    annotations=annotations,
                 ),
         spec=template_spec
     )
@@ -165,6 +174,9 @@ def main():
 
     if os.environ.get('RD_CONFIG_LABELS'):
         data["labels"] = os.environ.get('RD_CONFIG_LABELS')
+
+    if os.environ.get('RD_CONFIG_ANNOTATIONS'):
+        data["annotations"] = os.environ.get('RD_CONFIG_ANNOTATIONS')
 
     if os.environ.get('RD_CONFIG_SELECTORS'):
         data["selectors"] = os.environ.get('RD_CONFIG_SELECTORS')
