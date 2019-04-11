@@ -55,7 +55,7 @@ def main():
     destination_file = os.environ.get('RD_FILE_COPY_DESTINATION')
 
     #force print destination to avoid error with node-executor
-    print destination_file
+    print(destination_file)
 
     log.debug("Copying file from %s to %s" % (source_file, destination_file))
 

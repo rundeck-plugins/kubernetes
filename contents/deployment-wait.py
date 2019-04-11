@@ -22,8 +22,8 @@ def wait():
     data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
-    retries = os.environ.get('RD_CONFIG_RETRIES')
-    sleep = os.environ.get('RD_CONFIG_SLEEP')
+    retries = int(os.environ.get('RD_CONFIG_RETRIES'))
+    sleep = int(os.environ.get('RD_CONFIG_SLEEP'))
 
     try:
         extensions_v1beta1 = client.ExtensionsV1beta1Api()
@@ -33,11 +33,21 @@ def wait():
             data["namespace"],
             pretty="True")
 
-        print common.parseJson(api_response.status)
+        print(common.parseJson(api_response.status))
 
         unavailable_replicas = api_response.status.unavailable_replicas
         replicas = api_response.status.replicas
         ready_replicas = api_response.status.ready_replicas
+
+        if ready_replicas is None:
+            ready_replicas = 0
+        else:
+            ready_replicas = int(ready_replicas)
+
+        if replicas is None:
+            replicas = 0
+        else:
+            replicas = int(replicas)
 
         retries_count = 0
 

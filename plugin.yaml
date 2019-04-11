@@ -1,9 +1,10 @@
 name: kubernetes-plugin
-version: 1.0.11
-description: A set of providers to control Kubernetes resources
+description: "@description@"
 rundeckPluginVersion: 1.2
-author: Rundeck
-date: Tue Nov 28 2017
+author: "@author@"
+date: "@date@"
+version: @version@
+url: "@url@"
 tags:
   - kubernetes
   - script
@@ -48,6 +49,13 @@ providers:
         name: running
         title: Just Running Pods?
         description: 'Filter for running pods'
+        renderingOptions:
+          groupName: Config
+      - type: Boolean
+        name: emoticon
+        title: Enable emoticons on nodes?
+        description: 'Enable emoticons on nodes'
+        default: "true"
         renderingOptions:
           groupName: Config
       - name: config_file
@@ -257,6 +265,13 @@ providers:
         required: true
         renderingOptions:
           groupName: Metadata
+      - name: annotations
+        type: String
+        title: "Annotations"
+        description: "Annotations. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
       - name: container_name
         type: String
         title: "Container Name"
@@ -343,10 +358,12 @@ providers:
       - name: volume_mounts
         type: String
         title: "Volume Mounts"
-        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        description: "Volume Mounts, yaml format "
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: volumes
         type: String
         title: "Volumes"
@@ -775,82 +792,82 @@ providers:
         renderingOptions:
           groupName: Config
   - name: Kubernetes-Wait-StatefulSet
-      service: WorkflowNodeStep
-      title: Kubernetes / StatefulSet / Waitfor
-      description: 'Waitfor StatefulSet'
-      plugin-type: script
-      script-interpreter: python -u
-      script-file: StatefulSet-wait.py
-      script-args:
-      config:
-        - name: name
-          type: String
-          title: "Name"
-          description: "StatefulSet Name"
-          required: true
-        - name: namespace
-          type: String
-          title: "Namespace"
-          default: "default"
-          description: "Namespace where the StatefulSet will be created "
-          required: true
-        - name: retries
-          type: String
-          title: "Retries"
-          default: "100"
-          description: "Number Retries"
-          required: true
-        - name: sleep
-          type: String
-          title: "Sleep"
-          default: "10"
-          description: "Sleep between retries"
-          required: true
-        - name: config_file
-          type: String
-          title: "Kubernetes Config File Path"
-          description: "Leave empty if you want to pass the connection parameters"
-          required: false
-          renderingOptions:
-            groupName: Authentication
-        - name: url
-          type: String
-          title: "Cluster URL"
-          description: "Kubernetes Cluster URL"
-          required: false
-          renderingOptions:
-            groupName: Authentication
-        - name: token
-          type: String
-          title: "Token"
-          required: false
-          description: "Kubernetes API Token"
-          renderingOptions:
-            groupName: Authentication
-            selectionAccessor: "STORAGE_PATH"
-            valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
-            storage-path-root: "keys"
-        - name: verify_ssl
-          type: Boolean
-          title: "Verify ssl"
-          description: "Verify ssl for SSL connections"
-          required: false
-          renderingOptions:
-            groupName: Authentication
-        - name: ssl_ca_cert
-          type: String
-          title: "SSL Certificate Path"
-          description: "SSL Certificate Path for SSL connections"
-          required: false
-          renderingOptions:
-            groupName: Authentication
-        - type: Boolean
-          name: debug
-          title: Debug?
-          description: "Write debug messages to stderr"
-          required: false
-          renderingOptions:
-            groupName: Config
+    service: WorkflowNodeStep
+    title: Kubernetes / StatefulSet / Waitfor
+    description: 'Waitfor StatefulSet'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: StatefulSet-wait.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "StatefulSet Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the StatefulSet will be created "
+        required: true
+      - name: retries
+        type: String
+        title: "Retries"
+        default: "100"
+        description: "Number Retries"
+        required: true
+      - name: sleep
+        type: String
+        title: "Sleep"
+        default: "10"
+        description: "Sleep between retries"
+        required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
   - name: Kubernetes-Create
     service: WorkflowNodeStep
     title: Kubernetes / Generic / Create
