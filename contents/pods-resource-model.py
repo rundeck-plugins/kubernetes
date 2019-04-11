@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 import logging
 import sys
 import os
@@ -36,7 +36,7 @@ logging.basicConfig(stream=sys.stderr,
 log = logging.getLogger('kubernetes-model-source')
 
 
-def nodeCollectData(pod,container, defaults, taglist, mappingList):
+def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
     tags = []
     tags.extend(taglist.split(','))
 
@@ -57,7 +57,6 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
             log.info("pod-container-name:" + statuses.name)
 
             if (container.name == statuses.name):
-                log.info("entro")
                 if statuses.state.running is not None:
                     status = "running"
                     if statuses.state.running.started_at:
@@ -144,9 +143,13 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     if default_settings['default:status'] == "waiting":
         emoticon = u'\U0000274c'
 
-    data['status'] = emoticon + " " + default_settings['default:status']
+    if boEmoticon:
+        data['status'] = emoticon + " " + default_settings['default:status']
+        desc = emoticon + " " + default_settings['default:status']
+    else:
+        data['status'] = default_settings['default:status']
+        desc = default_settings['default:status']
 
-    desc = emoticon + " " + default_settings['default:status']
     if default_settings['default:status_message']:
         desc = desc + "(" + default_settings['default:status_message'] + ")"
 
@@ -164,7 +167,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     data['tags'] = ','.join(final_tags)
 
     if custom_attributes:
-        data = dict(data.items() + custom_attributes.items())
+        data = dict(list(data.items()) + list(custom_attributes.items()))
 
     data.update(dict(token.split('=') for token in shlex.split(defaults)))
 
@@ -185,6 +188,10 @@ def main():
     running = False
     if os.environ.get('RD_CONFIG_RUNNING') == 'true':
         running = True
+
+    boEmoticon = False
+    if os.environ.get('RD_CONFIG_EMOTICON') == 'true':
+        boEmoticon = True
 
     field_selector = None
     if os.environ.get('RD_CONFIG_FIELD_SELECTOR'):
@@ -208,7 +215,8 @@ def main():
                                         container,
                                         defaults,
                                         tags,
-                                        mappingList
+                                        mappingList,
+                                        boEmoticon
                                         )
 
             if running is False:
@@ -219,7 +227,7 @@ def main():
                 if node_data["status"] == "Running":
                     node_set.append(node_data)
 
-    print json.dumps(node_set, indent=4, sort_keys=True)
+    print(json.dumps(node_set, indent=4, sort_keys=True))
 
 
 if __name__ == '__main__':

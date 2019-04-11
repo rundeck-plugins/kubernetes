@@ -38,8 +38,8 @@ def main():
                 pretty="true")
 
         if data["type"] == "ConfigMap":
-            k8s_beta = client.AppsV1Api()
-            resp = k8s_beta.delete_namespaced_stateful_set(
+            k8s_beta = client.CoreV1Api()
+            resp = k8s_beta.delete_namespaced_config_map(
                 name=data["name"],
                 namespace=data["namespace"],
                 body=client.V1DeleteOptions(
@@ -49,7 +49,7 @@ def main():
 
         if data["type"] == "StatefulSet":
             k8s_beta = client.ExtensionsV1beta1Api()
-            resp = k8s_beta.(
+            resp = k8s_beta.delete_namespaced_stateful_set(
                 name=data["name"],
                 namespace=data["namespace"],
                 body=client.V1DeleteOptions(
@@ -116,7 +116,6 @@ def main():
             api_instance = client.CoreV1Api()
 
             resp = api_instance.delete_persistent_volume(
-                namespace=data["namespace"],
                 name=data["name"],
                 body=client.V1DeleteOptions(),
                 pretty="true")

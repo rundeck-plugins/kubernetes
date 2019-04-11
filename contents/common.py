@@ -26,6 +26,11 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 def connect():
     config_file = None
+
+    if os.environ.get('RD_CONFIG_ENV') == 'incluster':
+        config.load_incluster_config()
+        return
+
     if os.environ.get('RD_CONFIG_CONFIG_FILE'):
         config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
 
@@ -209,6 +214,23 @@ def create_volume(volume_data):
     return None
 
 
+def create_volume_mount(volume_mount_data):
+    if "name" in volume_mount_data and "mountPath" in volume_mount_data:
+        volume_mount = client.V1VolumeMount(
+            name=volume_mount_data["name"],
+            mount_path=volume_mount_data["mountPath"]
+        )
+        if "subPath" in volume_mount_data:
+            volume_mount.sub_path = volume_mount_data["subPath"]
+
+        if "readOnly" in volume_mount_data:
+            volume_mount.read_only = volume_mount_data["readOnly"]
+
+        return volume_mount
+
+    return None
+
+
 class ObjectEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -267,16 +289,20 @@ def create_pod_template_spec(data):
     )
 
     if "volume_mounts" in data:
+        volume_mounts_data = yaml.load(data["volume_mounts"])
         volume_mounts = []
 
-        vm_array = data["volume_mounts"].split(",")
-        tmp_vm = dict(s.split('=', 1) for s in vm_array)
+        if (isinstance(volume_mounts_data, list)):
+            for volume_mount_data in volume_mounts_data:
+                volume_mount = create_volume_mount(volume_mount_data)
 
-        for key in tmp_vm:
-            volume_mounts.append(client.V1VolumeMount(
-                name=key,
-                mount_path=tmp_vm[key])
-            )
+                if volume_mount:
+                    volume_mounts.append(volume_mount)
+        else:
+            volume_mount = create_volume_mount(volume_mounts_data)
+
+            if volume_mount:
+                volume_mounts.append(volume_mount)
 
         container.volume_mounts = volume_mounts
 

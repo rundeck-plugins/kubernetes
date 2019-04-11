@@ -22,8 +22,8 @@ def wait():
     data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
-    retries = os.environ.get('RD_CONFIG_RETRIES')
-    sleep = os.environ.get('RD_CONFIG_SLEEP')
+    retries = int(os.environ.get('RD_CONFIG_RETRIES'))
+    sleep = int(os.environ.get('RD_CONFIG_SLEEP'))
 
     try:
         AppsV1Api = client.AppsV1Api()
@@ -33,11 +33,21 @@ def wait():
             data["namespace"],
             pretty="True")
 
-        print common.parseJson(api_response.status)
+        print(common.parseJson(api_response.status))
 
         current_replicas = api_response.status.current_replicas
         replicas = api_response.spec.replicas
         ready_replicas = api_response.status.ready_replicas
+
+        if ready_replicas is None:
+            ready_replicas = 0
+        else:
+            ready_replicas = int(ready_replicas)
+
+        if replicas is None:
+            replicas = 0
+        else:
+            replicas = int(replicas)
 
         retries_count = 0
 
@@ -58,10 +68,21 @@ def wait():
                 data["name"],
                 data["namespace"],
                 pretty="True")
+
             replicas = api_response.spec.replicas
             ready_replicas = api_response.status.ready_replicas
-            print common.parseJson(api_response.status)
 
+            if ready_replicas is None:
+                ready_replicas = 0
+            else:
+                ready_replicas = int(ready_replicas)
+
+            if replicas is None:
+                replicas = 0
+            else:
+                replicas = int(replicas)
+
+            print(common.parseJson(api_response.status))
 
         log.info("current_replicas" + str(replicas))
 

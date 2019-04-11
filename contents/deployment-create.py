@@ -21,9 +21,17 @@ def create_deployment_object(data):
     labels_array = data["labels"].split(',')
     labels = dict(s.split('=') for s in labels_array)
 
+    meta = client.V1ObjectMeta(labels=labels)
+
+    annotations = None
+    if "annotations" in data:
+        annotations_array = data["annotations"].split(',')
+        annotations = dict(s.split('=') for s in annotations_array)
+        meta.annotations = annotations
+
     # Create and configurate a spec section
     template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(labels=labels),
+        metadata=meta,
         spec=template_spec
     )
     # Create the specification of deployment
@@ -97,6 +105,9 @@ def main():
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
         rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = rr
+
+    if os.environ.get('RD_CONFIG_ANNOTATIONS'):
+        data["annotations"] = os.environ.get('RD_CONFIG_ANNOTATIONS')
 
     log.debug("Creating job from data:")
     log.debug(data)
