@@ -1386,6 +1386,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Metadata
+      - name: annotations
+        type: String
+        title: "Annotations"
+        description: "Annotations. Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
       - name: selectors
         type: String
         title: "Selectors"
@@ -1474,6 +1481,7 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
       - name: resources_requests
         type: String
         title: "Resource Requests"
