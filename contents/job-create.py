@@ -141,6 +141,8 @@ def create_job_object(data):
         spec.parallelism = int(data["parallelism"])
     if "active_deadline_seconds" in data:
         spec.active_deadline_seconds = int(data["active_deadline_seconds"])
+    if "backoff_limit" in data:
+        spec.backoff_limit = int(data["backoff_limit"])        
 
     job = client.V1Job(
         api_version=data["api_version"],
@@ -208,6 +210,10 @@ def main():
     if os.environ.get('RD_CONFIG_ACTIVE_DEADLINE_SECONDS'):
         active_ds = os.environ.get('RD_CONFIG_ACTIVE_DEADLINE_SECONDS')
         data["active_deadline_seconds"] = active_ds
+
+    if os.environ.get('RD_CONFIG_BACKOFF_LIMIT'):
+        backoff_limit = os.environ.get('RD_CONFIG_BACKOFF_LIMIT')
+        data["backoff_limit"] = backoff_limit
 
     if os.environ.get('RD_CONFIG_ENVIRONMENTS'):
         data["environments"] = os.environ.get('RD_CONFIG_ENVIRONMENTS')
