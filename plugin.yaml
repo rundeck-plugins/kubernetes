@@ -2034,7 +2034,7 @@ providers:
   - name: Kubernetes-Delete-Pod
     service: WorkflowNodeStep
     title: Kubernetes / Pod / Delete
-    description: 'Delete a Job'
+    description: 'Delete a Pod'
     plugin-type: script
     script-interpreter: python -u
     script-file: pods-delete.py
