@@ -1525,10 +1525,12 @@ providers:
       - name: volume_mounts
         type: String
         title: "Volume Mounts"
-        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        description: "Volume Mounts, yaml format "
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"
@@ -1979,6 +1981,8 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: volumes
         type: String
         title: "Volumes"

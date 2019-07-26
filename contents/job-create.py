@@ -82,7 +82,7 @@ def create_job_object(data):
         )
 
     if "volume_mounts" in data:
-        volumes_array = data["volume_mounts"].splitlines()
+        volumes_array = data["volume_mounts"].split(",")
         tmp = dict(s.split('=', 1) for s in volumes_array)
 
         mounts = []
