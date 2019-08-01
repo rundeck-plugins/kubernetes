@@ -62,7 +62,7 @@ def main():
     destination_path = os.path.dirname(destination_file)
     destination_file_name = os.path.basename(destination_file)
 
-    common.copy_file(name, container, source_file, destination_path, destination_file_name)
+    common.copy_file(name, namespace, container, source_file, destination_path, destination_file_name)
 
 
 if __name__ == '__main__':
