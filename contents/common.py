@@ -355,12 +355,12 @@ def create_pod_template_spec(data):
     return template_spec
 
 
-def copy_file(name, container, source_file, destination_path, destination_file_name, stdout = False):
+def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout = False):
     api = core_v1_api.CoreV1Api()
 
     # Copying file client -> pod
     exec_command = ['tar', 'xvf', '-', '-C', '/']
-    resp = stream(api.connect_get_namespaced_pod_exec, name, 'default',
+    resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
                   command=exec_command,
                   container=container,
                   stderr=False, stdin=True,
