@@ -36,7 +36,7 @@ def wait():
         )
         log.debug(api_response.status)
 
-        status = None
+        status = False
 
         if api_response.status.container_statuses:
            status = api_response.status.container_statuses[0].ready
