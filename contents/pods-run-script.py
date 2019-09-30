@@ -82,6 +82,7 @@ def main():
         log.debug("coping script from %s to %s" % (temp.name,full_path))
 
         common.copy_file(name=name,
+                         namespace=namespace,
                          container=container,
                          source_file=temp.name,
                          destination_path= destination_path,
