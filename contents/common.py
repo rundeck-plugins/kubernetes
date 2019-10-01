@@ -21,6 +21,8 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-plugin')
 
+PY = sys.version_info[0]
+
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
@@ -385,6 +387,10 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
                 log.error("ERROR: %s" % resp.read_stderr())
             if commands:
                 c = commands.pop(0)
+                
+                # Python 3 expects bytes string to transfer the data.
+                if PY == 3:
+                    c = c.decode()
                 resp.write_stdin(c)
             else:
                 break

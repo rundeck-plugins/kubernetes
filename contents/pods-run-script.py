@@ -17,6 +17,7 @@ log = logging.getLogger('kubernetes-model-source')
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
+PY = sys.version_info[0]
 
 def main():
 
@@ -62,6 +63,11 @@ def main():
         exit(1)
 
     script = os.environ.get('RD_CONFIG_SCRIPT')
+
+    # Python 3 expects bytes string to transfer the data.
+    if PY == 3:
+        script = script.encode('utf-8')
+
     invocation = "/bin/bash"
     if 'RD_CONFIG_INVOCATION' in os.environ:
         invocation = os.environ.get('RD_CONFIG_INVOCATION')
