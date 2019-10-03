@@ -103,7 +103,7 @@ def create_job_object(data):
         restart_policy=data["job_restart_policy"])
 
     if "volumes" in data:
-        volumes_data = yaml.load(data["volumes"])
+        volumes_data = yaml.full_load(data["volumes"])
         volumes = []
 
         if (isinstance(volumes_data, list)):
