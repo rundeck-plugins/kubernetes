@@ -48,7 +48,7 @@ def main():
                 pretty="true")
 
         if data["type"] == "StatefulSet":
-            k8s_beta = client.ExtensionsV1beta1Api()
+            k8s_beta = client.AppsV1Api()
             resp = k8s_beta.delete_namespaced_stateful_set(
                 name=data["name"],
                 namespace=data["namespace"],
