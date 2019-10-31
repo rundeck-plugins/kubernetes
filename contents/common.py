@@ -87,7 +87,7 @@ def connect():
 
 
 def load_liveness_readiness_probe(data):
-    probe = yaml.load(data)
+    probe = yaml.full_load(data)
 
     httpGet = None
 
@@ -127,7 +127,7 @@ def load_liveness_readiness_probe(data):
 
 
 def parsePorts(data):
-    ports = yaml.load(data)
+    ports = yaml.full_load(data)
     portsList = []
 
     if (isinstance(ports, list)):
@@ -289,7 +289,7 @@ def create_pod_template_spec(data):
     )
 
     if "volume_mounts" in data:
-        volume_mounts_data = yaml.load(data["volume_mounts"])
+        volume_mounts_data = yaml.full_load(data["volume_mounts"])
         volume_mounts = []
 
         if (isinstance(volume_mounts_data, list)):
@@ -335,7 +335,7 @@ def create_pod_template_spec(data):
     )
 
     if "volumes" in data:
-        volumes_data = yaml.load(data["volumes"])
+        volumes_data = yaml.full_load(data["volumes"])
         volumes = []
 
         if (isinstance(volumes_data, list)):
