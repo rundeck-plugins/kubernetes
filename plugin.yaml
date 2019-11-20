@@ -1452,7 +1452,14 @@ providers:
         description: "Specifies the number of retries before marking this job failed, defaults to 6"
         required: false
         renderingOptions:
-          groupName: Metadata          
+          groupName: Metadata
+      - name: node_selector
+        type: String
+        title: "NodeSelctor"
+        description: "Node selection constraint, Add a comma separeted values (key=value format)"
+        required: false
+        renderingOptions:
+          groupName: Metadata
       - name: container_name
         type: String
         title: "Container Name"
