@@ -101,6 +101,9 @@ def main():
     if os.environ.get('RD_CONFIG_WAITREADY'):
         data["waitready"] = os.environ.get('RD_CONFIG_WAITREADY')
 
+    if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
+        data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
+
     pod = create_pod(data)
     resp = None
     try:
