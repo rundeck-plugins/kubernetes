@@ -120,6 +120,17 @@ def create_job_object(data):
 
         template_spec.volumes = volumes
 
+    if "tolerations" in data:
+        tolerations_data = yaml.full_load(data["tolerations"])
+        tolerations = []
+        for toleration_data in tolerations_data:
+            toleration = common.create_toleration(toleration_data)
+
+            if toleration:
+                tolerations.append(toleration)
+
+        template_spec.tolerations = tolerations
+
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(
                     name=data["name"],

@@ -205,7 +205,7 @@ def create_volume(volume_data):
                 secret_name=volume_data["secret"]["secretName"]
             )
 
-        # configMap 
+        # configMap
         if "configMap" in volume_data:
             volume.config_map = client.V1ConfigMapVolumeSource(
                 name=volume_data["configMap"]["name"]
@@ -231,6 +231,23 @@ def create_volume_mount(volume_mount_data):
         return volume_mount
 
     return None
+
+
+def create_toleration(toleration_data):
+    toleration = client.V1Toleration()
+
+    if "effect" in toleration_data:
+        toleration.effect = toleration_data["effect"]
+    if "key" in toleration_data:
+        toleration.key = toleration_data["key"]
+    if "operator" in toleration_data:
+        toleration.operator = toleration_data["operator"]
+    if "value" in toleration_data:
+        toleration.value = toleration_data["value"]
+    if "toleration_seconds" in toleration_data:
+        toleration.toleration_seconds = int(toleration_data["toleration_seconds"])
+
+    return toleration
 
 
 class ObjectEncoder(json.JSONEncoder):
@@ -387,7 +404,7 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
                 log.error("ERROR: %s" % resp.read_stderr())
             if commands:
                 c = commands.pop(0)
-                
+
                 # Python 3 expects bytes string to transfer the data.
                 if PY == 3:
                     c = c.decode()

@@ -1460,6 +1460,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Metadata
+      - name: tolerations
+        type: String
+        title: "Tolerations"
+        description: "Configure Tolerations YAML format( https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ )"
+        required: false
+        renderingOptions:
+          groupName: Metadata
       - name: container_name
         type: String
         title: "Container Name"
