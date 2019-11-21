@@ -443,7 +443,16 @@ def run_interactive_command(name, namespace, container, command):
             print("%s" % resp.read_stdout())
         if resp.peek_stderr():
             log.error("%s" % resp.read_stderr())
-            error = True
+
+    ERROR_CHANNEL = 3
+    err = api.api_client.last_response.read_channel(ERROR_CHANNEL)
+    err = yaml.safe_load(err)
+    if err['status'] != "Success":
+        log.error('Failed to run command')
+        log.error('Reason: ' + err['reason'])
+        log.error('Message: ' + err['message'])
+        log.error('Details: ' + ';'.join(map(lambda x: json.dumps(x), err['details']['causes'])))
+        error = True
 
     return (resp,error)
 
