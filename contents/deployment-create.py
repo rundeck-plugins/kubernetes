@@ -109,6 +109,9 @@ def main():
     if os.environ.get('RD_CONFIG_ANNOTATIONS'):
         data["annotations"] = os.environ.get('RD_CONFIG_ANNOTATIONS')
 
+    if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
+        data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
+
     log.debug("Creating job from data:")
     log.debug(data)
 

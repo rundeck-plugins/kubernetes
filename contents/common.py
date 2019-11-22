@@ -336,6 +336,15 @@ def create_pod_template_spec(data):
         containers=[container]
     )
 
+    if "image_pull_secrets" in data:
+        images_array = data["image_pull_secrets"].split(",")
+        images = []
+        for image in images_array:
+            images.append(client.V1LocalObjectReference(name=image))
+
+        template_spec.image_pull_secrets = images
+
+
     if "volumes" in data:
         volumes_data = yaml.full_load(data["volumes"])
         volumes = []

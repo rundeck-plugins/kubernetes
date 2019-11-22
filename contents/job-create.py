@@ -120,6 +120,14 @@ def create_job_object(data):
 
         template_spec.volumes = volumes
 
+    if "image_pull_secrets" in data:
+        images_array = data["image_pull_secrets"].split(",")
+        images = []
+        for image in images_array:
+            images.append(client.V1LocalObjectReference(name=image))
+
+        template_spec.image_pull_secrets = images
+
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(
                     name=data["name"],
@@ -128,6 +136,7 @@ def create_job_object(data):
                 ),
         spec=template_spec
     )
+
 
     spec = client.V1JobSpec(template=template)
 
@@ -221,6 +230,9 @@ def main():
     if os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS'):
         esecret = os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
         data["environments_secrets"] = esecret
+
+    if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
+        data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
 
     log.debug("Creating job")
     log.debug(data)
