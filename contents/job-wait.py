@@ -54,7 +54,7 @@ def wait():
             if completed:
                 break
 
-            log.info("Wating for job completion")
+            log.info("Waiting for job completion")
             time.sleep(sleep)
 
         if show_log:

@@ -120,6 +120,14 @@ def create_job_object(data):
 
         template_spec.volumes = volumes
 
+    if "image_pull_secrets" in data:
+        images_array = data["image_pull_secrets"].split(",")
+        images = []
+        for image in images_array:
+            images.append(client.V1LocalObjectReference(name=image))
+
+        template_spec.image_pull_secrets = images
+
     if "tolerations" in data:
         tolerations_data = yaml.full_load(data["tolerations"])
         tolerations = []
@@ -139,6 +147,7 @@ def create_job_object(data):
                 ),
         spec=template_spec
     )
+
 
     spec = client.V1JobSpec(template=template)
 
@@ -237,6 +246,9 @@ def main():
         esecret = os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
         data["environments_secrets"] = esecret
 
+    if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
+        data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
+
     if os.environ.get('RD_CONFIG_NODE_SELECTORS'):
         node_selector = os.environ.get('RD_CONFIG_NODE_SELECTORS')
         data["node_selector"] = node_selector
@@ -244,6 +256,7 @@ def main():
     if os.environ.get('RD_CONFIG_TOLERATIONS'):
         tolerations = os.environ.get('RD_CONFIG_TOLERATIONS')
         data["tolerations"] = tolerations
+
 
     log.debug("Creating job")
     log.debug(data)

@@ -286,6 +286,13 @@ providers:
         required: true
         renderingOptions:
           groupName: Container
+      - name: imagepullsecrets
+        type: String
+        title: "ImagePullSecrets"
+        description: "(Comma separated) Image Pull Secrets (see https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)"
+        required: false
+        renderingOptions:
+          groupName: Container
       - name: ports
         type: String
         title: "Container ports"
@@ -1483,6 +1490,13 @@ providers:
         required: true
         renderingOptions:
           groupName: Container
+      - name: imagepullsecrets
+        type: String
+        title: "ImagePullSecrets"
+        description: "(Comma separated) Image Pull Secrets (see https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)"
+        required: false
+        renderingOptions:
+          groupName: Container
       - name: image_pull_policy
         type: Select
         title: "Image Pull Policy"
@@ -1924,6 +1938,13 @@ providers:
         title: "Image"
         description: "Image Name"
         required: true
+        renderingOptions:
+          groupName: Container
+      - name: imagepullsecrets
+        type: String
+        title: "ImagePullSecrets"
+        description: "(Comma separated) Image Pull Secrets (see https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)"
+        required: false
         renderingOptions:
           groupName: Container
       - name: ports

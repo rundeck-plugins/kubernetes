@@ -353,6 +353,15 @@ def create_pod_template_spec(data):
         containers=[container]
     )
 
+    if "image_pull_secrets" in data:
+        images_array = data["image_pull_secrets"].split(",")
+        images = []
+        for image in images_array:
+            images.append(client.V1LocalObjectReference(name=image))
+
+        template_spec.image_pull_secrets = images
+
+
     if "volumes" in data:
         volumes_data = yaml.full_load(data["volumes"])
         volumes = []
@@ -460,7 +469,16 @@ def run_interactive_command(name, namespace, container, command):
             print("%s" % resp.read_stdout())
         if resp.peek_stderr():
             log.error("%s" % resp.read_stderr())
-            error = True
+
+    ERROR_CHANNEL = 3
+    err = api.api_client.last_response.read_channel(ERROR_CHANNEL)
+    err = yaml.safe_load(err)
+    if err['status'] != "Success":
+        log.error('Failed to run command')
+        log.error('Reason: ' + err['reason'])
+        log.error('Message: ' + err['message'])
+        log.error('Details: ' + ';'.join(map(lambda x: json.dumps(x), err['details']['causes'])))
+        error = True
 
     return (resp,error)
 
