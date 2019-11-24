@@ -237,6 +237,14 @@ def main():
         esecret = os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
         data["environments_secrets"] = esecret
 
+    if os.environ.get('RD_CONFIG_NODE_SELECTORS'):
+        node_selector = os.environ.get('RD_CONFIG_NODE_SELECTORS')
+        data["node_selector"] = node_selector
+
+    if os.environ.get('RD_CONFIG_TOLERATIONS'):
+        tolerations = os.environ.get('RD_CONFIG_TOLERATIONS')
+        data["tolerations"] = tolerations
+
     log.debug("Creating job")
     log.debug(data)
 

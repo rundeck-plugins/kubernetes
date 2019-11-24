@@ -1467,6 +1467,8 @@ providers:
         required: false
         renderingOptions:
           groupName: Metadata
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: container_name
         type: String
         title: "Container Name"
