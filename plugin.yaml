@@ -108,7 +108,6 @@ providers:
     plugin-type: script
     script-interpreter: python -u
     script-file: pods-node-executor.py
-    script-args: ${node.name}
     config:
       - name: shell
         type: String
@@ -171,7 +170,6 @@ providers:
     plugin-type: script
     script-interpreter: python -u
     script-file: pods-copy-file.py
-    script-args: ${node.name}
     config:
       - name: shell
         type: String
@@ -1459,7 +1457,7 @@ providers:
         description: "Specifies the number of retries before marking this job failed, defaults to 6"
         required: false
         renderingOptions:
-          groupName: Metadata          
+          groupName: Metadata
       - name: container_name
         type: String
         title: "Container Name"
@@ -2203,7 +2201,6 @@ providers:
     plugin-type: script
     script-interpreter: python -u
     script-file: pods-node-executor.py
-    script-args: ${config.name}
     config:
       - name: name
         type: String

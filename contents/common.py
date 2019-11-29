@@ -35,22 +35,32 @@ def connect():
 
     if os.environ.get('RD_CONFIG_CONFIG_FILE'):
         config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
+    elif os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE'):
+        config_file = os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE')
 
     url = None
     if os.environ.get('RD_CONFIG_URL'):
         url = os.environ.get('RD_CONFIG_URL')
+    elif os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL'):
+        url = os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL')
 
     verify_ssl = None
     if os.environ.get('RD_CONFIG_VERIFY_SSL'):
         verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
+    elif os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL'):
+        verify_ssl = os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL')
 
     ssl_ca_cert = None
     if os.environ.get('RD_CONFIG_SSL_CA_CERT'):
         ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
+    elif os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT'):
+        ssl_ca_cert = os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT')
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
         token = os.environ.get('RD_CONFIG_TOKEN')
+    elif os.environ.get('RD_NODE_KUBERNETES_API_TOKEN'):
+        token = os.environ.get('RD_NODE_KUBERNETES_API_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
@@ -205,7 +215,7 @@ def create_volume(volume_data):
                 secret_name=volume_data["secret"]["secretName"]
             )
 
-        # configMap 
+        # configMap
         if "configMap" in volume_data:
             volume.config_map = client.V1ConfigMapVolumeSource(
                 name=volume_data["configMap"]["name"]
@@ -396,7 +406,7 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
                 log.error("ERROR: %s" % resp.read_stderr())
             if commands:
                 c = commands.pop(0)
-                
+
                 # Python 3 expects bytes string to transfer the data.
                 if PY == 3:
                     c = c.decode()

@@ -24,7 +24,9 @@ def main():
     name = None
     namespace = None
 
-    if 'RD_NODE_DEFAULT_NAME' in os.environ and 'RD_NODE_DEFAULT_NAME' and 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
+    if 'RD_NODE_DEFAULT_NAME' in os.environ \
+    and 'RD_NODE_DEFAULT_NAME' in os.environ \
+    and 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
         namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
         name = os.environ.get('RD_NODE_DEFAULT_NAME')
         container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
