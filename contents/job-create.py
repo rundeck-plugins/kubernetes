@@ -128,6 +128,17 @@ def create_job_object(data):
 
         template_spec.image_pull_secrets = images
 
+    if "tolerations" in data:
+        tolerations_data = yaml.full_load(data["tolerations"])
+        tolerations = []
+        for toleration_data in tolerations_data:
+            toleration = common.create_toleration(toleration_data)
+
+            if toleration:
+                tolerations.append(toleration)
+
+        template_spec.tolerations = tolerations
+
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(
                     name=data["name"],
@@ -146,12 +157,16 @@ def create_job_object(data):
         selectors_array = data["selectors"].split(',')
         selectors = dict(s.split('=') for s in selectors_array)
         spec.selector = selectors
+    if "node_selector" in data:
+        node_selectors_array = data["node_selector"].split(',')
+        node_selectors = dict(s.split('=') for s in node_selectors_array)
+        spec.nodeSelector = node_selectors
     if "parallelism" in data:
         spec.parallelism = int(data["parallelism"])
     if "active_deadline_seconds" in data:
         spec.active_deadline_seconds = int(data["active_deadline_seconds"])
     if "backoff_limit" in data:
-        spec.backoff_limit = int(data["backoff_limit"])        
+        spec.backoff_limit = int(data["backoff_limit"])
 
     job = client.V1Job(
         api_version=data["api_version"],
@@ -233,6 +248,15 @@ def main():
 
     if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
         data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
+
+    if os.environ.get('RD_CONFIG_NODE_SELECTORS'):
+        node_selector = os.environ.get('RD_CONFIG_NODE_SELECTORS')
+        data["node_selector"] = node_selector
+
+    if os.environ.get('RD_CONFIG_TOLERATIONS'):
+        tolerations = os.environ.get('RD_CONFIG_TOLERATIONS')
+        data["tolerations"] = tolerations
+
 
     log.debug("Creating job")
     log.debug(data)
