@@ -64,7 +64,6 @@ def wait():
 
         if show_log:
             for i in range(len(api_response.status.container_statuses)):
-                log.debug("Fetching logs from pod: {0}    -- container {1}".format(name,api_response.status.container_statuses[i].name))
                 log.info("Fetching logs from pod: {0}    -- container {1} ".format(name,api_response.status.container_statuses[i].name))
                 pod_log = core_v1.read_namespaced_pod_log(
                     name=name,
