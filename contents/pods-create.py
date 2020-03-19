@@ -7,7 +7,7 @@ import common
 
 from kubernetes import client
 
-from kubernetes.client.apis import core_v1_api
+from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 
 

@@ -4,7 +4,7 @@ import sys
 import os
 import common
 
-from kubernetes.client.apis import core_v1_api
+from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes import client
 

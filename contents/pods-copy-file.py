@@ -6,7 +6,7 @@ import common
 import logging
 
 
-from kubernetes.client.apis import core_v1_api
+from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
