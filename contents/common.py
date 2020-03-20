@@ -11,7 +11,7 @@ import datetime
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.stream import stream
-from kubernetes.client.apis import core_v1_api
+from kubernetes.client.api import core_v1_api
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
