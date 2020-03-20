@@ -1,6 +1,6 @@
 # Rundeck Kubernetes Plugin
 
-This project provides integration between Rundeck and Kubernetes. This project contains a number of providers allowing job writers to use steps to call various API actions in Kubernetes. 
+This project provides integration between Rundeck and Kubernetes. This project contains a number of providers allowing job writers to use steps to call various API actions in Kubernetes.
 
 Use cases:
 
@@ -12,6 +12,8 @@ Use cases:
 
 These plugins require the python kubernetes SDK to be installed on the rundeck server.
 For example, you can install it using `pip install kubernetes`.
+
+The Python Kubernetes API client requires version 11 of the library. You can confirm it with `python -m pip list | grep kubernetes`.
 
 Further information here: [https://github.com/kubernetes-client/python](https://github.com/kubernetes-client/python).
 
@@ -51,7 +53,7 @@ This plugin allows getting the container pods from kubernetes as rundeck nodes.
 * **Default attributes**: List of key=value pairs, example: username=root
 * **Custom Mapping**: Custom mapping adding on the rundeck nodes, for example: ```nodename.selector=default:Name,hostname.selector=default:pod_id```
 
-* **Tags**: List of tags. You can add static and custom tags, for example: 
+* **Tags**: List of tags. You can add static and custom tags, for example:
 ```tag.selector=default:image, tag.selector=default:status, kubernetes```
 
 * **Field Selector**: Filter the list of pods using a response's API fields. For further information check SDK docs [here](https://github.com/kubernetes-client/python/blob/fd5a0c49259e83d928535dd66ab083ddb92ccecf/kubernetes/docs/CoreV1Api.md#return-type-116).
@@ -87,7 +89,7 @@ This plugin allows run commands/scripts to a container pod from rundeck.
 
 
 ## File Copier
-This plugin allows copy files from rundeck to a pod. 
+This plugin allows copy files from rundeck to a pod.
 For now just script and text files can be copied to a remote pod.
 
 **Configurations:**
@@ -101,18 +103,18 @@ For now just script and text files can be copied to a remote pod.
 The following steps plugins allow you to deploy/un-deploy applications and run/re-run jobs on kubernetes. For example, you can create deployment, services, ingress, etc and update or delete those kubernetes resources.
 
 ### Create / Update / Delete / Check / Wait a Deployment
-Theses steps manage deployment resources, you can create, update or delete a deployment and check its status. 
+Theses steps manage deployment resources, you can create, update or delete a deployment and check its status.
 
 Also, you have a step to wait for a deployment to be ready when the deployment is created. These require that the deployment define a `Readiness Probe` (further information [here](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes))
 
 ### Create / Update / Delete Services
 
-Theses steps manage services resources, you can create, update or delete a service. 
+Theses steps manage services resources, you can create, update or delete a service.
 
 
 ### Create / Delete / Re-run Jobs
 
-Theses steps manage services resources, you can create or delete a Job. 
+Theses steps manage services resources, you can create or delete a Job.
 
 Also, you can re-run jobs that are already created. Kubernetes doesn't allow re-run jobs, so what this step does is get the job definition, delete it, and creating it again.
 
@@ -128,4 +130,3 @@ These steps provide a generic way to create/delete resources on kubernetes using
 * PersistentVolume
 * PersistentVolumeClaim
 * Secret
-
