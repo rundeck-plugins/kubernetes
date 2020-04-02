@@ -224,7 +224,7 @@ def main():
                     node_set.append(node_data)
 
             if running is True:
-                if node_data["status"] == "Running":
+                if node_data["status"].lower() == "running":
                     node_set.append(node_data)
 
     print(json.dumps(node_set, indent=4, sort_keys=True))
