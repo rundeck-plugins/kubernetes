@@ -1837,6 +1837,11 @@ providers:
         default: "default"
         description: "Namespace where the deployment will be created "
         required: true
+      - type: Boolean
+        name: follow
+        title: Follow Output
+        description: "If it is enabled, the job will be following the output, like `tail -f`. The execution won't stop"
+        required: false
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"

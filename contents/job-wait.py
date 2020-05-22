@@ -6,6 +6,8 @@ import time
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
+from kubernetes import watch
+
 from os import environ
 
 logging.basicConfig(
@@ -30,6 +32,8 @@ def wait():
         # Poll for completion if retries
         retries_count = 0
         completed = False
+
+
         while True:
             api_response = batch_v1.read_namespaced_job_status(
                 name,
@@ -37,6 +41,9 @@ def wait():
                 pretty="True"
             )
             log.debug(api_response)
+
+            #for condition in api_response.status.conditions:
+            #    log.info(condition.type)
 
             retries_count = retries_count + 1
             if retries_count > retries:
@@ -48,8 +55,28 @@ def wait():
                     if condition.type == "Failed":
                         completed = True
 
+
             if api_response.status.completion_time:
                 completed = True
+            else:
+                if show_log:
+                    log.debug("Searching for pod associated with job")
+                    pod_list = core_v1.list_namespaced_pod(
+                        namespace,
+                        label_selector="job-name==" + name
+                    )
+                    first_item = pod_list.items[0]
+                    pod_name = first_item.metadata.name
+                    log.debug("Fetching logs from pod: {0}".format(pod_name))
+                    log.info("========================== job log start ==========================")
+
+                    w = watch.Watch()
+                    for line in w.stream(core_v1.read_namespaced_pod_log,
+                                         name=pod_name,
+                                         namespace=namespace):
+                        print(line)
+
+                    log.info("=========================== job log end ===========================")
 
             if completed:
                 break
@@ -57,20 +84,8 @@ def wait():
             log.info("Waiting for job completion")
             time.sleep(sleep)
 
-        if show_log:
-            log.debug("Searching for pod associated with job")
-            pod_list = core_v1.list_namespaced_pod(
-                namespace,
-                label_selector="job-name==" + name
-            )
-            first_item = pod_list.items[0]
-            pod_name = first_item.metadata.name
-            log.debug("Fetching logs from pod: {0}".format(pod_name))
-            pod_log = core_v1.read_namespaced_pod_log(pod_name, namespace)
 
-            log.info("========================== job log start ==========================")
-            log.info(pod_log)
-            log.info("=========================== job log end ===========================")
+
 
         if api_response.status.succeeded:
             log.info("Job succeeded")
@@ -82,6 +97,7 @@ def wait():
     except ApiException as e:
         log.error("Exception waiting for job: %s\n" % e)
         sys.exit(1)
+
 
 
 def main():
