@@ -297,7 +297,7 @@ providers:
         type: String
         title: "Container ports"
         description: "Container ports. Add a comma for multiples ports"
-        required: true
+        required: false
         renderingOptions:
           groupName: Container
       - name: environments
@@ -1077,7 +1077,7 @@ providers:
         type: String
         title: "Container ports"
         description: "Container ports. Use the YAML format (https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services)"
-        required: true
+        required: false
         renderingOptions:
           groupName: Spec
           displayType: CODE
@@ -1951,7 +1951,7 @@ providers:
         type: String
         title: "Container ports"
         description: "Container ports. Add a comma for multiples ports"
-        required: true
+        required: false
         renderingOptions:
           groupName: Container
       - name: environments
