@@ -45,6 +45,13 @@ providers:
         default: 'metadata.namespace=default'
         renderingOptions:
           groupName: Config
+      - name: label_selector
+        type: String
+        title: "Label Selector"
+        description: "Filter for a label"
+        required: false
+        renderingOptions:
+          groupName: Config
       - type: Boolean
         name: running
         title: Just Running Pods?
