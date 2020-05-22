@@ -1,0 +1,30 @@
+name: Gradle Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get Fetch Tags
+        run: git -c protocol.version=2 fetch --tags --progress --no-recurse-submodules origin
+        if: "!contains(github.ref, 'refs/tags')"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: Get Release Version
+        id: get_version
+        run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) && echo ::set-output name=VERSION::$VERSION
+      - name: Upload artifact zip
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          # Artifact name
+          name: kubernetes-plugin-${{ steps.get_version.outputs.VERSION }}
+          # Directory containing files to upload
+          path: build/libs/kubernetes-plugin-${{ steps.get_version.outputs.VERSION }}.zip
