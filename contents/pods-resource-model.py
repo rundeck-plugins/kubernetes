@@ -197,11 +197,17 @@ def main():
     if os.environ.get('RD_CONFIG_FIELD_SELECTOR'):
         field_selector = os.environ.get('RD_CONFIG_FIELD_SELECTOR')
 
+    label_selector = None
+
+    if os.environ.get('RD_CONFIG_LABEL_SELECTOR'):
+        label_selector = os.environ.get('RD_CONFIG_LABEL_SELECTOR')
+
     node_set = []
     v1 = client.CoreV1Api()
     ret = v1.list_pod_for_all_namespaces(
         watch=False,
-        field_selector=field_selector
+        field_selector=field_selector,
+        label_selector=label_selector,
     )
 
     for i in ret.items:
