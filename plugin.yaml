@@ -1528,6 +1528,15 @@ providers:
         renderingOptions:
           groupName: Container
           displayType: MULTI_LINE
+      - name: env_from
+        type: String
+        title: "EnvFrom"
+        description: "Configure envFrom YAML format ( https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#configure-all-key-value-pairs-in-a-configmap-as-container-environment-variables )"
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: container_command
         type: String
         title: "Container Command"
