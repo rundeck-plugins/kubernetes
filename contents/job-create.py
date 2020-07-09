@@ -96,6 +96,29 @@ def create_job_object(data):
 
     container.env = envs
 
+    if "env_from" in data:
+        env_froms_data = yaml.full_load(data["env_from"])
+        env_from = []
+        for env_from_data in env_froms_data:
+            if 'configMapRef' in env_from_data:
+                env_from.append(
+                    client.V1EnvFromSource(
+                        config_map_ref=client.V1ConfigMapEnvSource(
+                            env_from_data['configMapRef']['name']
+                        )
+                    )
+                )
+            elif 'secretRef' in env_from_data:
+                env_from.append(
+                    client.V1EnvFromSource(
+                        secret_ref=client.V1SecretEnvSource(
+                            env_from_data['secretRef']['name']
+                        )
+                    )
+                )
+
+        container.env_from = env_from
+
     template_spec = client.V1PodSpec(
         containers=[
             container
@@ -257,6 +280,9 @@ def main():
         tolerations = os.environ.get('RD_CONFIG_TOLERATIONS')
         data["tolerations"] = tolerations
 
+    if os.environ.get('RD_CONFIG_ENV_FROM'):
+        env_from = os.environ.get('RD_CONFIG_ENV_FROM')
+        data["env_from"] = env_from
 
     log.debug("Creating job")
     log.debug(data)
