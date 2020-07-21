@@ -89,7 +89,7 @@ def connect():
 
 
 def load_liveness_readiness_probe(data):
-    probe = yaml.full_load(data)
+    probe = yaml.safe_load(data)
 
     httpGet = None
 
@@ -129,7 +129,7 @@ def load_liveness_readiness_probe(data):
 
 
 def parsePorts(data):
-    ports = yaml.full_load(data)
+    ports = yaml.safe_load(data)
     portsList = []
 
     if (isinstance(ports, list)):
@@ -308,22 +308,7 @@ def create_pod_template_spec(data):
     )
 
     if "volume_mounts" in data:
-        volume_mounts_data = yaml.full_load(data["volume_mounts"])
-        volume_mounts = []
-
-        if (isinstance(volume_mounts_data, list)):
-            for volume_mount_data in volume_mounts_data:
-                volume_mount = create_volume_mount(volume_mount_data)
-
-                if volume_mount:
-                    volume_mounts.append(volume_mount)
-        else:
-            volume_mount = create_volume_mount(volume_mounts_data)
-
-            if volume_mount:
-                volume_mounts.append(volume_mount)
-
-        container.volume_mounts = volume_mounts
+        container.volume_mounts = create_volume_mount_yaml(data)
 
     if "liveness_probe" in data:
         container.liveness_probe = load_liveness_readiness_probe(
@@ -363,7 +348,7 @@ def create_pod_template_spec(data):
 
 
     if "volumes" in data:
-        volumes_data = yaml.full_load(data["volumes"])
+        volumes_data = yaml.safe_load(data["volumes"])
         volumes = []
 
         if (isinstance(volumes_data, list)):
@@ -382,6 +367,24 @@ def create_pod_template_spec(data):
 
     return template_spec
 
+
+def create_volume_mount_yaml(data):
+    volume_mounts_data = yaml.safe_load(data["volume_mounts"])
+    volume_mounts = []
+
+    if (isinstance(volume_mounts_data, list)):
+        for volume_mount_data in volume_mounts_data:
+            volume_mount = create_volume_mount(volume_mount_data)
+
+            if volume_mount:
+                volume_mounts.append(volume_mount)
+    else:
+        volume_mount = create_volume_mount(volume_mounts_data)
+
+        if volume_mount:
+            volume_mounts.append(volume_mount)
+
+    return volume_mounts
 
 def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout = False):
     api = core_v1_api.CoreV1Api()

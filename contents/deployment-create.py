@@ -35,11 +35,12 @@ def create_deployment_object(data):
         spec=template_spec
     )
     # Create the specification of deployment
-    spec = client.ExtensionsV1beta1DeploymentSpec(
+    spec = client.V1DeploymentSpec(
         replicas=int(data["replicas"]),
+        selector={"matchLabels": labels},
         template=template)
     # Instantiate the deployment object
-    deployment = client.ExtensionsV1beta1Deployment(
+    deployment = client.V1Deployment(
         api_version=data["api_version"],
         kind="Deployment",
         metadata=client.V1ObjectMeta(labels=labels,
@@ -117,14 +118,10 @@ def main():
 
     common.connect()
 
-    extensions_v1beta1 = client.ExtensionsV1beta1Api()
+    apiV1 = client.AppsV1Api()
 
     deployment = create_deployment_object(data)
-
-    log.debug("new deployment: ")
-    log.debug(deployment)
-
-    create_deployment(extensions_v1beta1, deployment, data)
+    create_deployment(apiV1, deployment, data)
 
 
 if __name__ == '__main__':

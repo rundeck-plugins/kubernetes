@@ -24,9 +24,9 @@ def main():
     common.connect()
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        api = client.AppsV1Api()
 
-        api_response = extensions_v1beta1.read_namespaced_deployment(
+        api_response = api.read_namespaced_deployment(
             data["name"],
             data["namespace"])
 

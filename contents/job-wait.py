@@ -67,8 +67,10 @@ def wait():
                     )
                     first_item = pod_list.items[0]
                     pod_name = first_item.metadata.name
-                    log.debug("Fetching logs from pod: {0}".format(pod_name))
+                    log.info("Fetching logs from pod: {0}".format(pod_name))
+                    time.sleep(15)
                     log.info("========================== job log start ==========================")
+
 
                     w = watch.Watch()
                     for line in w.stream(core_v1.read_namespaced_pod_log,

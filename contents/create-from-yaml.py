@@ -30,9 +30,9 @@ def main():
 
     try:
         if data["type"] == "Deployment":
-            dep = yaml.full_load(data["yaml"])
-            k8s_beta = client.ExtensionsV1beta1Api()
-            resp = k8s_beta.create_namespaced_deployment(
+            dep = yaml.safe_load(data["yaml"])
+            api_instance = client.AppsV1Api()
+            resp = api_instance.create_namespaced_deployment(
                 body=dep,
                 namespace=data["namespace"],
                 pretty="true")
@@ -41,7 +41,7 @@ def main():
 
         if data["type"] == "ConfigMap":
             api_instance = client.CoreV1Api()
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             resp = api_instance.create_namespaced_config_map(
                 namespace=data["namespace"],
                 body=dep,
@@ -50,7 +50,7 @@ def main():
             print(common.parseJson(resp.metadata))
 
         if data["type"] == "StatefulSet":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             k8s_beta = client.AppsV1Api()
             resp = k8s_beta.create_namespaced_stateful_set(
                 body=dep,
@@ -61,7 +61,7 @@ def main():
 
         if data["type"] == "Service":
             api_instance = client.CoreV1Api()
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             resp = api_instance.create_namespaced_service(
                 namespace=data["namespace"],
                 body=dep,
@@ -70,7 +70,7 @@ def main():
             print(common.parseJson(resp.status))
 
         if data["type"] == "Ingress":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_ingress(
                 body=dep,
@@ -81,7 +81,7 @@ def main():
 
         if data["type"] == "Job":
             api_instance = client.BatchV1Api()
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             resp = api_instance.create_namespaced_job(
                 namespace=data["namespace"],
                 body=dep,
@@ -90,7 +90,7 @@ def main():
             print(common.parseJson(resp.status))
 
         if data["type"] == "StorageClass":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             api_instance = client.StorageV1Api()
 
             resp = api_instance.create_storage_class(body=dep,
@@ -99,7 +99,7 @@ def main():
             print(common.parseJson(resp.metadata))
 
         if data["type"] == "PersistentVolumeClaim":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_namespaced_persistent_volume_claim(
@@ -110,7 +110,7 @@ def main():
             print(common.parseJson(resp.status))
 
         if data["type"] == "Secret":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_namespaced_secret(
@@ -121,7 +121,7 @@ def main():
             print(common.parseJson(resp.metadata))
 
         if data["type"] == "PersistentVolume":
-            dep = yaml.full_load(data["yaml"])
+            dep = yaml.safe_load(data["yaml"])
             api_instance = client.CoreV1Api()
 
             resp = api_instance.create_persistent_volume(
