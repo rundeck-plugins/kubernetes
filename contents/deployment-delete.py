@@ -39,9 +39,9 @@ def main():
     common.connect()
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        apps_v1 = client.AppsV1Api()
 
-        delete_deployment(extensions_v1beta1, data)
+        delete_deployment(apps_v1, data)
     except ApiException as e:
         log.error("Exception deleting deployment: %s\n" % e)
         sys.exit(1)

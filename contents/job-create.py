@@ -82,16 +82,7 @@ def create_job_object(data):
         )
 
     if "volume_mounts" in data:
-        volumes_array = data["volume_mounts"].splitlines()
-        tmp = dict(s.split('=', 1) for s in volumes_array)
-
-        mounts = []
-        for key in tmp:
-            mounts.append(client.V1VolumeMount(
-                name=key,
-                mount_path=tmp[key])
-            )
-
+        mounts = common.create_volume_mount_yaml(data)
         container.volume_mounts = mounts
 
     container.env = envs
@@ -126,7 +117,7 @@ def create_job_object(data):
         restart_policy=data["job_restart_policy"])
 
     if "volumes" in data:
-        volumes_data = yaml.full_load(data["volumes"])
+        volumes_data = yaml.safe_load(data["volumes"])
         volumes = []
 
         if (isinstance(volumes_data, list)):
@@ -152,7 +143,7 @@ def create_job_object(data):
         template_spec.image_pull_secrets = images
 
     if "tolerations" in data:
-        tolerations_data = yaml.full_load(data["tolerations"])
+        tolerations_data = yaml.safe_load(data["tolerations"])
         tolerations = []
         for toleration_data in tolerations_data:
             toleration = common.create_toleration(toleration_data)

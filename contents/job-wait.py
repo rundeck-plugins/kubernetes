@@ -8,6 +8,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 from kubernetes import watch
 
+
 from os import environ
 
 logging.basicConfig(
@@ -61,14 +62,33 @@ def wait():
             else:
                 if show_log:
                     log.debug("Searching for pod associated with job")
+
                     pod_list = core_v1.list_namespaced_pod(
                         namespace,
                         label_selector="job-name==" + name
                     )
                     first_item = pod_list.items[0]
                     pod_name = first_item.metadata.name
-                    log.debug("Fetching logs from pod: {0}".format(pod_name))
+                    log.info("Fetching logs from pod: {0}".format(pod_name))
+
+                    # time.sleep(15)
                     log.info("========================== job log start ==========================")
+                    start_time = time.time()
+                    timeout = 60
+                    while True:
+                        try:
+                            core_v1.read_namespaced_pod_log(name=pod_name,
+                                                            namespace=namespace)
+                            break
+                        except ApiException as ex:
+                            log.warning("Pod is not ready, status: {}".format(ex.status))
+                            if ex.status == 200:
+                                break
+                            else:
+                                log.info("waiting for log")
+                                time.sleep(15)
+                                if timeout and time.time() - start_time > timeout:  # pragma: no cover
+                                    raise TimeoutError
 
                     w = watch.Watch()
                     for line in w.stream(core_v1.read_namespaced_pod_log,

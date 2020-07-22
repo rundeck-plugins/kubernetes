@@ -204,11 +204,33 @@ def main():
 
     node_set = []
     v1 = client.CoreV1Api()
-    ret = v1.list_pod_for_all_namespaces(
-        watch=False,
-        field_selector=field_selector,
-        label_selector=label_selector,
-    )
+
+    log.debug(label_selector)
+    log.debug(field_selector)
+
+    if field_selector and label_selector:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            field_selector=field_selector,
+            label_selector=label_selector,
+        )
+
+    if field_selector and label_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            field_selector=field_selector,
+        )
+
+    if label_selector and field_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            label_selector=label_selector,
+        )
+
+    if label_selector is None and field_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+        )
 
     for i in ret.items:
         for container in i.spec.containers:

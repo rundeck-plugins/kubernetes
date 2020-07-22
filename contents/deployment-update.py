@@ -182,13 +182,13 @@ def main():
     common.connect()
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        apiV1 = client.AppsV1Api()
         deployment = create_deployment_object(data)
 
         log.debug("deployment object: ")
         log.debug(deployment)
 
-        update_deployment(extensions_v1beta1, deployment, data)
+        update_deployment(apiV1, deployment, data)
     except ApiException as e:
         log.error("Exception updating deployment: %s\n" % e)
         sys.exit(1)

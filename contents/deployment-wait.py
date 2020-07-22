@@ -11,7 +11,7 @@ from kubernetes.client.rest import ApiException
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+                    format='%(message)s')
 log = logging.getLogger('kubernetes-model-source')
 
 
@@ -26,9 +26,9 @@ def wait():
     sleep = int(os.environ.get('RD_CONFIG_SLEEP'))
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        appsV1Api = client.AppsV1Api()
 
-        api_response = extensions_v1beta1.read_namespaced_deployment(
+        api_response = appsV1Api.read_namespaced_deployment(
             data["name"],
             data["namespace"],
             pretty="True")
@@ -64,7 +64,7 @@ def wait():
                 log.error("number retries exedded")
                 sys.exit(1)
 
-            api_response = extensions_v1beta1.read_namespaced_deployment(
+            api_response = appsV1Api.read_namespaced_deployment(
                 data["name"],
                 data["namespace"],
                 pretty="True")
