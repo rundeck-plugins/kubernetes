@@ -137,7 +137,7 @@ def main():
             openshift_client = DynamicClient(k8s_client)
             v1_bc = openshift_client.resources.get(api_version='build.openshift.io/v1', kind='BuildConfig')
 
-            resp = v1_bc.create(body=dep, namespace='default')
+            resp = v1_bc.create(body=dep, namespace=data["namespace"])
 
             print(common.parseJson(resp.metadata))
     except ApiException as e:
