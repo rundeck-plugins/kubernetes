@@ -902,7 +902,7 @@ providers:
         title: "Type"
         description: "Type"
         required: true
-        values: Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+        values: Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret,BuildConfig
       - name: yaml
         type: String
         title: "YAML String"
