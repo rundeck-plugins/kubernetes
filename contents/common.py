@@ -71,6 +71,7 @@ def connect():
                 configuration.verify_ssl = verify_ssl
             else:
                 configuration.verify_ssl = None
+                configuration.assert_hostname = False
 
             if ssl_ca_cert:
                 configuration.ssl_ca_cert = ssl_ca_cert
@@ -82,10 +83,6 @@ def connect():
         else:
             log.debug("getting from default config file")
             config.load_kube_config()
-
-    c = Configuration()
-    c.assert_hostname = False
-    Configuration.set_default(c)
 
 
 def load_liveness_readiness_probe(data):
