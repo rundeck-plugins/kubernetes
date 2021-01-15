@@ -11,7 +11,7 @@ from kubernetes.client.rest import ApiException
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(message)s')
+                    format='%(levelname)s: %(name)s: %(message)s')
 log = logging.getLogger('kubernetes-model-source')
 
 
@@ -26,17 +26,17 @@ def wait():
     sleep = int(os.environ.get('RD_CONFIG_SLEEP'))
 
     try:
-        appsV1Api = client.AppsV1Api()
+        AppsV1Api = client.AppsV1Api()
 
-        api_response = appsV1Api.read_namespaced_deployment(
+        api_response = AppsV1Api.read_namespaced_stateful_set(
             data["name"],
             data["namespace"],
             pretty="True")
 
         print(common.parseJson(api_response.status))
 
-        unavailable_replicas = api_response.status.unavailable_replicas
-        replicas = api_response.status.replicas
+        current_replicas = api_response.status.current_replicas
+        replicas = api_response.spec.replicas
         ready_replicas = api_response.status.ready_replicas
 
         if ready_replicas is None:
@@ -55,8 +55,8 @@ def wait():
             log.info("Deployment is ready")
             sys.exit(0)
 
-        while (unavailable_replicas is not None):
-            log.info("wating for deployment")
+        while ( ready_replicas < replicas ):
+            log.info("wating for StatefulSet")
             time.sleep(float(sleep))
             retries_count = retries_count+1
 
@@ -64,16 +64,30 @@ def wait():
                 log.error("number retries exedded")
                 sys.exit(1)
 
-            api_response = appsV1Api.read_namespaced_deployment(
+            api_response = AppsV1Api.read_namespaced_stateful_set(
                 data["name"],
                 data["namespace"],
                 pretty="True")
-            unavailable_replicas = api_response.status.unavailable_replicas
 
-            log.info("unavailable replicas: " + str(unavailable_replicas))
+            replicas = api_response.spec.replicas
+            ready_replicas = api_response.status.ready_replicas
+
+            if ready_replicas is None:
+                ready_replicas = 0
+            else:
+                ready_replicas = int(ready_replicas)
+
+            if replicas is None:
+                replicas = 0
+            else:
+                replicas = int(replicas)
+
+            print(common.parseJson(api_response.status))
+
+        log.info("current_replicas" + str(replicas))
 
     except ApiException as e:
-        log.error("Exception deleting deployment: %s\n" % e)
+        log.error("Exception deleting StatefulSet: %s\n" % e)
         sys.exit(1)
 
 

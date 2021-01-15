@@ -15,9 +15,6 @@ log = logging.getLogger('kubernetes-model-source')
 
 def main():
 
-    if os.environ.get('RD_CONFIG_DEBUG') == 'true':
-        log.setLevel(logging.DEBUG)
-        log.debug("Log level configured for DEBUG")
 
     data = {}
 
@@ -27,13 +24,13 @@ def main():
     common.connect()
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        api = client.AppsV1Api()
 
-        api_response = extensions_v1beta1.read_namespaced_deployment(
+        api_response = api.read_namespaced_deployment(
             data["name"],
             data["namespace"])
 
-        print common.print_deployment_status(api_response)
+        print(common.parseJson(api_response.status))
 
         replicas = api_response.status.replicas
         r_replicas = api_response.status.ready_replicas

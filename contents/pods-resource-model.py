@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 import logging
 import sys
 import os
@@ -36,7 +36,7 @@ logging.basicConfig(stream=sys.stderr,
 log = logging.getLogger('kubernetes-model-source')
 
 
-def nodeCollectData(pod,container, defaults, taglist, mappingList):
+def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
     tags = []
     tags.extend(taglist.split(','))
 
@@ -57,7 +57,6 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
             log.info("pod-container-name:" + statuses.name)
 
             if (container.name == statuses.name):
-                log.info("entro")
                 if statuses.state.running is not None:
                     status = "running"
                     if statuses.state.running.started_at:
@@ -144,9 +143,13 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     if default_settings['default:status'] == "waiting":
         emoticon = u'\U0000274c'
 
-    data['status'] = emoticon + " " + default_settings['default:status']
+    if boEmoticon:
+        data['status'] = emoticon + " " + default_settings['default:status']
+        desc = emoticon + " " + default_settings['default:status']
+    else:
+        data['status'] = default_settings['default:status']
+        desc = default_settings['default:status']
 
-    desc = emoticon + " " + default_settings['default:status']
     if default_settings['default:status_message']:
         desc = desc + "(" + default_settings['default:status_message'] + ")"
 
@@ -164,7 +167,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList):
     data['tags'] = ','.join(final_tags)
 
     if custom_attributes:
-        data = dict(data.items() + custom_attributes.items())
+        data = dict(list(data.items()) + list(custom_attributes.items()))
 
     data.update(dict(token.split('=') for token in shlex.split(defaults)))
 
@@ -186,16 +189,48 @@ def main():
     if os.environ.get('RD_CONFIG_RUNNING') == 'true':
         running = True
 
+    boEmoticon = False
+    if os.environ.get('RD_CONFIG_EMOTICON') == 'true':
+        boEmoticon = True
+
     field_selector = None
     if os.environ.get('RD_CONFIG_FIELD_SELECTOR'):
         field_selector = os.environ.get('RD_CONFIG_FIELD_SELECTOR')
 
+    label_selector = None
+
+    if os.environ.get('RD_CONFIG_LABEL_SELECTOR'):
+        label_selector = os.environ.get('RD_CONFIG_LABEL_SELECTOR')
+
     node_set = []
     v1 = client.CoreV1Api()
-    ret = v1.list_pod_for_all_namespaces(
-        watch=False,
-        field_selector=field_selector
-    )
+
+    log.debug(label_selector)
+    log.debug(field_selector)
+
+    if field_selector and label_selector:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            field_selector=field_selector,
+            label_selector=label_selector,
+        )
+
+    if field_selector and label_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            field_selector=field_selector,
+        )
+
+    if label_selector and field_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+            label_selector=label_selector,
+        )
+
+    if label_selector is None and field_selector is None:
+        ret = v1.list_pod_for_all_namespaces(
+            watch=False,
+        )
 
     for i in ret.items:
         for container in i.spec.containers:
@@ -208,7 +243,8 @@ def main():
                                         container,
                                         defaults,
                                         tags,
-                                        mappingList
+                                        mappingList,
+                                        boEmoticon
                                         )
 
             if running is False:
@@ -216,10 +252,10 @@ def main():
                     node_set.append(node_data)
 
             if running is True:
-                if node_data["status"] == "Running":
+                if node_data["status"].lower() == "running":
                     node_set.append(node_data)
 
-    print json.dumps(node_set, indent=4, sort_keys=True)
+    print(json.dumps(node_set, indent=4, sort_keys=True))
 
 
 if __name__ == '__main__':

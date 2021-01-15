@@ -128,7 +128,7 @@ def update_deployment(api_instance, deployment, data):
         namespace=data["namespace"],
         body=deployment)
 
-    print common.print_deployment_status(api_response)
+    print(common.parseJson(api_response.status))
 
 
 def main():
@@ -182,13 +182,13 @@ def main():
     common.connect()
 
     try:
-        extensions_v1beta1 = client.ExtensionsV1beta1Api()
+        apiV1 = client.AppsV1Api()
         deployment = create_deployment_object(data)
 
         log.debug("deployment object: ")
         log.debug(deployment)
 
-        update_deployment(extensions_v1beta1, deployment, data)
+        update_deployment(apiV1, deployment, data)
     except ApiException as e:
         log.error("Exception updating deployment: %s\n" % e)
         sys.exit(1)

@@ -108,7 +108,7 @@ def main():
             namespace=data["namespace"],
             body=service
         )
-        print("Service created. status='%s'" % str(resp.status))
+        print(common.parseJson(resp.status))
 
     except ApiException as e:
         log.error("Exception when calling create_namespaced_service: %s\n" % e)

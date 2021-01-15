@@ -6,11 +6,23 @@ import common
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
+from kubernetes.client.api import core_v1_api
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
-log = logging.getLogger('kubernetes-service-delete')
+log = logging.getLogger('kubernetes-delete-pod')
+
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
+    log.setLevel(logging.DEBUG)
+
+
+def delete_pod(data):
+    # Delete pod
+    api = core_v1_api.CoreV1Api()
+    common.delete_pod(api, data)
+
+    print("Pod deleted successfully")
 
 
 def main():
@@ -26,21 +38,10 @@ def main():
 
     common.connect()
 
-    api_instance = client.CoreV1Api()
-
     try:
-
-        api_response = api_instance.delete_namespaced_service(
-            name=data["name"],
-            body=client.V1DeleteOptions(propagation_policy='Foreground',
-                                      grace_period_seconds=5),
-            namespace=data["namespace"],
-            pretty="true"
-        )
-        print(common.parseJson(api_response))
-
+        delete_pod(data)
     except ApiException as e:
-        log.error("Exception when calling delete_namespaced_service: %s\n" % e)
+        log.error("Exception deleting deployment: %s\n" % e)
         sys.exit(1)
 
 
