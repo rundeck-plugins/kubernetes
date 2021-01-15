@@ -1752,7 +1752,6 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
-
       - type: Boolean
         name: force
         title: Force
