@@ -25,7 +25,7 @@ def main():
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
     data["name"] = os.environ.get('RD_CONFIG_NAME')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
-    force = os.environ.get('RD_CONFIG_NAMESPACE')
+    force = os.environ.get('RD_CONFIG_FORCE')
 
     try:
 
