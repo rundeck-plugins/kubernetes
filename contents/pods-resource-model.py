@@ -73,7 +73,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
 
                 container_id = statuses.container_id
 
-    if terminated is False:
+    if terminated is False and pod.status.conditions is not None:
         for info in pod.status.conditions:
             if (info.status == 'False'):
                 status = info.reason
