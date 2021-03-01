@@ -1752,6 +1752,11 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - type: Boolean
+        name: force
+        title: Force
+        description: "Continue even if previous run was unsuccessful"
+        default: true
   - name: Kubernetes-Wait-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Waitfor
