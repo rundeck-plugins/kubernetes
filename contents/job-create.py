@@ -25,16 +25,31 @@ def create_job_object(data):
 
     annotations = None
     if "annotations" in data:
-        annotations_array = data["annotations"].split(',')
-        annotations = dict(s.split('=') for s in annotations_array)
+        annotations = yaml.full_load(data["annotations"])
         meta.annotations = annotations
 
     envs = []
     if "environments" in data:
-        envs_array = data["environments"].splitlines()
-        tmp_envs = dict(s.split('=', 1) for s in envs_array)
-        for key in tmp_envs:
-            envs.append(client.V1EnvVar(name=key, value=tmp_envs[key]))
+        env_data = yaml.full_load(data["environments"])
+        for item in env_data:
+            if 'value' in item.keys():
+                envs.append(client.V1EnvVar(
+                    name = item['name'], 
+                    value = item['value'])
+                )
+            elif 'valueFrom' in item.keys():
+                if 'fieldRef' in item['valueFrom'].keys():
+                    envs.append(
+                        client.V1EnvVar(
+                            name = item['name'],
+                            value_from = client.V1EnvVarSource(
+                                field_ref = client.V1ObjectFieldSelector(
+                                    field_path=item['valueFrom']['fieldRef']['fieldPath']
+                                )
+                            )   
+                        )                 
+                    )
+
 
     if "environments_secrets" in data:
         envs_array = data["environments_secrets"].splitlines()
@@ -57,6 +72,32 @@ def create_job_object(data):
                             secret_key_ref=client.V1SecretKeySelector(
                                 key=secrect_key,
                                 name=secrect_name
+                            )
+                        )
+                    )
+                )
+
+    if "environments_configs" in data:
+        envs_array = data["environments_configs"].splitlines()
+        tmp_envs = dict(s.split('=', 1) for s in envs_array)
+
+        for key in tmp_envs:
+
+            if (":" in tmp_envs[key]):
+                # passing config env
+                value = tmp_envs[key]
+                configs = value.split(':')
+                config_key = configs[1]
+                config_name = configs[0]
+
+                envs.append(
+                    client.V1EnvVar(
+                        name=key,
+                        value="",
+                        value_from=client.V1EnvVarSource(
+                            config_map_key_ref=client.V1ConfigMapKeySelector(
+                                key=config_key,
+                                name=config_name
                             )
                         )
                     )
@@ -259,6 +300,10 @@ def main():
     if os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS'):
         esecret = os.environ.get('RD_CONFIG_ENVIRONMENTS_SECRETS')
         data["environments_secrets"] = esecret
+
+    if os.environ.get('RD_CONFIG_ENVIRONMENTS_CONFIGS'):
+        config = os.environ.get('RD_CONFIG_ENVIRONMENTS_CONFIGS')
+        data["environments_configs"] = config
 
     if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
         data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
