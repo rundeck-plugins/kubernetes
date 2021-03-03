@@ -1420,10 +1420,12 @@ providers:
       - name: annotations
         type: String
         title: "Annotations"
-        description: "Annotations. Add a comma separeted values (key=value format)"
+        description: "Annotations. Configure in YAML format "
         required: false
         renderingOptions:
           groupName: Metadata
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: selectors
         type: String
         title: "Selectors"
@@ -1515,15 +1517,24 @@ providers:
       - name: environments
         type: String
         title: "Environment Variables"
-        description: "List Environment Variables (key=value format)"
+        description: "List Environment Variables in YAML format"
         required: false
         renderingOptions:
           groupName: Container
           displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: environments_secrets
         type: String
         title: "Environment Variables from secret"
         description: "List Environment Variables from secrets variables. Use key=secret-Name:secret-Key-Name format (AWS-SECRET=awscredentials:accesskey) "
+        required: false
+        renderingOptions:
+          groupName: Container
+          displayType: MULTI_LINE
+      - name: environments_configs
+        type: String
+        title: "Environment Variables from config"
+        description: "List Environment Variables from configs variables. Use key=config-Name:config-Key-Name format"
         required: false
         renderingOptions:
           groupName: Container
