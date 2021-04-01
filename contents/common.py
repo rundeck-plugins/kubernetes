@@ -26,6 +26,7 @@ PY = sys.version_info[0]
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
+
 def connect():
     config_file = None
 
@@ -35,22 +36,32 @@ def connect():
 
     if os.environ.get('RD_CONFIG_CONFIG_FILE'):
         config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
+    elif os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE'):
+        config_file = os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE')
 
     url = None
     if os.environ.get('RD_CONFIG_URL'):
         url = os.environ.get('RD_CONFIG_URL')
+    elif os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL'):
+        url = os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL')
 
     verify_ssl = None
     if os.environ.get('RD_CONFIG_VERIFY_SSL'):
         verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
+    elif os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL'):
+        verify_ssl = os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL')
 
     ssl_ca_cert = None
     if os.environ.get('RD_CONFIG_SSL_CA_CERT'):
         ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
+    elif os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT'):
+        ssl_ca_cert = os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT')
 
     token = None
     if os.environ.get('RD_CONFIG_TOKEN'):
         token = os.environ.get('RD_CONFIG_TOKEN')
+    elif os.environ.get('RD_NODE_KUBERNETES_API_TOKEN'):
+        token = os.environ.get('RD_NODE_KUBERNETES_API_TOKEN')
 
     log.debug("config file")
     log.debug(config_file)
@@ -343,7 +354,6 @@ def create_pod_template_spec(data):
 
         template_spec.image_pull_secrets = images
 
-
     if "volumes" in data:
         volumes_data = yaml.safe_load(data["volumes"])
         volumes = []
@@ -383,7 +393,8 @@ def create_volume_mount_yaml(data):
 
     return volume_mounts
 
-def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout = False):
+
+def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout=False):
     api = core_v1_api.CoreV1Api()
 
     # Copying file client -> pod
@@ -444,7 +455,6 @@ def run_command(name, namespace, container, command):
     return resp
 
 
-
 def run_interactive_command(name, namespace, container, command):
     api = core_v1_api.CoreV1Api()
 
@@ -480,7 +490,7 @@ def run_interactive_command(name, namespace, container, command):
         log.error('Details: ' + ';'.join(map(lambda x: json.dumps(x), err['details']['causes'])))
         error = True
 
-    return (resp,error)
+    return (resp, error)
 
 
 def delete_pod(api, data):

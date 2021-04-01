@@ -36,7 +36,7 @@ logging.basicConfig(stream=sys.stderr,
 log = logging.getLogger('kubernetes-model-source')
 
 
-def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
+def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
     tags = []
     tags.extend(taglist.split(','))
 
@@ -51,7 +51,6 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
 
         log.info("------")
         log.info("container-name:" + container.name)
-
 
         for statuses in pod.status.container_statuses:
             log.info("pod-container-name:" + statuses.name)
@@ -86,6 +85,11 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
             labels.append(keys + ":" + values)
 
     default_settings = {
+        'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
+        'kubernetes:cluster_url': os.environ.get('RD_CONFIG_URL'),
+        'kubernetes:api_token':   os.environ.get('RD_CONFIG_TOKEN'),
+        'kubernetes:verify_ssl':  os.environ.get('RD_CONFIG_VERIFY_SSL'),
+        'kubernetes:ssl_ca_cert': os.environ.get('RD_CONFIG_SSL_CA_CERT'),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,
         'default:started_at': startedAt,
