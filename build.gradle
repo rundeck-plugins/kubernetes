@@ -33,6 +33,85 @@ scmVersion {
 }
 
 project.version = scmVersion.version
-ext.archiveFilename = ext.archivesBaseName + '-' + version 
+ext.archiveFilename = ext.archivesBaseName + '-' + version
 
-apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/master/build.gradle'
+import org.apache.tools.ant.filters.ReplaceTokens
+
+defaultTasks 'build'
+
+task pluginZip(type: Jar) {
+    destinationDir = file("build/libs")
+    baseName = project.ext.archivesBaseName
+    version = project.version
+    classifier = ''
+    extension = 'zip'
+
+    from("${project.buildDir}/zip-contents") {
+        include("*.yaml")
+        include("resources/**")
+        include("contents/*")
+        into(archiveFilename)
+    }
+
+    manifest {
+        attributes 'Rundeck-Plugin-Name': pluginName.toString(),
+                   'Rundeck-Plugin-Description': pluginDescription.toString(),
+                   'Rundeck-Plugin-Archive': 'true',
+                   'Rundeck-Plugin-File-Version': version,
+                   'Rundeck-Plugin-Author': sopsCopyright,
+                   'Rundeck-Plugin-URL': sopsUrl,
+                   'Rundeck-Plugin-Date': buildDateString
+    }
+}
+
+pluginZip.doFirst {
+    def assetsMap = new Properties()
+    def tokens = assetsMap + [
+            version    : version,
+            date       : new Date().format("yyyy-MM-dd'T'HH:mm:ssX").toString(),
+            author     : sopsCopyright,
+            url        : sopsUrl,
+            title      : pluginName,
+            description: pluginDescription,
+            name       : archivesBaseName.toString(),
+    ]
+
+    copy {
+
+        from("${project.projectDir}/resources"){
+            include '**/*'
+            into "resources"
+        }
+
+        from("${project.projectDir}/contents"){
+            into "contents"
+        }
+
+        from("${project.projectDir}/plugin.yaml") {
+            filter(ReplaceTokens, tokens: tokens)
+            exclude '**/*.png'
+        }
+
+        into "${project.buildDir}/zip-contents"
+    }
+}
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        mavenZip(MavenPublication) {
+            artifact pluginZip
+        }
+    }
+}
+
+defaultTasks 'clean', 'build','pluginZip'
+
+task build(dependsOn: ['pluginZip']) { doLast { } }
+
+task install(dependsOn: ['build','publishToMavenLocal']) { doLast { } }
+
+task clean(type: Delete) {
+    delete('build')
+}
