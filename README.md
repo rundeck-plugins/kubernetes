@@ -60,7 +60,7 @@ This plugin allows getting the container pods from kubernetes as rundeck nodes.
 For example: ```metadata.namespace=default``` will show the pods of the default namespace.
 * **Just Running Pods?**: Filter by running pods
 
-This plugin generate a list of `default` pod's attributes in order to reference them on the custom config parameters of the plugin (eg: default:status, default:image). The following list are the default available attributes:
+This plugin generates a list of `default` pod's attributes in order to reference them on the custom config parameters of the plugin (eg: default:status, default:image). The following list are the default available attributes:
 
 ```
 default:pod_id: Pod ID,
@@ -103,24 +103,24 @@ For now just script and text files can be copied to a remote pod.
 The following steps plugins allow you to deploy/un-deploy applications and run/re-run jobs on kubernetes. For example, you can create deployment, services, ingress, etc and update or delete those kubernetes resources.
 
 ### Create / Update / Delete / Check / Wait a Deployment
-Theses steps manage deployment resources, you can create, update or delete a deployment and check its status.
+These steps manage deployment resources, you can create, update or delete a deployment and check its status.
 
 Also, you have a step to wait for a deployment to be ready when the deployment is created. These require that the deployment define a `Readiness Probe` (further information [here](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#define-readiness-probes))
 
 ### Create / Update / Delete Services
 
-Theses steps manage services resources, you can create, update or delete a service.
+These steps manage services resources, you can create, update or delete a service.
 
 
 ### Create / Delete / Re-run Jobs
 
-Theses steps manage services resources, you can create or delete a Job.
+These steps manage services resources, you can create or delete a Job.
 
 Also, you can re-run jobs that are already created. Kubernetes doesn't allow re-run jobs, so what this step does is get the job definition, delete it, and creating it again.
 
 ### Generic Steps
 
-These steps provide a generic way to create/delete resources on kubernetes using a yaml script. The resources that this plugin allows to create are:
+These steps provide a generic way to create/delete resources on kubernetes using a yaml script. The resources that this plugin allows creating are:
 
 * Deployment
 * Service
