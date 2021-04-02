@@ -86,8 +86,8 @@ def wait():
 
         log.info("current_replicas" + str(replicas))
 
-    except ApiException as e:
-        log.error("Exception deleting StatefulSet: %s\n" % e)
+    except ApiException:
+        log.exception("Exception deleting StatefulSet:")
         sys.exit(1)
 
 

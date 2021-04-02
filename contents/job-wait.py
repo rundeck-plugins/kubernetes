@@ -129,8 +129,8 @@ def wait():
             log.info("Job failed")
             sys.exit(1)
 
-    except ApiException as e:
-        log.error("Exception waiting for job: %s\n" % e)
+    except ApiException:
+        log.exception("Exception waiting for job:")
         sys.exit(1)
 
 

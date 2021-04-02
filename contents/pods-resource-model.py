@@ -104,7 +104,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
 
     # custom mapping attributes
     if mappingList:
-        log.debug('Mapping: %s' % mappingList)
+        log.debug('Mapping: %s', mappingList)
         mappings.extend(mappingList.split(','))
 
         for mapping in mappings:
@@ -125,7 +125,7 @@ def nodeCollectData(pod,container, defaults, taglist, mappingList, boEmoticon):
                     if custom_attribute:
                         custom_attributes[attribute] = custom_attribute
 
-        log.debug('Custom Attributes: %s' % custom_attributes)
+        log.debug('Custom Attributes: %s', custom_attributes)
 
     # rundeck attributes
     data = default_settings
@@ -234,10 +234,11 @@ def main():
 
     for i in ret.items:
         for container in i.spec.containers:
-            log.debug("%s\t%s\t%s\t%s" % (i.status.pod_ip,
-                                          i.metadata.namespace,
-                                          i.metadata.name,
-                                          container.name))
+            log.debug("%s\t%s\t%s\t%s",
+                      i.status.pod_ip,
+                      i.metadata.namespace,
+                      i.metadata.name,
+                      container.name)
 
             node_data = nodeCollectData(i,
                                         container,

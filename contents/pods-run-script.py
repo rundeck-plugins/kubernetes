@@ -28,8 +28,8 @@ def main():
     name = os.environ.get('RD_CONFIG_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s ", namespace)
     log.debug("--------------------------")
 
     delete_on_fail = False
@@ -42,11 +42,11 @@ def main():
                                        namespace=namespace)
     except ApiException as e:
         if e.status != 404:
-            log.error("Unknown error: %s" % e)
+            log.error("Unknown error: %s" e)
             exit(1)
 
     if not resp:
-        log.error("Pod %s does not exits." % name)
+        log.error("Pod %s does not exits.", name)
         exit(1)
 
     core_v1 = client.CoreV1Api()
@@ -85,7 +85,7 @@ def main():
         temp.write(script)
         temp.seek(0)
 
-        log.debug("coping script from %s to %s" % (temp.name,full_path))
+        log.debug("coping script from %s to %s", temp.name, full_path)
 
         common.copy_file(name=name,
                          namespace=namespace,
@@ -100,7 +100,7 @@ def main():
 
     permissions_command = ["chmod", "+x", full_path]
 
-    log.debug("setting permissions %s" % permissions_command)
+    log.debug("setting permissions %s", permissions_command)
     resp = common.run_command(name=name,
                               namespace=namespace,
                               container=container,
@@ -122,7 +122,7 @@ def main():
         arguments = os.environ.get('RD_CONFIG_ARGUMENTS')
         exec_command.append(arguments)
 
-    log.debug("running script %s" % exec_command)
+    log.debug("running script %s", exec_command)
 
     resp, error = common.run_interactive_command(name=name,
                                           namespace=namespace,
@@ -144,7 +144,7 @@ def main():
 
     rm_command = ["rm", full_path]
 
-    log.debug("removing file %s" % rm_command)
+    log.debug("removing file %s", rm_command)
     resp = common.run_command(name=name,
                               namespace=namespace,
                               container=container,

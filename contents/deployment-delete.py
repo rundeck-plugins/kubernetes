@@ -42,8 +42,8 @@ def main():
         apps_v1 = client.AppsV1Api()
 
         delete_deployment(apps_v1, data)
-    except ApiException as e:
-        log.error("Exception deleting deployment: %s\n" % e)
+    except ApiException:
+        log.exception("Exception deleting deployment:")
         sys.exit(1)
 
 

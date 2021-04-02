@@ -33,9 +33,9 @@ def main():
     container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
-    log.debug("Container: %s " % container)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s ", namespace)
+    log.debug("Container: %s ", container)
     log.debug("--------------------------")
 
     resp = None
@@ -57,7 +57,7 @@ def main():
     #force print destination to avoid error with node-executor
     print(destination_file)
 
-    log.debug("Copying file from %s to %s" % (source_file, destination_file))
+    log.debug("Copying file from %s to %s", source_file, destination_file)
 
     destination_path = os.path.dirname(destination_file)
     destination_file_name = os.path.basename(destination_file)
