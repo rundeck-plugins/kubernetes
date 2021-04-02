@@ -20,8 +20,8 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 def wait():
     try:
-        name = environ.get("RD_CONFIG_NAME")
-        namespace = environ.get("RD_CONFIG_NAMESPACE")
+        name = environ.get('RD_CONFIG_NAME', environ.get('RD_NODE_DEFAULT_NAME'))
+        namespace = environ.get('RD_CONFIG_NAMESPACE', environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
         retries = int(environ.get("RD_CONFIG_RETRIES"))
         sleep = float(environ.get("RD_CONFIG_SLEEP"))
         show_log = environ.get("RD_CONFIG_SHOW_LOG") == "true"

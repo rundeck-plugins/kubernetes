@@ -53,9 +53,9 @@ def main():
     container = os.environ.get('RD_CONFIG_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
-    log.debug("Container: %s " % container)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     data = {}

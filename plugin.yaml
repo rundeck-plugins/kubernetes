@@ -1853,13 +1853,12 @@ providers:
         type: String
         title: "Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the deployment will be created "
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - type: Boolean
         name: follow
         title: Follow Output
@@ -2109,13 +2108,12 @@ providers:
         type: String
         title: "Name"
         description: "Pod Name"
-        required: true
+        required: fals
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the pod will be created "
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"
@@ -2172,13 +2170,13 @@ providers:
         type: String
         title: "Name"
         description: "Job Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
         default: "default"
-        description: "Namespace where the job was created"
-        required: true
+        description: "Namespace where the pod was created"
+        required: delete
       - name: retries
         type: String
         title: "Retries"
@@ -2253,13 +2251,12 @@ providers:
         type: String
         title: "Pod Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the job was created"
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - name: shell
         type: String
         title: "Shell"
@@ -2327,13 +2324,12 @@ providers:
         type: String
         title: "Pod Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
         description: "Namespace where the job was created"
-        required: true
+        required: false
       - name: script
         type: String
         title: "Script"

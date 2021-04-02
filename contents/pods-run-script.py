@@ -24,12 +24,14 @@ def main():
     common.connect()
 
     api = core_v1_api.CoreV1Api()
-    namespace = os.environ.get('RD_CONFIG_NAMESPACE')
-    name = os.environ.get('RD_CONFIG_NAME')
+    name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
+    namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
+    container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     delete_on_fail = False
