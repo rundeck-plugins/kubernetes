@@ -42,7 +42,7 @@ def main():
                                        namespace=namespace)
     except ApiException as e:
         if e.status != 404:
-            log.error("Unknown error: %s" e)
+            log.exception("Unknown error:")
             exit(1)
 
     if not resp:

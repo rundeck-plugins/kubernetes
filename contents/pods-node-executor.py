@@ -52,11 +52,11 @@ def main():
                                        namespace=namespace)
     except ApiException as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            log.exception("Unknown error:")
             exit(1)
 
     if not resp:
-        print("Pod %s does not exits." % name)
+        log.error("Pod %s does not exist", name)
         exit(1)
 
     shell = os.environ.get('RD_CONFIG_SHELL')

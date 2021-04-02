@@ -498,5 +498,5 @@ def delete_pod(api, data):
 
     except Exception as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            log.exception("Unknown error:")
             return None
