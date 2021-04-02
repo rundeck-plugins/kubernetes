@@ -14,7 +14,7 @@ log = logging.getLogger('kubernetes-model-source')
 
 
 def create_deployment_object(data):
-    # Configureate Pod template container
+    # Configure Pod template container
 
     template_spec = common.create_pod_template_spec(data=data)
 
@@ -29,7 +29,7 @@ def create_deployment_object(data):
         annotations = dict(s.split('=') for s in annotations_array)
         meta.annotations = annotations
 
-    # Create and configurate a spec section
+    # Create and configure a spec section
     template = client.V1PodTemplateSpec(
         metadata=meta,
         spec=template_spec
@@ -52,7 +52,7 @@ def create_deployment_object(data):
 
 
 def create_deployment(api_instance, deployment, data):
-    # Create deployement
+    # Create deployment
     api_response = api_instance.create_namespaced_deployment(
         body=deployment,
         namespace=data["namespace"])
