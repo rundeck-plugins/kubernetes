@@ -54,8 +54,8 @@ def main():
 
     log.debug("--------------------------")
     log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s ", namespace)
-    log.debug("Container: %s ", container)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     data = {}

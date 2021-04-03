@@ -29,7 +29,7 @@ def main():
 
     log.debug("--------------------------")
     log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s ", namespace)
+    log.debug("Namespace: %s", namespace)
     log.debug("--------------------------")
 
     delete_on_fail = False
