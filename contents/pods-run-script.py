@@ -29,9 +29,8 @@ def main():
     container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s", namespace)
-    log.debug("Container: %s", container)
+    log.debug("Pod Name:  %s" % name)
+    log.debug("Namespace: %s " % namespace)
     log.debug("--------------------------")
 
     delete_on_fail = False
