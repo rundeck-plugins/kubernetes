@@ -24,14 +24,12 @@ def main():
     name = None
     namespace = None
 
-    if 'RD_NODE_DEFAULT_NAME' in os.environ and 'RD_NODE_DEFAULT_NAME' and 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
-        namespace = os.environ.get('RD_NODE_DEFAULT_NAMESPACE')
-        name = os.environ.get('RD_NODE_DEFAULT_NAME')
+    name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
+    namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
+
+    if 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
         container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
     else:
-        namespace = os.environ.get('RD_CONFIG_NAMESPACE')
-        name = os.environ.get('RD_CONFIG_NAME')
-
         core_v1 = client.CoreV1Api()
         response = core_v1.read_namespaced_pod_status(
             name=name,

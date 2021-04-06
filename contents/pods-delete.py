@@ -33,8 +33,8 @@ def main():
 
     data = {}
 
-    data["name"] = os.environ.get('RD_CONFIG_NAME')
-    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
+    data["name"] = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
+    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
 
     common.connect()
 
