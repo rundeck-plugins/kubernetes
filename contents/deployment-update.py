@@ -15,7 +15,7 @@ log = logging.getLogger('kubernetes-model-source')
 
 
 def create_deployment_object(data):
-    # Configureate Pod template container
+    # Configure Pod template container
 
     ports = []
 
@@ -48,16 +48,16 @@ def create_deployment_object(data):
                 # passing secret env
                 value = tmp_envs[key]
                 secrets = value.split(':')
-                secrect_key = secrets[1]
-                secrect_name = secrets[0]
+                secret_key = secrets[1]
+                secret_name = secrets[0]
 
                 envs.append(client.V1EnvVar(
                     name=key,
                     value="",
                     value_from=client.V1EnvVarSource(
                         secret_key_ref=client.V1SecretKeySelector(
-                            key=secrect_key,
-                            name=secrect_name)
+                            key=secret_key,
+                            name=secret_name)
                     )
                 )
                 )
@@ -98,7 +98,7 @@ def create_deployment_object(data):
         labels_array = data["labels"].split(',')
         labels = dict(s.split('=') for s in labels_array)
 
-    # Create and configurate a spec section
+    # Create and configure a spec section
     template = client.V1PodTemplateSpec(
         spec=client.V1PodSpec(containers=[container])
     )

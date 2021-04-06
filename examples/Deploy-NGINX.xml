@@ -61,7 +61,7 @@
         </node-step-plugin>
       </command>
       <command>
-        <description>Wating-For-Nginx-App</description>
+        <description>Waiting-For-Nginx-App</description>
         <node-step-plugin type='Kubernetes-Wait-Deployment'>
           <configuration>
             <entry key='debug' value='false' />

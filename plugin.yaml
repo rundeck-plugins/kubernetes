@@ -268,14 +268,14 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: true
         renderingOptions:
           groupName: Metadata
       - name: annotations
         type: String
         title: "Annotations"
-        description: "Annotations. Add a comma separeted values (key=value format)"
+        description: "Annotations. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
@@ -467,7 +467,7 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
@@ -731,7 +731,7 @@ providers:
   - name: Kubernetes-Wait-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Waitfor
-    description: 'Waitfor Deployment'
+    description: 'Wait for Deployment'
     plugin-type: script
     script-interpreter: python -u
     script-file: deployment-wait.py
@@ -808,7 +808,7 @@ providers:
   - name: Kubernetes-Wait-StatefulSet
     service: WorkflowNodeStep
     title: Kubernetes / StatefulSet / Waitfor
-    description: 'Waitfor StatefulSet'
+    description: 'Wait for StatefulSet'
     plugin-type: script
     script-interpreter: python -u
     script-file: StatefulSet-wait.py
@@ -1062,21 +1062,21 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: true
         renderingOptions:
           groupName: Config
       - name: annotations
         type: String
         title: "Annotations"
-        description: "Annotations. Add a comma separeted values (key=value format)"
+        description: "Annotations. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Config
       - name: selectors
         type: String
         title: "Selectors"
-        description: "Selectors. Add a comma separeted values (key=value format)"
+        description: "Selectors. Add comma separated values (key=value format)"
         required: true
         renderingOptions:
           groupName: Spec
@@ -1205,21 +1205,21 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Config
       - name: annotations
         type: String
         title: "Annotations"
-        description: "Annotations. Add a comma separeted values (key=value format)"
+        description: "Annotations. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Config
       - name: selectors
         type: String
         title: "Selectors"
-        description: "Selectors. Add a comma separeted values (key=value format)"
+        description: "Selectors. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Spec
@@ -1413,21 +1413,21 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
       - name: annotations
         type: String
         title: "Annotations"
-        description: "Annotations. Add a comma separeted values (key=value format)"
+        description: "Annotations. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
       - name: selectors
         type: String
         title: "Selectors"
-        description: "Selectors. Add a comma separeted values (key=value format)"
+        description: "Selectors. Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
@@ -1469,8 +1469,8 @@ providers:
           groupName: Metadata
       - name: node_selector
         type: String
-        title: "NodeSelctor"
-        description: "Node selection constraint, Add a comma separeted values (key=value format)"
+        title: "NodeSelector"
+        description: "Node selection constraint, Add comma separated values (key=value format)"
         required: false
         renderingOptions:
           groupName: Metadata
@@ -1760,7 +1760,7 @@ providers:
   - name: Kubernetes-Wait-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Waitfor
-    description: 'Waitfor Job'
+    description: 'Wait for Job'
     plugin-type: script
     script-interpreter: python -u
     script-file: job-wait.py
@@ -1853,13 +1853,12 @@ providers:
         type: String
         title: "Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the deployment will be created "
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - type: Boolean
         name: follow
         title: Follow Output
@@ -1950,7 +1949,7 @@ providers:
       - name: labels
         type: String
         title: "Labels"
-        description: "Labels. Add a comma separeted values (key=value format)"
+        description: "Labels. Add comma separated values (key=value format)"
         required: true
         renderingOptions:
           groupName: Metadata
@@ -2109,13 +2108,12 @@ providers:
         type: String
         title: "Name"
         description: "Pod Name"
-        required: true
+        required: fals
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the pod will be created "
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"
@@ -2162,7 +2160,7 @@ providers:
   - name: Kubernetes-Wait-Pod
     service: WorkflowNodeStep
     title: Kubernetes / Pod / Waitfor
-    description: 'Waitfor Pod ready status'
+    description: 'Wait for Pod ready status'
     plugin-type: script
     script-interpreter: python -u
     script-file: pods-wait.py
@@ -2172,13 +2170,13 @@ providers:
         type: String
         title: "Name"
         description: "Job Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
         default: "default"
-        description: "Namespace where the job was created"
-        required: true
+        description: "Namespace where the pod was created"
+        required: delete
       - name: retries
         type: String
         title: "Retries"
@@ -2253,13 +2251,12 @@ providers:
         type: String
         title: "Pod Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
-        description: "Namespace where the job was created"
-        required: true
+        description: "Namespace where the pod was created"
+        required: false
       - name: shell
         type: String
         title: "Shell"
@@ -2327,13 +2324,12 @@ providers:
         type: String
         title: "Pod Name"
         description: "Pod Name"
-        required: true
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
-        default: "default"
         description: "Namespace where the job was created"
-        required: true
+        required: false
       - name: script
         type: String
         title: "Script"

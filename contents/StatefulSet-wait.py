@@ -56,12 +56,12 @@ def wait():
             sys.exit(0)
 
         while ( ready_replicas < replicas ):
-            log.info("wating for StatefulSet")
+            log.info("waiting for StatefulSet")
             time.sleep(float(sleep))
             retries_count = retries_count+1
 
             if retries_count > retries:
-                log.error("number retries exedded")
+                log.error("number of retries exceeded")
                 sys.exit(1)
 
             api_response = AppsV1Api.read_namespaced_stateful_set(

@@ -19,8 +19,8 @@ def main():
         log.debug("Log level configured for DEBUG")
 
     data = {}
-    data["name"] = os.environ.get('RD_CONFIG_NAME')
-    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
+    data["name"] = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
+    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
     data["container"] = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
     data["follow"] = os.environ.get('RD_CONFIG_FOLLOW')
 

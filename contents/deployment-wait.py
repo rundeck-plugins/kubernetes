@@ -56,12 +56,12 @@ def wait():
             sys.exit(0)
 
         while (unavailable_replicas is not None):
-            log.info("wating for deployment")
+            log.info("waiting for deployment")
             time.sleep(float(sleep))
             retries_count = retries_count+1
 
             if retries_count > retries:
-                log.error("number retries exedded")
+                log.error("number of retries exceeded")
                 sys.exit(1)
 
             api_response = appsV1Api.read_namespaced_deployment(

@@ -21,7 +21,7 @@ scmVersion {
         prefix = ''
         versionSeparator = ''
         def origDeserialize=deserialize
-        //apend .0 to satisfy semver if the tag version is only X.Y
+        // Append .0 to satisfy semver if the tag version is only X.Y
         deserialize = { config, position, tagName ->
             def orig = origDeserialize(config, position, tagName)
             if (orig.split('\\.').length < 3) {
@@ -35,4 +35,4 @@ scmVersion {
 project.version = scmVersion.version
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
-apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/master/build.gradle'
+apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/gradle-5.6/build.gradle'
