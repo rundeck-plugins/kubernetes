@@ -266,8 +266,10 @@ class ObjectEncoder(json.JSONEncoder):
 
 
 def parseJson(obj):
-    return json.dumps(obj, cls=ObjectEncoder)
-
+    try:
+        return json.dumps(obj, cls=ObjectEncoder)
+    except:
+        return obj
 
 def create_pod_template_spec(data):
     ports = []
