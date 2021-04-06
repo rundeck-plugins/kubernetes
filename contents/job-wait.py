@@ -77,7 +77,7 @@ def wait():
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
                         break
-                    except IndexError as IndexEx:
+                    except IndexError:
                         log.warning("Still Waiting for Pod to be Scheduled")
                         time.sleep(60)
                         if schedule_timeout and time.time() - schedule_start_time > schedule_timeout:  # pragma: no cover
@@ -95,7 +95,7 @@ def wait():
                                                         namespace=namespace)
                         break
                     except ApiException as ex:
-                        log.warning("Pod is not ready, status: {}".format(ex.status))
+                        log.warning("Pod is not ready, status: %d", ex.status)
                         if ex.status == 200:
                             break
                         else:
@@ -129,8 +129,8 @@ def wait():
             log.info("Job failed")
             sys.exit(1)
 
-    except ApiException as e:
-        log.error("Exception waiting for job: %s\n" % e)
+    except ApiException:
+        log.exception("Exception waiting for job:")
         sys.exit(1)
 
 

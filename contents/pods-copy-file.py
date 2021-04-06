@@ -33,9 +33,9 @@ def main():
     container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
-    log.debug("Container: %s " % container)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     resp = None
@@ -44,11 +44,11 @@ def main():
                                        namespace=namespace)
     except ApiException as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            log.exception("Unknown error:")
             exit(1)
 
     if not resp:
-        print("Pod %s does not exist" % name)
+        log.error("Pod %s does not exist", name)
         exit(1)
 
     source_file = os.environ.get('RD_FILE_COPY_FILE')
@@ -57,7 +57,7 @@ def main():
     #force print destination to avoid error with node-executor
     print(destination_file)
 
-    log.debug("Copying file from %s to %s" % (source_file, destination_file))
+    log.debug("Copying file from %s to %s", source_file, destination_file)
 
     destination_path = os.path.dirname(destination_file)
     destination_file_name = os.path.basename(destination_file)

@@ -130,8 +130,8 @@ def main():
 
             print(common.parseJson(resp.status))
 
-    except ApiException as e:
-        log.error("Exception error creating: %s\n" % e)
+    except ApiException:
+        log.exception("Exception error creating:")
         sys.exit(1)
 
 

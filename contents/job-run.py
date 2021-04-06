@@ -63,8 +63,8 @@ def main():
 
         print(common.parseJson(api_response.status))
 
-    except ApiException as e:
-        log.error("Exception creating job: %s\n" % e)
+    except ApiException:
+        log.exception("Exception creating job:")
         sys.exit(1)
 
 

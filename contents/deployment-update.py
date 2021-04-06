@@ -189,8 +189,8 @@ def main():
         log.debug(deployment)
 
         update_deployment(apiV1, deployment, data)
-    except ApiException as e:
-        log.error("Exception updating deployment: %s\n" % e)
+    except ApiException:
+        log.exception("Exception updating deployment:")
         sys.exit(1)
 
 

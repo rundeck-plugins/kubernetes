@@ -53,9 +53,9 @@ def main():
     container = os.environ.get('RD_CONFIG_CONTAINER_NAME')
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
-    log.debug("Container: %s " % container)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     data = {}
@@ -113,8 +113,8 @@ def main():
 
         print("Pod Created successfully")
 
-    except ApiException as e:
-        log.error("Exception creating pod: %s\n" % e)
+    except ApiException:
+        log.exception("Exception creating pod:")
         exit(1)
 
     if not resp:

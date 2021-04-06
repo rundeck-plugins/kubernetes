@@ -68,7 +68,7 @@ def connect():
     log.debug("-------------------")
 
     if config_file:
-        log.debug("getting settings from file %s" % config_file)
+        log.debug("getting settings from file %s", config_file)
         config.load_kube_config(config_file=config_file)
     else:
 
@@ -421,9 +421,9 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
 
             if resp.peek_stdout():
                 if stdout:
-                    log.info("%s" % resp.read_stdout())
+                    log.info("%s", resp.read_stdout())
             if resp.peek_stderr():
-                log.error("ERROR: %s" % resp.read_stderr())
+                log.error("ERROR: %s", resp.read_stderr())
             if commands:
                 c = commands.pop(0)
 
@@ -480,7 +480,7 @@ def run_interactive_command(name, namespace, container, command):
         if resp.peek_stdout():
             print("%s" % resp.read_stdout())
         if resp.peek_stderr():
-            log.error("%s" % resp.read_stderr())
+            log.error("%s", resp.read_stderr())
 
     ERROR_CHANNEL = 3
     err = api.api_client.last_response.read_channel(ERROR_CHANNEL)
@@ -510,5 +510,5 @@ def delete_pod(api, data):
 
     except Exception as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            log.exception("Unknown error:")
             return None

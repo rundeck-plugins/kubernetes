@@ -53,8 +53,8 @@ def main():
                                                                watch=watch)
 
             print(common.parseJson(api_response))
-        except ApiException as e:
-            print("Exception when calling CoreV1Api->delete_collection_namespaced_pod: %s\n" % e)
+        except ApiException:
+            log.exception("Exception when calling CoreV1Api->delete_collection_namespaced_pod:")
 
 
         body = client.V1DeleteOptions(api_version='v1', kind="DeleteOptions", propagation_policy="Background")
@@ -68,8 +68,8 @@ def main():
 
         print(common.parseJson(api_response.status))
 
-    except ApiException as e:
-        log.error("Exception when calling delete_namespaced_job: %s\n" % e)
+    except ApiException:
+        log.exception("Exception when calling delete_namespaced_job:")
         sys.exit(1)
 
 

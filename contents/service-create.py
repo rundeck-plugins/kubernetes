@@ -110,8 +110,8 @@ def main():
         )
         print(common.parseJson(resp.status))
 
-    except ApiException as e:
-        log.error("Exception when calling create_namespaced_service: %s\n" % e)
+    except ApiException:
+        log.exception("Exception when calling create_namespaced_service:")
         sys.exit(1)
 
 

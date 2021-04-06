@@ -39,9 +39,9 @@ def main():
         container = response.spec.containers[0].name
 
     log.debug("--------------------------")
-    log.debug("Pod Name:  %s" % name)
-    log.debug("Namespace: %s " % namespace)
-    log.debug("Container: %s " % container)
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
     log.debug("--------------------------")
 
     resp = None
@@ -50,11 +50,11 @@ def main():
                                        namespace=namespace)
     except ApiException as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            log.exception("Unknown error:")
             exit(1)
 
     if not resp:
-        print("Pod %s does not exist" % name)
+        log.error("Pod %s does not exist", name)
         exit(1)
 
     shell = os.environ.get('RD_CONFIG_SHELL')
@@ -64,7 +64,7 @@ def main():
     else:
         command = os.environ['RD_CONFIG_COMMAND']
 
-    log.debug("Command: %s " % command)
+    log.debug("Command: %s ", command)
 
     # calling exec and wait for response.
     exec_command = [

@@ -72,8 +72,8 @@ def wait():
 
             log.info("unavailable replicas: " + str(unavailable_replicas))
 
-    except ApiException as e:
-        log.error("Exception deleting deployment: %s\n" % e)
+    except ApiException:
+        log.exception("Exception deleting deployment:")
         sys.exit(1)
 
 

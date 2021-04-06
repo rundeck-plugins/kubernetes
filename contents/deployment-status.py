@@ -38,18 +38,18 @@ def main():
 
         if(u_replicas is not None):
             log.error(
-                "unavailable replicas on the deployment: %s\n" % u_replicas
+                "unavailable replicas on the deployment: %s\n", u_replicas
             )
             sys.exit(1)
 
         if (replicas != r_replicas):
             log.error(
-                "ready replicas doesn't match with replicas: %s\n" % r_replicas
+                "ready replicas doesn't match with replicas: %s\n", r_replicas
             )
             sys.exit(1)
 
-    except ApiException as e:
-        log.error("Exception deleting deployment: %s\n" % e)
+    except ApiException:
+        log.exception("Exception deleting deployment:")
         sys.exit(1)
 
 
