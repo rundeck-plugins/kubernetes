@@ -46,8 +46,8 @@ def create_job_object(data):
                 # passing secret env
                 value = tmp_envs[key]
                 secrets = value.split(':')
-                secrect_key = secrets[1]
-                secrect_name = secrets[0]
+                secret_key = secrets[1]
+                secret_name = secrets[0]
 
                 envs.append(
                     client.V1EnvVar(
@@ -55,8 +55,8 @@ def create_job_object(data):
                         value="",
                         value_from=client.V1EnvVarSource(
                             secret_key_ref=client.V1SecretKeySelector(
-                                key=secrect_key,
-                                name=secrect_name
+                                key=secret_key,
+                                name=secret_name
                             )
                         )
                     )

@@ -54,7 +54,7 @@ def main():
             exit(1)
 
     if not resp:
-        print("Pod %s does not exits." % name)
+        print("Pod %s does not exist" % name)
         exit(1)
 
     shell = os.environ.get('RD_CONFIG_SHELL')

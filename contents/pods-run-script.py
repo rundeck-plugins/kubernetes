@@ -47,7 +47,7 @@ def main():
             exit(1)
 
     if not resp:
-        log.error("Pod %s does not exits." % name)
+        log.error("Pod %s does not exist" % name)
         exit(1)
 
     core_v1 = client.CoreV1Api()

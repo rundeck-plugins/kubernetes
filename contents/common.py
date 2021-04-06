@@ -73,7 +73,7 @@ def connect():
     else:
 
         if url:
-            log.debug("getting settings from pluing configuration")
+            log.debug("getting settings from plugin configuration")
 
             configuration = Configuration()
             configuration.host = url
@@ -92,7 +92,7 @@ def connect():
 
             client.Configuration.set_default(configuration)
         else:
-            log.debug("getting from default config file")
+            log.debug("getting settings from default config file")
             config.load_kube_config()
 
 
@@ -295,16 +295,16 @@ def create_pod_template_spec(data):
                 # passing secret env
                 value = tmp_envs[key]
                 secrets = value.split(':')
-                secrect_key = secrets[1]
-                secrect_name = secrets[0]
+                secret_key = secrets[1]
+                secret_name = secrets[0]
 
                 envs.append(client.V1EnvVar(
                     name=key,
                     value="",
                     value_from=client.V1EnvVarSource(
                         secret_key_ref=client.V1SecretKeySelector(
-                            key=secrect_key,
-                            name=secrect_name))
+                            key=secret_key,
+                            name=secret_name))
                 )
                 )
 

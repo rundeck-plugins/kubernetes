@@ -49,7 +49,7 @@ def wait():
                 log.error("Number of retries exceeded")
                 sys.exit(1)
 
-            print("Wating for pod completion ... ")
+            print("Waiting for pod completion ... ")
             time.sleep(sleep)
             api_response = core_v1.read_namespaced_pod_status(
                 name=name,

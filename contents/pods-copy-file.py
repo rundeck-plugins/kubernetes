@@ -48,7 +48,7 @@ def main():
             exit(1)
 
     if not resp:
-        print("Pod %s does not exits." % name)
+        print("Pod %s does not exist" % name)
         exit(1)
 
     source_file = os.environ.get('RD_FILE_COPY_FILE')
