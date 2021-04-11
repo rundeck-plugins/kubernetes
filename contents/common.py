@@ -12,6 +12,7 @@ from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.stream import stream
 from kubernetes.client.api import core_v1_api
+from kubernetes.client.rest import ApiException
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -134,6 +135,63 @@ def load_liveness_readiness_probe(data):
         v1Probe.timeout_seconds = probe["timeoutSeconds"]
 
     return v1Probe
+
+
+def get_core_node_parameter_list():
+    """
+    Finds pod and container request info.
+
+    For pod name and namespace, looks for an explicitly specified value in the
+    step definition, and uses the node value if no explicit setting is found.
+    When creating nodes, uses 'default' as the namespace when one is not
+    specified.
+
+    :returns: A list of name, namespace, and container
+    """
+    data = get_code_node_parameter_dictionary()
+    return [data['name'], data['namespace'], data['container_name']]
+
+
+def get_code_node_parameter_dictionary():
+    """
+    Finds pod and container request info.
+
+    For pod name and namespace, looks for an explicitly specified value in the
+    step definition, and uses the node value if no explicit setting is found.
+    When creating nodes, uses 'default' as the namespace when one is not
+    specified.
+
+    :returns: A dictionary of name, namespace, and container
+    """
+    return {
+        'name': os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME')),
+        'namespace': os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default')),
+        'container_name': os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+    }
+
+
+def log_pod_parameters(logger, data):
+    """Writes debug-level log for a pod."""
+    logger.debug("--------------------------")
+    logger.debug("Pod Name:  %s", data['name'])
+    logger.debug("Namespace: %s", data['namespace'])
+    logger.debug("Container: %s", data['container_name'])
+    logger.debug("--------------------------")
+
+
+def verify_pod_exists(name, namespace):
+    """Verify pod exists."""
+    api = core_v1_api.CoreV1Api()
+    resp = None
+    try:
+        resp = api.read_namespaced_pod(name=name, namespace=namespace)
+    except ApiException as e:
+        if e.status != 404:
+            log.exception("Unknown error:")
+            exit(1)
+    if not resp:
+        log.error("Pod %s does not exist", name)
+        exit(1)
 
 
 def parsePorts(data):
@@ -268,6 +326,7 @@ def parseJson(obj):
         return json.dumps(obj, cls=ObjectEncoder)
     except:
         return obj
+
 
 def create_pod_template_spec(data):
     ports = []
@@ -493,7 +552,8 @@ def run_interactive_command(name, namespace, container, command):
     return (resp, error)
 
 
-def delete_pod(api, data):
+def delete_pod(data):
+    api = core_v1_api.CoreV1Api()
     body = client.V1DeleteOptions()
 
     try:
@@ -503,7 +563,6 @@ def delete_pod(api, data):
                                          body=body,
                                          grace_period_seconds=5,
                                          propagation_policy='Foreground')
-
         return resp
 
     except Exception as e:
