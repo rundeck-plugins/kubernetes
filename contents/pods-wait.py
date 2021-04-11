@@ -20,8 +20,9 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 def wait():
     try:
-        name = environ.get('RD_CONFIG_NAME', environ.get('RD_NODE_DEFAULT_NAME'))
-        namespace = environ.get('RD_CONFIG_NAMESPACE', environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
+        data = common.get_code_node_parameter_dictionary()
+        name = data['name']
+        namespace = data['namespace']
         retries = int(environ.get("RD_CONFIG_RETRIES"))
         sleep = float(environ.get("RD_CONFIG_SLEEP"))
         show_log = environ.get("RD_CONFIG_SHOW_LOG") == "true"
@@ -39,11 +40,11 @@ def wait():
         status = False
 
         if api_response.status.container_statuses:
-           status = api_response.status.container_statuses[0].ready
+            status = api_response.status.container_statuses[0].ready
 
         # Poll for completion if retries
         retries_count = 0
-        while status == False:
+        while not status:
             retries_count = retries_count + 1
             if retries_count > retries:
                 log.error("Number of retries exceeded")
@@ -64,7 +65,8 @@ def wait():
 
         if show_log:
             for i in range(len(api_response.status.container_statuses)):
-                log.info("Fetching logs from pod: {0}    -- container {1} ".format(name,api_response.status.container_statuses[i].name))
+                log.info("Fetching logs from pod: {0}    -- container {1} "
+                         .format(name, api_response.status.container_statuses[i].name))
                 pod_log = core_v1.read_namespaced_pod_log(
                     name=name,
                     namespace=namespace,

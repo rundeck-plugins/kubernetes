@@ -55,7 +55,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
         for statuses in pod.status.container_statuses:
             log.info("pod-container-name:" + statuses.name)
 
-            if (container.name == statuses.name):
+            if container.name == statuses.name:
                 if statuses.state.running is not None:
                     status = "running"
                     if statuses.state.running.started_at:
@@ -74,7 +74,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
 
     if terminated is False and pod.status.conditions is not None:
         for info in pod.status.conditions:
-            if (info.status == 'False'):
+            if info.status == 'False':
                 status = info.reason
                 statusMessage = info.message
 
@@ -212,6 +212,7 @@ def main():
     log.debug(label_selector)
     log.debug(field_selector)
 
+    ret = []
     if field_selector and label_selector:
         ret = v1.list_pod_for_all_namespaces(
             watch=False,
@@ -253,7 +254,7 @@ def main():
                                         )
 
             if running is False:
-                if(node_data["terminated"] is False):
+                if node_data["terminated"] is False:
                     node_set.append(node_data)
 
             if running is True:

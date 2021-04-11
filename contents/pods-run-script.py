@@ -6,8 +6,6 @@ import tempfile
 
 import common
 
-from kubernetes.client.api import core_v1_api
-from kubernetes.client.rest import ApiException
 from kubernetes import client
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
@@ -19,36 +17,18 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 PY = sys.version_info[0]
 
+
 def main():
 
     common.connect()
 
-    api = core_v1_api.CoreV1Api()
-    name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
-    namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
-    container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
-
-    log.debug("--------------------------")
-    log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s", namespace)
-    log.debug("--------------------------")
+    [name, namespace, container] = common.get_core_node_parameter_list()
+    common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container': container})
+    common.verify_pod_exists(name, namespace)
 
     delete_on_fail = False
     if os.environ.get('RD_CONFIG_DELETEONFAIL') == 'true':
         delete_on_fail = True
-
-    resp = None
-    try:
-        resp = api.read_namespaced_pod(name=name,
-                                       namespace=namespace)
-    except ApiException as e:
-        if e.status != 404:
-            log.exception("Unknown error:")
-            exit(1)
-
-    if not resp:
-        log.error("Pod %s does not exits.", name)
-        exit(1)
 
     core_v1 = client.CoreV1Api()
     response = core_v1.read_namespaced_pod_status(
@@ -92,7 +72,7 @@ def main():
                          namespace=namespace,
                          container=container,
                          source_file=temp.name,
-                         destination_path= destination_path,
+                         destination_path=destination_path,
                          destination_file_name=destination_file_name
                          )
 
@@ -126,20 +106,17 @@ def main():
     log.debug("running script %s", exec_command)
 
     resp, error = common.run_interactive_command(name=name,
-                                          namespace=namespace,
-                                          container=container,
-                                          command=exec_command
-                                          )
+                                                 namespace=namespace,
+                                                 container=container,
+                                                 command=exec_command
+                                                 )
     if error:
         log.error("error running script")
 
         if delete_on_fail:
             log.info("removing POD on fail")
-            data = {}
-            data["name"] = name
-            data["namespace"] = namespace
-            common.delete_pod(api, data)
-
+            data = {"name": name, "namespace": namespace}
+            common.delete_pod(data)
             log.info("POD deleted")
         sys.exit(1)
 

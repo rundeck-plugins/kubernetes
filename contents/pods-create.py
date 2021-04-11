@@ -1,5 +1,4 @@
 #!/usr/bin/env python -u
-import argparse
 import logging
 import sys
 import os
@@ -40,33 +39,19 @@ def create_pod(data):
     return pod
 
 
-
-
 def main():
 
     common.connect()
 
     api = core_v1_api.CoreV1Api()
 
-    namespace = os.environ.get('RD_CONFIG_NAMESPACE')
-    name = os.environ.get('RD_CONFIG_NAME')
-    container = os.environ.get('RD_CONFIG_CONTAINER_NAME')
-
-    log.debug("--------------------------")
-    log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s", namespace)
-    log.debug("Container: %s", container)
-    log.debug("--------------------------")
-
-    data = {}
+    data = common.get_code_node_parameter_dictionary()
+    common.log_pod_parameters(log, data)
 
     data["api_version"] = os.environ.get('RD_CONFIG_API_VERSION')
-    data["name"] = os.environ.get('RD_CONFIG_NAME')
-    data["container_name"] = os.environ.get('RD_CONFIG_CONTAINER_NAME')
     data["image"] = os.environ.get('RD_CONFIG_IMAGE')
     data["ports"] = os.environ.get('RD_CONFIG_PORTS')
     data["replicas"] = os.environ.get('RD_CONFIG_REPLICAS')
-    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
     data["labels"] = os.environ.get('RD_CONFIG_LABELS')
     if os.environ.get('RD_CONFIG_ENVIRONMENTS'):
         data["environments"] = os.environ.get('RD_CONFIG_ENVIRONMENTS')
@@ -107,7 +92,7 @@ def main():
     pod = create_pod(data)
     resp = None
     try:
-        resp = api.create_namespaced_pod(namespace=namespace,
+        resp = api.create_namespaced_pod(namespace=data['namespace'],
                                          body=pod,
                                          pretty="True")
 
@@ -118,7 +103,7 @@ def main():
         exit(1)
 
     if not resp:
-        print("Pod %s does not exist" % name)
+        print("Pod %s does not exist" % data['name'])
         exit(1)
 
 

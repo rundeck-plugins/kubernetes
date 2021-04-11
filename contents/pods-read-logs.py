@@ -18,10 +18,7 @@ def main():
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
-    data = {}
-    data["name"] = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
-    data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
-    data["container"] = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+    data = common.get_code_node_parameter_dictionary()
     data["follow"] = os.environ.get('RD_CONFIG_FOLLOW')
 
     common.connect()
@@ -34,23 +31,24 @@ def main():
             if data["container"]:
                 w = watch.Watch()
                 for line in w.stream(v1.read_namespaced_pod_log,
-                                     name=data["name"],
                                      namespace=data["namespace"],
+                                     name=data["name"],
                                      follow=False):
                     print(line)
             else:
                 w = watch.Watch()
-                for line in w.stream(v1.read_namespaced_pod_log, name=data["name"],
-                                     container=data["container"],
+                for line in w.stream(v1.read_namespaced_pod_log,
+                                     container=data["container_name"],
                                      namespace=data["namespace"],
+                                     name=data["name"],
                                      follow=False):
                     print(line)
         else:
             if data["container"]:
                 ret = v1.read_namespaced_pod_log(
+                    container=data["container_name"],
                     namespace=data["namespace"],
                     name=data["name"],
-                    container=data["container"],
                     _preload_content=False
                 )
             else:
