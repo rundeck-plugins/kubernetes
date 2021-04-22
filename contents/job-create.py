@@ -116,6 +116,11 @@ def create_job_object(data):
         ],
         restart_policy=data["job_restart_policy"])
 
+    if "node_selector" in data:
+        node_selectors_array = data["node_selector"].split(',')
+        node_selectors = dict(s.split('=') for s in node_selectors_array)
+        template_spec.node_selector = node_selectors
+
     if "volumes" in data:
         volumes_data = yaml.safe_load(data["volumes"])
         volumes = []
@@ -171,10 +176,6 @@ def create_job_object(data):
         selectors_array = data["selectors"].split(',')
         selectors = dict(s.split('=') for s in selectors_array)
         spec.selector = selectors
-    if "node_selector" in data:
-        node_selectors_array = data["node_selector"].split(',')
-        node_selectors = dict(s.split('=') for s in node_selectors_array)
-        spec.nodeSelector = node_selectors
     if "parallelism" in data:
         spec.parallelism = int(data["parallelism"])
     if "active_deadline_seconds" in data:
