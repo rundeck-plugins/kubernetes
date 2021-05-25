@@ -1467,9 +1467,9 @@ providers:
         required: false
         renderingOptions:
           groupName: Metadata
-      - name: node_selector
+      - name: node_selectors
         type: String
-        title: "NodeSelector"
+        title: "NodeSelectors"
         description: "Node selection constraint, Add comma separated values (key=value format)"
         required: false
         renderingOptions:
