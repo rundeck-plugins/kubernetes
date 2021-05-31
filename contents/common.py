@@ -191,13 +191,11 @@ def create_volume(volume_data):
 
         # hostpath
         if "hostPath" in volume_data and "path" in volume_data["hostPath"]:
-            host_path = client.V1HostPathVolumeSource(
-                path=volume_data["hostPath"]["path"]
-            )
-
-            if "hostPath" in volume_data and "type" in volume_data["hostPath"]:
+            host_path = client.V1HostPathVolumeSource(path=volume_data["hostPath"]["path"])
+            if "type" in volume_data["hostPath"]:
                 host_path.type = volume_data["hostPath"]["type"]
-                volume.host_path = host_path
+            volume.host_path = host_path
+
         # nfs
         if ("nfs" in volume_data and
                 "path" in volume_data["nfs"] and
