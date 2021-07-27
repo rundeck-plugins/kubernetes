@@ -49,8 +49,7 @@ def main():
         try:
             api_response = v1.delete_collection_namespaced_pod(data["namespace"],
                                                                pretty=pretty,
-                                                               label_selector=label_selector,
-                                                               watch=watch)
+                                                               label_selector=label_selector)
 
             print(common.parseJson(api_response))
         except ApiException:
