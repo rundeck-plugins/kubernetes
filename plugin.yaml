@@ -1483,6 +1483,13 @@ providers:
           groupName: Metadata
           displayType: MULTI_LINE
           codeSyntaxMode: yaml
+      - name: serviceaccount                                                                                                                                                                                                                  
+        type: String
+        title: "Service Account"
+        description: "Service Account to use for launching Job"
+        required: false
+        renderingOptions:
+          groupName: Metadata
       - name: container_name
         type: String
         title: "Container Name"
