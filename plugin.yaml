@@ -2330,6 +2330,11 @@ providers:
         title: "Namespace"
         description: "Namespace where the job was created"
         required: false
+      - name: container
+        type: String
+        title: "Container Name"
+        description: "Container name within the pod"
+        required: false
       - name: script
         type: String
         title: "Script"
