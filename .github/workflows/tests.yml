@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Test
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -17,17 +17,25 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "pypy3"]
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: echo Hello, world!
+    - uses: "actions/setup-python@v2"
+      with:
+        python-version: "${{ matrix.python-version }}"
 
-    # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
+    - name: "Install dependencies"
       run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+        python -VV
+        python -m site
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
+
+    - name: "Run tox targets for ${{ matrix.python-version }}"
+      run: "python -m tox"
