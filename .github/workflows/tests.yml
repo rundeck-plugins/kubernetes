@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "pypy3"]
+        python-version: ["pypy3"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -38,4 +38,4 @@ jobs:
         python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
 
     - name: "Run tox targets for ${{ matrix.python-version }}"
-      run: "python -m tox"
+      run: "python -m tox -c tox.ini"
