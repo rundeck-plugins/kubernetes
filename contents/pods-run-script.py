@@ -19,19 +19,14 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 PY = sys.version_info[0]
 
-def main():
 
+def main():
     common.connect()
 
     api = core_v1_api.CoreV1Api()
     name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
     namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
-    container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
-
-    log.debug("--------------------------")
-    log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s", namespace)
-    log.debug("--------------------------")
+    container = os.environ.get('RD_CONFIG_CONTAINER', os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME'))
 
     delete_on_fail = False
     if os.environ.get('RD_CONFIG_DELETEONFAIL') == 'true':
@@ -50,24 +45,31 @@ def main():
         log.error("Pod %s does not exits.", name)
         exit(1)
 
-    core_v1 = client.CoreV1Api()
-    response = core_v1.read_namespaced_pod_status(
-        name=name,
-        namespace=namespace,
-        pretty="True"
-    )
+    if not container:
+        core_v1 = client.CoreV1Api()
+        response = core_v1.read_namespaced_pod_status(
+            name=name,
+            namespace=namespace,
+            pretty="True"
+        )
 
-    if response.spec.containers:
-        container = response.spec.containers[0].name
-    else:
-        log.error("Container not found")
-        exit(1)
+        if response.spec.containers:
+            container = response.spec.containers[0].name
+        else:
+            log.error("Container not found")
+            exit(1)
 
     script = os.environ.get('RD_CONFIG_SCRIPT')
 
     # Python 3 expects bytes string to transfer the data.
     if PY == 3:
         script = script.encode('utf-8')
+
+    log.debug("--------------------------")
+    log.debug("Pod Name:  %s", name)
+    log.debug("Namespace: %s", namespace)
+    log.debug("Container: %s", container)
+    log.debug("--------------------------")
 
     invocation = "/bin/bash"
     if 'RD_CONFIG_INVOCATION' in os.environ:
@@ -92,7 +94,7 @@ def main():
                          namespace=namespace,
                          container=container,
                          source_file=temp.name,
-                         destination_path= destination_path,
+                         destination_path=destination_path,
                          destination_file_name=destination_file_name
                          )
 
@@ -126,10 +128,10 @@ def main():
     log.debug("running script %s", exec_command)
 
     resp, error = common.run_interactive_command(name=name,
-                                          namespace=namespace,
-                                          container=container,
-                                          command=exec_command
-                                          )
+                                                 namespace=namespace,
+                                                 container=container,
+                                                 command=exec_command
+                                                 )
     if error:
         log.error("error running script")
 
