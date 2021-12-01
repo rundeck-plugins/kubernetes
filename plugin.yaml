@@ -62,7 +62,7 @@ providers:
         name: emoticon
         title: Enable emoticons on nodes?
         description: 'Enable emoticons on nodes'
-        default: "true"
+        default: "false"
         renderingOptions:
           groupName: Config
       - name: config_file
