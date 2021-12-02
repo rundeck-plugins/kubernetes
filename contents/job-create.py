@@ -68,7 +68,7 @@ def create_job_object(data):
                                    )
 
     if "container_command" in data:
-        container.command = data["container_command"].split(' ')
+        container.command = data["container_command"].strip().split(' ')
 
     if "container_args" in data:
         args_array = data["container_args"].splitlines()
@@ -110,17 +110,17 @@ def create_job_object(data):
 
         container.env_from = env_from
 
-    serviceaccount = None                                                                                                                                                                                                                     
+    serviceaccount = None
     if "serviceaccount" in data:
       serviceaccount = data["serviceaccount"]
 
-        
+
     template_spec = client.V1PodSpec(
         containers=[
             container
         ],
         restart_policy=data["job_restart_policy"],
-        service_account_name = serviceaccount)                                                                                                                                                                                                
+        service_account_name = serviceaccount)
 
     if "node_selector" in data:
         node_selectors_array = data["node_selector"].split(',')
@@ -218,10 +218,10 @@ def main():
 
     if os.environ.get('RD_CONFIG_PARALLELISM'):
         data["parallelism"] = os.environ.get('RD_CONFIG_PARALLELISM')
-        
+
     if os.environ.get('RD_CONFIG_SERVICEACCOUNT'):
-        data["serviceaccount"] = os.environ.get('RD_CONFIG_SERVICEACCOUNT')   
-        
+        data["serviceaccount"] = os.environ.get('RD_CONFIG_SERVICEACCOUNT')
+
     if os.environ.get('RD_CONFIG_LABELS'):
         data["labels"] = os.environ.get('RD_CONFIG_LABELS')
 
