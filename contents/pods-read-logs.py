@@ -37,14 +37,14 @@ def main():
                                      name=data["name"],
                                      namespace=data["namespace"],
                                      follow=False):
-                    print(line)
+                    print(line.encode('ascii', 'ignore'))
             else:
                 w = watch.Watch()
                 for line in w.stream(v1.read_namespaced_pod_log, name=data["name"],
                                      container=data["container"],
                                      namespace=data["namespace"],
                                      follow=False):
-                    print(line)
+                    print(line.encode('ascii', 'ignore'))
         else:
             if data["container"]:
                 ret = v1.read_namespaced_pod_log(
