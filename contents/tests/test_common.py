@@ -67,6 +67,7 @@ class TestCommon(unittest.TestCase):
         self.assertEqual(data['namespace'], actual_namespace)
         self.assertEqual(data['container_name'], actual_container)
 
+        os.environ.clear()
         name = 'Node'
         namespace = 'Space'
         container = 'Container'
@@ -75,13 +76,23 @@ class TestCommon(unittest.TestCase):
         os.environ.setdefault('RD_NODE_DEFAULT_CONTAINER_NAME', container)
         self.assert_dictionary_matches(name, namespace, container)
 
+        os.environ.clear()
         name = 'Config Node'
         namespace = 'Config Space'
         config_container = 'Config Container'
         os.environ.setdefault('RD_CONFIG_NAME', name)
         os.environ.setdefault('RD_CONFIG_NAMESPACE', namespace)
         os.environ.setdefault('RD_CONFIG_CONTAINER_NAME', config_container)
-        self.assert_dictionary_matches(name, namespace, container)
+        self.assert_dictionary_matches(name, namespace, config_container)
+
+        os.environ.clear()
+        name = 'Config Node'
+        namespace = 'Config Space'
+        config2_container = 'Config2 Container'
+        os.environ.setdefault('RD_CONFIG_NAME', name)
+        os.environ.setdefault('RD_CONFIG_NAMESPACE', namespace)
+        os.environ.setdefault('RD_CONFIG_CONTAINER', config2_container)
+        self.assert_dictionary_matches(name, namespace, config2_container)
 
     def assert_dictionary_matches(self, name, namespace, container):
         """Asserts that a """

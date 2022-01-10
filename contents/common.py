@@ -163,10 +163,21 @@ def get_code_node_parameter_dictionary():
 
     :returns: A dictionary of name, namespace, and container
     """
+    container = None
+
+    if 'RD_CONFIG_CONTAINER_NAME' in os.environ:
+        container = os.environ.get('RD_CONFIG_CONTAINER_NAME')
+
+    if container is None and 'RD_CONFIG_CONTAINER' in os.environ:
+        container = os.environ.get('RD_CONFIG_CONTAINER')
+
+    if container is None and 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
+        container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+
     return {
         'name': os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME')),
         'namespace': os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default')),
-        'container_name': os.environ.get('RD_CONFIG_CONTAINER_NAME', os.environ.get('RD_CONFIG_CONTAINER', os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')))
+        'container_name': container
     }
 
 
