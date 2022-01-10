@@ -108,7 +108,7 @@ def wait():
                 for line in w.stream(core_v1.read_namespaced_pod_log,
                                         name=pod_name,
                                         namespace=namespace):
-                    print(line)
+                    print(line.encode('ascii', 'ignore'))
 
                 log.info("=========================== job log end ===========================")
 
