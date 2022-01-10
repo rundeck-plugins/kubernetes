@@ -4,8 +4,6 @@ import sys
 import os
 import common
 
-from kubernetes.client.api import core_v1_api
-from kubernetes.client.rest import ApiException
 from kubernetes import client
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
@@ -15,21 +13,14 @@ log = logging.getLogger('kubernetes-model-source')
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
+
 def main():
 
     common.connect()
 
-    api = core_v1_api.CoreV1Api()
-    container = None
-    name = None
-    namespace = None
+    [name, namespace, container] = common.get_core_node_parameter_list()
 
-    name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
-    namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
-
-    if 'RD_NODE_DEFAULT_CONTAINER_NAME' in os.environ:
-        container = os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
-    else:
+    if not container:
         core_v1 = client.CoreV1Api()
         response = core_v1.read_namespaced_pod_status(
             name=name,
@@ -38,24 +29,8 @@ def main():
         )
         container = response.spec.containers[0].name
 
-    log.debug("--------------------------")
-    log.debug("Pod Name:  %s", name)
-    log.debug("Namespace: %s", namespace)
-    log.debug("Container: %s", container)
-    log.debug("--------------------------")
-
-    resp = None
-    try:
-        resp = api.read_namespaced_pod(name=name,
-                                       namespace=namespace)
-    except ApiException as e:
-        if e.status != 404:
-            log.exception("Unknown error:")
-            exit(1)
-
-    if not resp:
-        log.error("Pod %s does not exist", name)
-        exit(1)
+    common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container_name': container})
+    common.verify_pod_exists(name, namespace)
 
     shell = os.environ.get('RD_CONFIG_SHELL')
 
