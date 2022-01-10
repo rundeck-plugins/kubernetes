@@ -399,7 +399,7 @@ def create_pod_template_spec(data):
         )
 
     if "container_command" in data:
-        container.command = data["container_command"].split(' ')
+        container.command = data["container_command"].strip().split(' ')
 
     if "container_args" in data:
         args_array = data["container_args"].splitlines()
