@@ -166,7 +166,7 @@ def get_code_node_parameter_dictionary():
     return {
         'name': os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME')),
         'namespace': os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default')),
-        'container_name': os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')
+        'container_name': os.environ.get('RD_CONFIG_CONTAINER_NAME', os.environ.get('RD_CONFIG_CONTAINER', os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME')))
     }
 
 

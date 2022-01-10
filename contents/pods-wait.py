@@ -21,6 +21,8 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 def wait():
     try:
         data = common.get_code_node_parameter_dictionary()
+        common.log_pod_parameters(log, data)
+
         name = data['name']
         namespace = data['namespace']
         retries = int(environ.get("RD_CONFIG_RETRIES"))

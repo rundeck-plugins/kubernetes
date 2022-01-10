@@ -22,9 +22,9 @@ PY = sys.version_info[0]
 
 def main():
     common.connect()
+    api = core_v1_api.CoreV1Api()
 
     [name, namespace, container] = common.get_core_node_parameter_list()
-    common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container': container})
     common.verify_pod_exists(name, namespace)
 
     delete_on_fail = False
@@ -57,6 +57,8 @@ def main():
         else:
             log.error("Container not found")
             exit(1)
+
+    common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container_name': container})
 
     script = os.environ.get('RD_CONFIG_SCRIPT')
 

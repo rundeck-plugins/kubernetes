@@ -28,7 +28,7 @@ def main():
 
         if data["follow"] == 'true':
 
-            if data["container"]:
+            if data["container_name"]:
                 w = watch.Watch()
                 for line in w.stream(v1.read_namespaced_pod_log,
                                      namespace=data["namespace"],
@@ -44,7 +44,7 @@ def main():
                                      follow=False):
                     print(line)
         else:
-            if data["container"]:
+            if data["container_name"]:
                 ret = v1.read_namespaced_pod_log(
                     container=data["container_name"],
                     namespace=data["namespace"],
