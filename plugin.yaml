@@ -86,7 +86,9 @@ providers:
         description: "Kubernetes API Token"
         renderingOptions:
           groupName: Authentication
-          displayType: PASSWORD
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
       - name: verify_ssl
         type: Boolean
         title: "Verify ssl"
