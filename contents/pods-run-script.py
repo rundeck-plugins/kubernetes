@@ -22,11 +22,10 @@ PY = sys.version_info[0]
 
 def main():
     common.connect()
-
     api = core_v1_api.CoreV1Api()
-    name = os.environ.get('RD_CONFIG_NAME', os.environ.get('RD_NODE_DEFAULT_NAME'))
-    namespace = os.environ.get('RD_CONFIG_NAMESPACE', os.environ.get('RD_NODE_DEFAULT_NAMESPACE', 'default'))
-    container = os.environ.get('RD_CONFIG_CONTAINER', os.environ.get('RD_NODE_DEFAULT_CONTAINER_NAME'))
+
+    [name, namespace, container] = common.get_core_node_parameter_list()
+    common.verify_pod_exists(name, namespace)
 
     delete_on_fail = False
     if os.environ.get('RD_CONFIG_DELETEONFAIL') == 'true':
@@ -58,6 +57,8 @@ def main():
         else:
             log.error("Container not found")
             exit(1)
+
+    common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container_name': container})
 
     script = os.environ.get('RD_CONFIG_SCRIPT')
 
@@ -137,11 +138,8 @@ def main():
 
         if delete_on_fail:
             log.info("removing POD on fail")
-            data = {}
-            data["name"] = name
-            data["namespace"] = namespace
-            common.delete_pod(api, data)
-
+            data = {"name": name, "namespace": namespace}
+            common.delete_pod(data)
             log.info("POD deleted")
         sys.exit(1)
 
