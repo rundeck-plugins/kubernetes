@@ -43,7 +43,10 @@ def connect():
     verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
     ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
     url = os.environ.get('RD_CONFIG_URL')
+    
     token = os.environ.get('RD_CONFIG_TOKEN')
+    if not token:
+        token = os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH')
 
     log.debug("config file")
     log.debug(config_file)
