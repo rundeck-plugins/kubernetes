@@ -5,6 +5,7 @@ import os
 import common
 import json
 import shlex
+import pprint
 
 from kubernetes import client
 
@@ -85,11 +86,9 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
             labels.append(keys + ":" + values)
 
     default_settings = {
+        # kubernetes:config_file attribute are kept to avoid breaking existing k8s jobs depend on this configuration-override hack
+        # This is just a temporary walkaround solultion and should be replaced by a layered configuration-override mechanism.  
         'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
-        'kubernetes:cluster_url': os.environ.get('RD_CONFIG_URL'),
-        'kubernetes:api_token':   os.environ.get('RD_CONFIG_TOKEN'),
-        'kubernetes:verify_ssl':  os.environ.get('RD_CONFIG_VERIFY_SSL'),
-        'kubernetes:ssl_ca_cert': os.environ.get('RD_CONFIG_SSL_CA_CERT'),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,
         'default:started_at': startedAt,

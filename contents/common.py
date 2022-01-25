@@ -40,29 +40,13 @@ def connect():
     elif os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE'):
         config_file = os.environ.get('RD_NODE_KUBERNETES_CONFIG_FILE')
 
-    url = None
-    if os.environ.get('RD_CONFIG_URL'):
-        url = os.environ.get('RD_CONFIG_URL')
-    elif os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL'):
-        url = os.environ.get('RD_NODE_KUBERNETES_CLUSTER_URL')
-
-    verify_ssl = None
-    if os.environ.get('RD_CONFIG_VERIFY_SSL'):
-        verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
-    elif os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL'):
-        verify_ssl = os.environ.get('RD_NODE_KUBERNETES_VERIFY_SSL')
-
-    ssl_ca_cert = None
-    if os.environ.get('RD_CONFIG_SSL_CA_CERT'):
-        ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
-    elif os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT'):
-        ssl_ca_cert = os.environ.get('RD_NODE_KUBERNETES_SSL_CA_CERT')
-
-    token = None
-    if os.environ.get('RD_CONFIG_TOKEN'):
-        token = os.environ.get('RD_CONFIG_TOKEN')
-    elif os.environ.get('RD_NODE_KUBERNETES_API_TOKEN'):
-        token = os.environ.get('RD_NODE_KUBERNETES_API_TOKEN')
+    verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
+    ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
+    url = os.environ.get('RD_CONFIG_URL')
+    
+    token = os.environ.get('RD_CONFIG_TOKEN')
+    if not token:
+        token = os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH')
 
     log.debug("config file")
     log.debug(config_file)
@@ -72,8 +56,7 @@ def connect():
         log.debug("getting settings from file %s", config_file)
         config.load_kube_config(config_file=config_file)
     else:
-
-        if url:
+        if url and token:
             log.debug("getting settings from plugin configuration")
 
             configuration = Configuration()
@@ -93,7 +76,7 @@ def connect():
 
             client.Configuration.set_default(configuration)
         else:
-            log.debug("getting settings from default config file")
+            log.debug("Either URL or Token is not defined. Fall back to getting settings from default config file [$home/.kube/config]")
             config.load_kube_config()
 
 

@@ -79,11 +79,21 @@ providers:
         required: false
         renderingOptions:
           groupName: Authentication
+      - name: token_storage_path
+        type: String
+        title: "Token Storage Path"
+        required: false
+        description: "Select Kubernetes API Token From Storage Path"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
       - name: token
         type: String
         title: "Token"
         required: false
-        description: "Kubernetes API Token"
+        description: "Kubernetes API Token. Token set here will override the token from the storage path."
         renderingOptions:
           groupName: Authentication
           displayType: PASSWORD
