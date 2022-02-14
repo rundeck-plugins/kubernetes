@@ -531,7 +531,7 @@ def run_interactive_command(name, namespace, container, command):
         if resp.peek_stdout():
             print("%s" % resp.read_stdout())
         if resp.peek_stderr():
-            log.error("%s", resp.read_stderr())
+            print(resp.read_stderr())
 
     ERROR_CHANNEL = 3
     err = api.api_client.last_response.read_channel(ERROR_CHANNEL)
