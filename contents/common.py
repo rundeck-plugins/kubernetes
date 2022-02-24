@@ -43,7 +43,7 @@ def connect():
     verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
     ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
     url = os.environ.get('RD_CONFIG_URL')
-    
+
     token = os.environ.get('RD_CONFIG_TOKEN')
     if not token:
         token = os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH')
@@ -171,6 +171,48 @@ def log_pod_parameters(logger, data):
     logger.debug("Namespace: %s", data['namespace'])
     logger.debug("Container: %s", data['container_name'])
     logger.debug("--------------------------")
+
+
+def resolve_container_for_pod(name, namespace):
+    core_v1 = client.CoreV1Api()
+    response = core_v1.read_namespaced_pod_status(
+        name=name,
+        namespace=namespace,
+        pretty="True"
+    )
+
+    if response.spec.containers:
+        container = response.spec.containers[0].name
+        return container
+    log.error("Container not found for pod %s", name)
+    exit(1)
+
+
+def get_active_pods_for_deployment(name, namespace):
+    """
+    Retrieve all pods belonging to a deployment
+    """
+    api = core_v1_api.CoreV1Api()
+    resp = None
+    try:
+        resp = api.list_namespaced_pod(namespace=namespace)
+    except ApiException as e:
+        if e.status != 404:
+            log.exception("Unknown error:")
+            exit(1)
+
+    if not resp:
+        log.error("Namespace %s does not exits.", namespace)
+        exit(1)
+    pods_for_deployment = []
+    for pod_spec in resp.items:
+        pod_labels = pod_spec.metadata.labels
+        if pod_labels['app'] == name and pod_spec.status.phase == 'Running':
+            pods_for_deployment.append(pod_spec.metadata.name)
+    if len(pods_for_deployment) < 1:
+        log.error("Did not find valid pods for deployment %s in namespace %s", name, namespace)
+        exit(1)
+    return pods_for_deployment
 
 
 def verify_pod_exists(name, namespace):

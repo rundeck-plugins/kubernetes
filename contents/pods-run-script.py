@@ -45,18 +45,7 @@ def main():
         exit(1)
 
     if not container:
-        core_v1 = client.CoreV1Api()
-        response = core_v1.read_namespaced_pod_status(
-            name=name,
-            namespace=namespace,
-            pretty="True"
-        )
-
-        if response.spec.containers:
-            container = response.spec.containers[0].name
-        else:
-            log.error("Container not found")
-            exit(1)
+        container = common.resolve_container_for_pod(name=name, namespace=namespace)
 
     common.log_pod_parameters(log, {'name': name, 'namespace': namespace, 'container_name': container})
 
