@@ -75,13 +75,9 @@ def main():
                              destination_path=destination_path,
                              destination_file_name=destination_file_name
                              )
-        except Exception as e:
-            log.error(e)
-            continue
 
-        permissions_command = ["chmod", "+x", full_path]
-        log.debug("setting permissions %s", permissions_command)
-        try:
+            permissions_command = ["chmod", "+x", full_path]
+            log.debug("setting permissions %s", permissions_command)
             resp = common.run_command(name=pod_name,
                                       namespace=namespace,
                                       container=container,
@@ -94,15 +90,12 @@ def main():
             if resp.peek_stderr():
                 print(resp.read_stderr())
                 continue
-        except Exception as e:
-            log.error(e)
-            continue
 
-        # calling exec and wait for response.
-        exec_command = invocation.split(" ")
-        exec_command.append(full_path)
 
-        try:
+            # calling exec and wait for response.
+            exec_command = invocation.split(" ")
+            exec_command.append(full_path)
+
             if 'RD_CONFIG_ARGUMENTS' in os.environ:
                 arguments = os.environ.get('RD_CONFIG_ARGUMENTS')
                 exec_command.append(arguments)
@@ -117,19 +110,14 @@ def main():
             if error:
                 log.error("error running script on iteration %d", i)
                 continue
-        except Exception as e:
-            log.error(e)
-            continue
 
-        rm_command = ["rm", full_path]
-        log.debug("removing file %s", rm_command)
-        try:
+            rm_command = ["rm", full_path]
+            log.debug("removing file %s", rm_command)
             resp = common.run_command(name=pod_name,
                                       namespace=namespace,
                                       container=container,
                                       command=rm_command
                                       )
-
             if resp.peek_stdout():
                 log.debug(resp.read_stdout())
 
