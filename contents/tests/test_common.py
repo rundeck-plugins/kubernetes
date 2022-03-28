@@ -21,8 +21,8 @@ class TestCommon(unittest.TestCase):
         intended to prevent regressions, not to suggest there is a fundamental
         problem with naming a single port.
         """
-        entry = {'node_port': 90, 'port': 8080, 'protocol': 'http', 'targetPort': 80}
-        named_entry = {'name': 'foo', 'node_port': 90, 'port': 8080, 'protocol': 'http', "targetPort": 80}
+        entry = {'node_port': 90, 'port': 8080, 'protocol': 'TCP', 'targetPort': 80}
+        named_entry = {'name': 'foo', 'node_port': 90, 'port': 8080, 'protocol': 'TCP', "targetPort": 80}
 
         data = json.dumps(entry)
         actual = common.parsePorts(data)
@@ -31,13 +31,17 @@ class TestCommon(unittest.TestCase):
 
         data = json.dumps(named_entry)
         actual = common.parsePorts(data)
+        print(actual)
         port = actual.pop()
+        print(port)
         self.assert_port_match(port, named_entry, None)
 
         data = json.dumps([named_entry, entry])
+        print(data)
         actual = common.parsePorts(data)
         port = actual.pop()
-        self.assert_port_match(port, entry, entry['protocol'] + str(entry['port']))
+        print(port)
+        self.assert_port_match(port, entry, str.lower(entry['protocol']) + str(entry['port']))
         port = actual.pop()
         self.assert_port_match(port, entry, named_entry['name'])
 
