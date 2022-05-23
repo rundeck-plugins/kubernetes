@@ -202,7 +202,7 @@ def get_active_pods_for_deployment(name, namespace):
             exit(1)
 
     if not resp:
-        log.error("Namespace %s does not exits.", namespace)
+        log.error("Namespace %s does not exist.", namespace)
         exit(1)
     pods_for_deployment = []
     for pod_spec in resp.items:
