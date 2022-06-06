@@ -273,8 +273,14 @@ def main():
                       container.name)
 
             # For scalable pods in a deployment, the ReplicaSet of a pod is the pod name with the last dash-separated
-            # token stripped off. If we have seen the ReplicaSet already, add one. Otherwise, initialize this as the
-            # first pod in the ReplicaSet.
+            # token stripped off. If we have seen the ReplicaSet already, increment the counter. Otherwise, initialize
+            # this as the first pod in the ReplicaSet.
+            #
+            # For example, the deployment "my-deployment" might create a ReplicaSet named "my-deployment-5ffd8f676d"
+            # and one of the pods within the ReplicaSet might be identified as "my-deployment-5ffd8f676d-ccwbf". By
+            # removing the suffix that identifies the pod, we index resources within the parent group. In this way, we
+            # can ensure that only one pod per ReplicaSet runs a command by filtering the nodes in Rundeck to include
+            # only those where index is equal to 1.
             parent_name = '-'.join(i.metadata.name.split('-')[0:-1])
             if parent_name in parents:
                 parents[parent_name] += 1
