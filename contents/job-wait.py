@@ -33,64 +33,34 @@ def wait():
 
 
         while True:
-
             common.connect()
 
-            batch_v1 = client.BatchV1Api()
-            core_v1 = client.CoreV1Api()
-
-            api_response = batch_v1.read_namespaced_job_status(
-                name,
-                namespace,
-                pretty="True"
-            )
-            log.debug(api_response)
-
-            #for condition in api_response.status.conditions:
-            #    log.info(condition.type)
-
+            #validate retries
+            if retries_count != 0:
+                log.warning("An error occurred - retries: {0}".format(retries_count))
             retries_count = retries_count + 1
+
             if retries_count > retries:
                 log.error("Number of retries exceeded")
                 completed = True
 
-            if api_response.status.conditions:
-                for condition in api_response.status.conditions:
-                    if condition.type == "Failed":
-                        completed = True
-
-
-            if api_response.status.completion_time:
-                completed = True
-
-            if show_log:
+            if show_log and not completed:
                 log.debug("Searching for pod associated with job")
-
-                schedule_start_time = time.time()
-                schedule_timeout = 600
+                
+                start_time = time.time()
+                timeout = 300 #Revisar si este tiempo es suficiente para pods que no logran ser creados
                 while True:
+                    core_v1 = client.CoreV1Api()
                     try:
+                        #get available pod
                         pod_list = core_v1.list_namespaced_pod(
                             namespace,
                             label_selector="job-name==" + name
                         )
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
-                        break
-                    except IndexError:
-                        log.warning("Still Waiting for Pod to be Scheduled")
-                        time.sleep(60)
-                        if schedule_timeout and time.time() - schedule_start_time > schedule_timeout:  # pragma: no cover
-                            raise TimeoutError
 
-                log.info("Fetching logs from pod: {0}".format(pod_name))
-
-                # time.sleep(15)
-                log.info("========================== job log start ==========================")
-                start_time = time.time()
-                timeout = 300
-                while True:
-                    try:
+                        #try get available log
                         core_v1.read_namespaced_pod_log(name=pod_name,
                                                         namespace=namespace)
                         break
@@ -103,6 +73,11 @@ def wait():
                             time.sleep(15)
                             if timeout and time.time() - start_time > timeout:  # pragma: no cover
                                 raise TimeoutError
+                
+                log.info("Fetching logs from pod: {0}".format(pod_name))
+                
+                if retries_count == 1:
+                    log.info("========================== job log start ==========================")
 
                 w = watch.Watch()
                 for line in w.stream(core_v1.read_namespaced_pod_log,
@@ -110,16 +85,31 @@ def wait():
                                         namespace=namespace):
                     print(line.encode('ascii', 'ignore'))
 
-                log.info("=========================== job log end ===========================")
+            #check status job
+            batch_v1 = client.BatchV1Api()
+
+            api_response = batch_v1.read_namespaced_job_status(
+                name,
+                namespace,
+                pretty="True"
+            )
+            log.debug(api_response)
+
+            if api_response.status.conditions:
+                for condition in api_response.status.conditions:
+                    if condition.type == "Failed":
+                        completed = True
+
+            if api_response.status.completion_time:
+                completed = True
 
             if completed:
+                if show_log:
+                    log.info("=========================== job log end ===========================")
                 break
 
             log.info("Waiting for job completion")
-            show_log = False
             time.sleep(sleep)
-
-
 
 
         if api_response.status.succeeded:
@@ -140,7 +130,7 @@ def main():
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
-    common.connect()
+    #common.connect()
     wait()
 
 
