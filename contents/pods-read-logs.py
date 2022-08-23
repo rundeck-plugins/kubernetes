@@ -33,6 +33,7 @@ def main():
                 for line in w.stream(v1.read_namespaced_pod_log,
                                      namespace=data["namespace"],
                                      name=data["name"],
+                                     tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                                      follow=False):
                     print(line.encode('ascii', 'ignore'))
             else:
@@ -41,6 +42,7 @@ def main():
                                      container=data["container_name"],
                                      namespace=data["namespace"],
                                      name=data["name"],
+                                     tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                                      follow=False):
                     print(line.encode('ascii', 'ignore'))
         else:
@@ -49,12 +51,14 @@ def main():
                     container=data["container_name"],
                     namespace=data["namespace"],
                     name=data["name"],
+                    tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                     _preload_content=False
                 )
             else:
                 ret = v1.read_namespaced_pod_log(
                     namespace=data["namespace"],
                     name=data["name"],
+                    tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                     _preload_content=False
                 )
             print(ret.read())

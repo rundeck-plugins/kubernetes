@@ -1889,6 +1889,11 @@ providers:
         required: false
         renderingOptions:
           groupName: Authentication
+      - name: number_of_lines
+        type: Integer
+        required: false
+        description: "If set, the number of lines from the end of the logs to show. If not specified, logs are shown from the creation of the container."
+        title: "Number of Log Lines"
       - name: url
         type: String
         title: "Cluster URL"

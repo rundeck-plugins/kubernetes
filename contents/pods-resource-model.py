@@ -136,6 +136,10 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
     data['hostname'] = default_settings['default:pod_id']
     data['terminated'] = terminated
 
+    # Add labels as its own map of node attributes.
+    for key, value in pod.metadata.labels.items():
+        data['labels:' + key] = value
+
     emoticon = ""
     if default_settings['default:status'] == "running":
         emoticon = u'\U0001f44d'
