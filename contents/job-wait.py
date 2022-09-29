@@ -26,18 +26,19 @@ def wait():
         retries = int(environ.get("RD_CONFIG_RETRIES"))
         sleep = float(environ.get("RD_CONFIG_SLEEP"))
         show_log = environ.get("RD_CONFIG_SHOW_LOG") == "true"
+        container = environ.get("RD_CONFIG_CONTAINER")
 
         # Poll for completion if retries
         retries_count = 0
         completed = False
 
-
         while True:
             common.connect()
 
-            #validate retries
+            # validate retries
             if retries_count != 0:
-                log.warning("An error occurred - retries: {0}".format(retries_count))
+                log.warning(
+                    "An error occurred - retries: {0}".format(retries_count))
             retries_count = retries_count + 1
 
             if retries_count > retries:
@@ -46,13 +47,13 @@ def wait():
 
             if show_log and not completed:
                 log.debug("Searching for pod associated with job")
-                
+
                 start_time = time.time()
-                timeout = 300 #Revisar si este tiempo es suficiente para pods que no logran ser creados
+                timeout = 300  # Revisar si este tiempo es suficiente para pods que no logran ser creados
                 while True:
                     core_v1 = client.CoreV1Api()
                     try:
-                        #get available pod
+                        # get available pod
                         pod_list = core_v1.list_namespaced_pod(
                             namespace,
                             label_selector="job-name==" + name
@@ -60,7 +61,7 @@ def wait():
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
 
-                        #try get available log
+                        # try get available log
                         core_v1.read_namespaced_pod_log(name=pod_name,
                                                         namespace=namespace)
                         break
@@ -73,19 +74,21 @@ def wait():
                             time.sleep(15)
                             if timeout and time.time() - start_time > timeout:  # pragma: no cover
                                 raise TimeoutError
-                
+
                 log.info("Fetching logs from pod: {0}".format(pod_name))
-                
+
                 if retries_count == 1:
-                    log.info("========================== job log start ==========================")
+                    log.info(
+                        "========================== job log start ==========================")
 
                 w = watch.Watch()
                 for line in w.stream(core_v1.read_namespaced_pod_log,
-                                        name=pod_name,
-                                        namespace=namespace):
+                                     name=pod_name,
+                                     namespace=namespace,
+                                     container=container):
                     print(line.encode('ascii', 'ignore'))
 
-            #check status job
+            # check status job
             batch_v1 = client.BatchV1Api()
 
             api_response = batch_v1.read_namespaced_job_status(
@@ -105,12 +108,12 @@ def wait():
 
             if completed:
                 if show_log:
-                    log.info("=========================== job log end ===========================")
+                    log.info(
+                        "=========================== job log end ===========================")
                 break
 
             log.info("Waiting for job completion")
             time.sleep(sleep)
-
 
         if api_response.status.succeeded:
             log.info("Job succeeded")
@@ -124,13 +127,12 @@ def wait():
         sys.exit(1)
 
 
-
 def main():
     if environ.get("RD_CONFIG_DEBUG") == "true":
         log.setLevel(logging.DEBUG)
         log.debug("Log level configured for DEBUG")
 
-    #common.connect()
+    # common.connect()
     wait()
 
 
