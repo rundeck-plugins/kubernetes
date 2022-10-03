@@ -63,7 +63,7 @@ def wait():
 
                         # try get available log
                         core_v1.read_namespaced_pod_log(name=pod_name,
-                                                        namespace=namespace)
+                                                        namespace=namespace, container=container)
                         break
                     except ApiException as ex:
                         log.warning("Pod is not ready, status: %d", ex.status)
@@ -84,8 +84,7 @@ def wait():
                 w = watch.Watch()
                 for line in w.stream(core_v1.read_namespaced_pod_log,
                                      name=pod_name,
-                                     namespace=namespace,
-                                     container=container):
+                                     namespace=namespace, container=container):
                     print(line.encode('ascii', 'ignore'))
 
             # check status job
