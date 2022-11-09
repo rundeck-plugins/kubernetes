@@ -29,6 +29,16 @@ def main():
     common.connect()
 
     try:
+        if data["type"] == "Pod":
+            api_instance = client.CoreV1Api()
+            dep = yaml.safe_load(data["yaml"])
+            resp = api_instance.create_namespaced_pod(
+                body=dep,
+                namespace=data["namespace"],
+                pretty="true")
+
+            print(common.parseJson(resp.status))
+
         if data["type"] == "Deployment":
             dep = yaml.safe_load(data["yaml"])
             api_instance = client.AppsV1Api()
@@ -51,8 +61,8 @@ def main():
 
         if data["type"] == "StatefulSet":
             dep = yaml.safe_load(data["yaml"])
-            k8s_beta = client.AppsV1Api()
-            resp = k8s_beta.create_namespaced_stateful_set(
+            api_instance = client.AppsV1Api()
+            resp = api_instance.create_namespaced_stateful_set(
                 body=dep,
                 namespace=data["namespace"],
                 pretty="true")
@@ -71,8 +81,8 @@ def main():
 
         if data["type"] == "Ingress":
             dep = yaml.safe_load(data["yaml"])
-            k8s_beta = client.ExtensionsV1beta1Api()
-            resp = k8s_beta.create_namespaced_ingress(
+            api_instance = client.NetworkingV1Api()
+            resp = api_instance.create_namespaced_ingress(
                 body=dep,
                 namespace=data["namespace"],
                 pretty="true")
