@@ -34,24 +34,22 @@ def main():
         pretty = 'true'
 
         v1 = client.CoreV1Api()
-        ret = v1.list_pod_for_all_namespaces(
-            watch=False,
+        ret = v1.list_namespaced_pod(
+            namespace=data["namespace"],
             label_selector=label_selector
         )
 
-        print("pods found: %s" % len(ret.items))
+        log.info("pods found: %s" % len(ret.items))
 
         for i in ret.items:
-            print("Removing pod %s" % (i.metadata.name))
-
-        watch = True
+            log.info("Removing pod %s" % i.metadata.name)
 
         try:
             api_response = v1.delete_collection_namespaced_pod(data["namespace"],
                                                                pretty=pretty,
                                                                label_selector=label_selector)
 
-            print(common.parseJson(api_response))
+            log.debug(common.parseJson(api_response))
         except ApiException:
             log.exception("Exception when calling CoreV1Api->delete_collection_namespaced_pod:")
 
@@ -64,8 +62,7 @@ def main():
             body=body,
             pretty=pretty
         )
-
-        print(common.parseJson(api_response.status))
+        log.debug(common.parseJson(api_response.status))
 
     except ApiException:
         log.exception("Exception when calling delete_namespaced_job:")

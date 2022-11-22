@@ -83,12 +83,12 @@ def wait():
                 for line in w.stream(core_v1.read_namespaced_pod_log,
                                         name=pod_name,
                                         namespace=namespace):
-                    print(line.encode('ascii', 'ignore'))
+                    log.info(line.encode('ascii', 'ignore'))
 
             #check status job
             batch_v1 = client.BatchV1Api()
 
-            api_response = batch_v1.read_namespaced_job_status(
+            api_response = batch_v1.read_namespaced_job(
                 name,
                 namespace,
                 pretty="True"
