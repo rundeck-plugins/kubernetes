@@ -29,6 +29,6 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           # Artifact name
-          name: kubernetes-plugin-${{ steps.get_version.outputs.VERSION }}
+          name: kubernetes-${{ steps.get_version.outputs.VERSION }}
           # Directory containing files to upload
-          path: build/libs/kubernetes-plugin-${{ steps.get_version.outputs.VERSION }}.zip
+          path: build/libs/kubernetes-${{ steps.get_version.outputs.VERSION }}.zip
