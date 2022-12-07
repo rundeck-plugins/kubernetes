@@ -56,8 +56,10 @@ This plugin allows getting the container pods from kubernetes as rundeck nodes.
 * **Tags**: List of tags. You can add static and custom tags, for example:
 ```tag.selector=default:image, tag.selector=default:status, kubernetes```
 
+* **Namespace** Retrieve only pods from a desired namespace. (An empty value results in listing pods from all namespaces)
+For example: `default` will result on listing the pods on "default" namespace.
 * **Field Selector**: Filter the list of pods using a response's API fields. For further information check SDK docs [here](https://github.com/kubernetes-client/python/blob/fd5a0c49259e83d928535dd66ab083ddb92ccecf/kubernetes/docs/CoreV1Api.md#return-type-116).
-For example: ```metadata.namespace=default``` will show the pods of the default namespace.
+For example: ```metadata.uid=123``` will show the pod with uid 123.
 * **Just Running Pods?**: Filter by running pods
 
 This plugin generates a list of `default` pod's attributes in order to reference them on the custom config parameters of the plugin (eg: default:status, default:image). The following list are the default available attributes:
