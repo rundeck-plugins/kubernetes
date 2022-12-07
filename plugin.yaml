@@ -37,6 +37,14 @@ providers:
         default: 'tag.selector=default:status'
         renderingOptions:
           groupName: Config
+      - name: namespace_filter
+        type: String
+        title: "Namespace"
+        description: "Filter pods by namespace."
+        required: false
+        default: ''
+        renderingOptions:
+          groupName: Config
       - name: field_selector
         type: String
         title: "Field Selector"
