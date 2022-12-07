@@ -1819,6 +1819,12 @@ providers:
         required: false
         renderingOptions:
           groupName: Authentication
+      - name: container
+        type: String
+        title: "Container"
+        default: ""
+        description: "Get logs from this container"
+        required: false
       - name: url
         type: String
         title: "Cluster URL"
