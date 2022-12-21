@@ -7,7 +7,7 @@ plugins {
     id 'pl.allegro.tech.build.axion-release' version '1.14.2'
 }
 
-ext.pluginName = 'Kubernetes Rundeck Plugin'
+ext.pluginName = 'kubernetes'
 ext.pluginDescription = "Kubernetes Rundeck Plugin to manage pods , deployments, etc"
 ext.sopsCopyright = "© 2018, Rundeck, Inc."
 ext.sopsUrl = "http://rundeck.com"

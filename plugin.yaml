@@ -1,4 +1,4 @@
-name: kubernetes-plugin
+name: "@name@"
 description: "@description@"
 rundeckPluginVersion: 1.2
 author: "@author@"
