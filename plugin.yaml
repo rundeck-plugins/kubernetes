@@ -920,7 +920,7 @@ providers:
         title: "Type"
         description: "Type"
         required: true
-        values: Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
+        values: Pod,Deployment,StatefulSet,ConfigMap,Service,Ingress,Job,StorageClass,PersistentVolume,PersistentVolumeClaim,Secret
       - name: yaml
         type: String
         title: "YAML String"
@@ -2069,10 +2069,12 @@ providers:
       - name: volume_mounts
         type: String
         title: "Volume Mounts"
-        description: "Volume Mounts, name=mountPath format. Use comma for multiples volume  "
+        description: "Volume Mounts, yaml format (https://kubernetes.io/docs/tasks/configure-pod-container/configure-volume-storage/#configure-a-volume-for-a-pod)"
         required: false
         renderingOptions:
           groupName: Container
+          displayType: MULTI_LINE
+          codeSyntaxMode: yaml
       - name: volumes
         type: String
         title: "Volumes"
