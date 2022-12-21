@@ -37,12 +37,20 @@ providers:
         default: 'tag.selector=default:status'
         renderingOptions:
           groupName: Config
+      - name: namespace_filter
+        type: String
+        title: "Namespace"
+        description: "Filter pods by namespace. (Takes all namespaces if not specified)"
+        required: false
+        default: ''
+        renderingOptions:
+          groupName: Config
       - name: field_selector
         type: String
         title: "Field Selector"
         description: "Filter for a field name (check API response fields https://github.com/kubernetes-client/python/blob/fd5a0c49259e83d928535dd66ab083ddb92ccecf/kubernetes/docs/CoreV1Api.md#return-type-116)"
         required: false
-        default: 'metadata.namespace=default'
+        default: ''
         renderingOptions:
           groupName: Config
       - name: label_selector
