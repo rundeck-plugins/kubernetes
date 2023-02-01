@@ -2287,7 +2287,7 @@ providers:
       - name: container
         type: String
         title: "Container Name"
-        description: "Container name within the pod to execute the command on.\n This is only relevant for pods with multiple containers in them."
+        description: "Container name within the pod to execute the command on. This is only relevant for pods with multiple containers in them."
         required: false
       - name: namespace
         type: String
