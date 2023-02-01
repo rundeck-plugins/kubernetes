@@ -2287,7 +2287,7 @@ providers:
       - name: container
         type: String
         title: "Container Name"
-        description: "Container name within the pod to execute the command on.\n This is only relevant for pods with multiple containers in them."
+        description: "(Optional) Container name within the pod to execute the command.\n This is only relevant for pods with multiple containers in them. Leave blank to default to the first container in the Pod definition."
         required: false
       - name: namespace
         type: String
