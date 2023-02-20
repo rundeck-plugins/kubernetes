@@ -68,9 +68,9 @@ def main():
                 pretty="true")
 
         if data["type"] == "Ingress":
-            apps_v1 = client.ExtensionsV1beta1Api()
+            networkingV1Api = client.NetworkingV1Api()
             body = client.V1DeleteOptions()
-            resp = apps_v1.delete_namespaced_ingress(
+            resp = networkingV1Api.delete_namespaced_ingress(
                 name=data["name"],
                 namespace=data["namespace"],
                 body=body,
