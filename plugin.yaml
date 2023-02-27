@@ -2348,6 +2348,36 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+  - name: Kubernetes-Ephemeral-Container
+    service: WorkflowNodeStep
+    title: Kubernetes / Pods / Debug Ephemeral Container
+    description: 'Add an ephemeral container to a pod for debugging.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: debug-ephemeral-container.py
+    script-args: ${config.name}
+    config:
+      - name: name
+        type: String
+        title: "Pod Name"
+        required: true
+        description: "Name of the running pod that the ephemeral container will get attached to."
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the job was created"
+        required: false
+        default: default
+      - name: container-name
+        type: String
+        title: "Name for Ephemeral Container"
+        description: "Name for the ephemeral container that will be added to the running pod."
+        required: false
+      - name: image
+        type: String
+        title: "Container Image"
+        description: "Image for the ephemeral container to be added to the running pod."
+        default: "busybox"
   - name: Kubernetes-InlineScript-Step
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Execute Script
