@@ -19,8 +19,6 @@ def main():
 
     common.connect()
 
-    print("Container image: " + os.environ.get("RD_CONFIG_CONTAINER_IMAGE"))
-    print("Container name: " + os.environ.get("RD_CONFIG_CONTAINER_NAME"))
     container_name = os.environ.get("RD_CONFIG_CONTAINER_NAME")
     container_image = os.environ.get("RD_CONFIG_CONTAINER_IMAGE")
 
