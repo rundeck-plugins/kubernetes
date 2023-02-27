@@ -22,6 +22,9 @@ def main():
     container_name = os.environ.get("RD_CONFIG_CONTAINER_NAME")
     container_image = os.environ.get("RD_CONFIG_CONTAINER_IMAGE")
 
+    if os.environ.get("RD_CONFIG_TARGET_CONTAINER"):
+        target_container = os.environ.get("RD_CONFIG_TARGET_CONTAINER")
+
     try:
         v1 = client.CoreV1Api()
 
@@ -40,18 +43,25 @@ def main():
         common.verify_pod_exists(name, namespace)
 
         # add a debug container to it
-        spec = client.models.V1EphemeralContainer(
-            name = container_name,
-            image = container_image,
-            stdin=True,
-            tty=True)
         body = {
             "spec": {
                 "ephemeralContainers": [
-                    spec.to_dict()
+                    {
+                        "name": container_name,
+                        "image": container_image,
+                        "targetContainerName": target_container,
+                        "stdin": True,
+                        "tty": True,
+#                         "volumeMounts": [{
+#                             "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+#                             "name": "kube-api-access-qnhvv",
+#                             "readOnly": true
+#                         }]
+                    }
                 ]
             }
         }
+
         response = v1.patch_namespaced_pod_ephemeralcontainers(
             name,
             namespace,
@@ -59,7 +69,6 @@ def main():
             _preload_content=False)
 
         print(response.data)
-#         print("Read(): " + response.read())
 
 
     except ApiException:
