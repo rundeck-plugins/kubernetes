@@ -2368,12 +2368,13 @@ providers:
         description: "Namespace where the job was created"
         required: false
         default: default
-      - name: container-name
+      - name: container_name
         type: String
         title: "Name for Ephemeral Container"
         description: "Name for the ephemeral container that will be added to the running pod."
-        required: false
-      - name: image
+        required: true
+        default: debugger
+      - name: container_image
         type: String
         title: "Container Image"
         description: "Image for the ephemeral container to be added to the running pod."

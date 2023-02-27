@@ -19,6 +19,11 @@ def main():
 
     common.connect()
 
+    print("Container image: " + os.environ.get("RD_CONFIG_CONTAINER_IMAGE"))
+    print("Container name: " + os.environ.get("RD_CONFIG_CONTAINER_NAME"))
+    container_name = os.environ.get("RD_CONFIG_CONTAINER_NAME")
+    container_image = os.environ.get("RD_CONFIG_CONTAINER_IMAGE")
+
     try:
         v1 = client.CoreV1Api()
 
@@ -38,8 +43,8 @@ def main():
 
         # add a debug container to it
         spec = client.models.V1EphemeralContainer(
-            name="debugger",
-            image = "centos:7",
+            name = container_name,
+            image = container_image,
             stdin=True,
             tty=True)
         body = {
