@@ -2384,6 +2384,49 @@ providers:
         title: "Target Container"
         description: "Name of a container within the running pod that the ephemeral container should target.\n The ephemeral container will be run in the namespaces (IPC, PID, etc) of the Target Container. If not set then the ephemeral container uses the namespaces configured in the Pod spec."
         required: false
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
   - name: Kubernetes-InlineScript-Step
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Execute Script
