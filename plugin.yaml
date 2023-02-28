@@ -2350,7 +2350,7 @@ providers:
           groupName: Authentication
   - name: Kubernetes-Ephemeral-Container
     service: WorkflowNodeStep
-    title: Kubernetes / Pods / Debug Ephemeral Container
+    title: Kubernetes / Pods / Add Ephemeral Debug Container
     description: 'Add an ephemeral container to a pod for debugging.'
     plugin-type: script
     script-interpreter: python -u
@@ -2382,7 +2382,7 @@ providers:
       - name: target_container
         type: String
         title: "Target Container"
-        description: "Name of a container within the running pod that the ephemeral container should target.\n The ephemeral container will be run in the namespaces (IPC, PID, etc) of the Target Container. If not set then the ephemeral container uses the namespaces configured in the Pod spec."
+        description: "Name of a container within the running pod that the ephemeral container should target.\n The ephemeral container will be run in the namespaces (IPC, PID, etc) of the Target Container. If not set then the ephemeral container uses the namespaces configured in the Pod spec. See the official Kubernetes documentation [here](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#ephemeral-container) for further details."
         required: false
       - name: print_pod_spec
         type: Boolean
