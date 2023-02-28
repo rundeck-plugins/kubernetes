@@ -2384,6 +2384,11 @@ providers:
         title: "Target Container"
         description: "Name of a container within the running pod that the ephemeral container should target.\n The ephemeral container will be run in the namespaces (IPC, PID, etc) of the Target Container. If not set then the ephemeral container uses the namespaces configured in the Pod spec."
         required: false
+      - name: print_pod_spec
+        type: Boolean
+        title: "Print Pod Spec"
+        description: "Optionally print the pod spec to the log output after the ephemeral container has been added."
+        default: "false"
       - name: config_file
         type: String
         title: "Kubernetes Config File Path"

@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import common
+import json
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
@@ -68,7 +69,11 @@ def main():
             body,
             _preload_content=False)
 
-        print("Ephemeral container " + container_name + " successfully added to pod " + name)
+        if os.environ.get("RD_CONFIG_PRINT_POD_SPEC") == "true":
+            json_data = json.loads(response.data.decode("utf-8"))
+            print(json.dumps(json_data, indent=2))
+        else:
+            print("Ephemeral container " + container_name + " successfully added to pod " + name)
 
     except ApiException:
         log.exception("Exception error creating:")
