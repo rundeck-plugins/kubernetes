@@ -68,8 +68,7 @@ def main():
             body,
             _preload_content=False)
 
-        print(response.data)
-
+        print("Ephemeral container " + container_name + " successfully added to pod " + name)
 
     except ApiException:
         log.exception("Exception error creating:")
