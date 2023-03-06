@@ -52,12 +52,7 @@ def main():
                         "image": container_image,
                         "targetContainerName": target_container,
                         "stdin": True,
-                        "tty": True,
-#                         "volumeMounts": [{
-#                             "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
-#                             "name": "kube-api-access-qnhvv",
-#                             "readOnly": true
-#                         }]
+                        "tty": True
                     }
                 ]
             }

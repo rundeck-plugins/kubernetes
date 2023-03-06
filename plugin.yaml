@@ -2350,7 +2350,7 @@ providers:
           groupName: Authentication
   - name: Kubernetes-Ephemeral-Container
     service: WorkflowNodeStep
-    title: Kubernetes / Pods / Add Ephemeral Debug Container
+    title: Kubernetes / Debug / Ephemeral Container
     description: 'Add an ephemeral container to a pod for debugging.'
     plugin-type: script
     script-interpreter: python -u
