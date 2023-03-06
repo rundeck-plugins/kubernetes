@@ -2348,6 +2348,90 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+  - name: Kubernetes-Ephemeral-Container
+    service: WorkflowNodeStep
+    title: Kubernetes / Debug / Ephemeral Container
+    description: 'Add an ephemeral container to a pod for debugging.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: debug-ephemeral-container.py
+    script-args: ${config.name}
+    config:
+      - name: name
+        type: String
+        title: "Pod Name"
+        required: true
+        description: "Name of the running pod that the ephemeral container will get attached to."
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the job was created"
+        required: false
+        default: default
+      - name: container_name
+        type: String
+        title: "Name for Ephemeral Container"
+        description: "Name for the ephemeral container that will be added to the running pod."
+        required: true
+        default: debugger
+      - name: container_image
+        type: String
+        title: "Container Image"
+        description: "Image for the ephemeral container to be added to the running pod."
+        default: "busybox"
+      - name: target_container
+        type: String
+        title: "Target Container"
+        description: "Name of a container within the running pod that the ephemeral container should target.\n The ephemeral container will be run in the namespaces (IPC, PID, etc) of the Target Container. If not set then the ephemeral container uses the namespaces configured in the Pod spec. See the official Kubernetes documentation [here](https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#ephemeral-container) for further details."
+        required: false
+      - name: print_pod_spec
+        type: Boolean
+        title: "Print Pod Spec"
+        description: "Optionally print the pod spec to the log output after the ephemeral container has been added."
+        default: "false"
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
   - name: Kubernetes-InlineScript-Step
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Execute Script
