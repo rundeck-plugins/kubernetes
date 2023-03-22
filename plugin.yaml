@@ -823,6 +823,91 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+  - name: Kubernetes-DeploymentScript-Step
+    service: WorkflowNodeStep
+    title: Kubernetes / Deployment / Execute Script
+    description: 'Run a script randomly on one of the pods of a deployment'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: deployment-run-script.py
+    script-args: ${config.name}
+    config:
+      - name: name
+        type: String
+        title: "Deployment Name"
+        description: "Deployment Name"
+        required: true
+      - name: namespace
+        type: String
+        title: "Namespace"
+        description: "Namespace where the deployment is residing"
+        required: true
+      - name: script
+        type: String
+        title: "Script"
+        description: "Script to run"
+        required: true
+        renderingOptions:
+          displayType: CODE
+      - name: invocation
+        type: String
+        title: "Invocation String"
+        description: "Invocation String"
+        required: false
+      - name: arguments
+        type: String
+        title: "Arguments"
+        description: "Arguments of the script"
+        required: false
+      - type: Integer
+        name: retryBeforeFailing
+        title: Number of retries before failure
+        description: "Retries the job in case of failure n times before reporting failure (default 0)"
+        required: false
+        default: 0
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        scope: Instance
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        scope: Instance
+        renderingOptions:
+          groupName: Authentication
   - name: Kubernetes-Wait-StatefulSet
     service: WorkflowNodeStep
     title: Kubernetes / StatefulSet / Waitfor
