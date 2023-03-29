@@ -18,14 +18,6 @@ providers:
     script-interpreter: ${config.interpreter} -u
     script-file: pods-resource-model.py
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - type: String
         name: attributes
         title: 'Default attributes'
@@ -134,6 +126,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-node-executor
     service: NodeExecutor
     title: Kubernetes / Pods / Node Executor
@@ -143,14 +145,6 @@ providers:
     script-file: pods-node-executor.py
     script-args: ${node.name}
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: shell
         type: String
         title: "Shell"
@@ -205,6 +199,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-file-copier
     service: FileCopier
     title: Kubernetes / Pods / File Copier
@@ -214,14 +218,6 @@ providers:
     script-file: pods-copy-file.py
     script-args: ${node.name}
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: shell
         type: String
         title: "Shell"
@@ -275,6 +271,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Create-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Create
@@ -284,14 +290,6 @@ providers:
     script-file: deployment-create.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -482,6 +480,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Update-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Update
@@ -491,14 +499,6 @@ providers:
     script-file: deployment-update.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -656,6 +656,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Delete-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Delete
@@ -665,14 +675,6 @@ providers:
     script-file: deployment-delete.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -729,6 +731,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Status-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Status
@@ -738,14 +750,6 @@ providers:
     script-file: deployment-status.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -802,6 +806,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Wait-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Waitfor
@@ -811,14 +825,6 @@ providers:
     script-file: deployment-wait.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -887,6 +893,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Wait-StatefulSet
     service: WorkflowNodeStep
     title: Kubernetes / StatefulSet / Waitfor
@@ -896,14 +912,6 @@ providers:
     script-file: StatefulSet-wait.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -972,6 +980,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Create
     service: WorkflowNodeStep
     title: Kubernetes / Generic / Create
@@ -981,14 +999,6 @@ providers:
     script-file: create-from-yaml.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: namespace
         type: String
         title: "Namespace"
@@ -1054,6 +1064,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Delete
     service: WorkflowNodeStep
     title: Kubernetes / Generic / Delete
@@ -1063,14 +1083,6 @@ providers:
     script-file: delete.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -1133,6 +1145,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Create-Service
     service: WorkflowNodeStep
     title: Kubernetes / Service / Create
@@ -1142,14 +1164,6 @@ providers:
     script-file: service-create.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -1284,6 +1298,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Update-Service
     service: WorkflowNodeStep
     title: Kubernetes / Service / Update
@@ -1293,14 +1317,6 @@ providers:
     script-file: service-update.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -1435,6 +1451,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Delete-Service
     service: WorkflowNodeStep
     title: Kubernetes / Service / Delete
@@ -1444,14 +1470,6 @@ providers:
     script-file: service-delete.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -1508,6 +1526,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Create-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Create
@@ -1517,14 +1545,6 @@ providers:
     script-file: job-create.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -1767,6 +1787,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Delete-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Delete
@@ -1776,14 +1806,6 @@ providers:
     script-file: job-delete.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -1840,6 +1862,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Run-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Re-Run
@@ -1849,14 +1881,6 @@ providers:
     script-file: job-run.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -1918,6 +1942,16 @@ providers:
         title: Force
         description: "Continue even if previous run was unsuccessful"
         default: true
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Wait-Job
     service: WorkflowNodeStep
     title: Kubernetes / Job / Waitfor
@@ -1927,14 +1961,6 @@ providers:
     script-file: job-wait.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -2009,6 +2035,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Pods-Logs
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Logs
@@ -2018,14 +2054,6 @@ providers:
     script-file: pods-read-logs.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -2096,6 +2124,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Create-Pod
     service: WorkflowNodeStep
     title: Kubernetes / Pod / Create
@@ -2105,14 +2143,6 @@ providers:
     script-file: pods-create.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: api_version
         type: String
         title: "API Version"
@@ -2287,6 +2317,16 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Delete-Pod
     service: WorkflowNodeStep
     title: Kubernetes / Pod / Delete
@@ -2296,14 +2336,6 @@ providers:
     script-file: pods-delete.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -2357,6 +2389,16 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Wait-Pod
     service: WorkflowNodeStep
     title: Kubernetes / Pod / Waitfor
@@ -2366,14 +2408,6 @@ providers:
     script-file: pods-wait.py
     script-args:
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Name"
@@ -2446,6 +2480,16 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Execute-Step
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Execute Command
@@ -2455,14 +2499,6 @@ providers:
     script-file: pods-node-executor.py
     script-args: ${config.name}
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Pod Name"
@@ -2532,6 +2568,16 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Ephemeral-Container
     service: WorkflowNodeStep
     title: Kubernetes / Debug / Ephemeral Container
@@ -2541,14 +2587,6 @@ providers:
     script-file: debug-ephemeral-container.py
     script-args: ${config.name}
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Pod Name"
@@ -2624,6 +2662,16 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-InlineScript-Step
     service: WorkflowNodeStep
     title: Kubernetes / Pods / Execute Script
@@ -2633,14 +2681,6 @@ providers:
     script-file: pods-run-script.py
     script-args: ${config.name}
     config:
-      - name: interpreter
-        title: Python Interpreter
-        description: "Python Interpreter (Default: python)"
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
       - name: name
         type: String
         title: "Pod Name"
@@ -2720,3 +2760,13 @@ providers:
         scope: Instance
         renderingOptions:
           groupName: Authentication
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
