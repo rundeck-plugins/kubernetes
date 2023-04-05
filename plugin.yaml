@@ -806,6 +806,71 @@ providers:
         default: "python"
         required: true
         scope: Instance
+  - name: Kubernetes-Describe-Pod
+    service: WorkflowNodeStep
+    title: Kubernetes / Pod / Describe
+    description: 'Describe a Specific Pod'
+    plugin-type: script
+    script-interpreter: ${config.interpreter} -u
+    script-file: pod-describe.py
+    script-args:
+    config:
+      - name: name
+        type: String
+        title: "Name"
+        description: "Pod Name. Can be left empty if Job is configured to Dispatch to Nodes."
+        required: false
+      - name: namespace
+        type: String
+        title: "Namespace"
+        default: "default"
+        description: "Namespace where the pod is located."
+        required: true
+      - name: config_file
+        type: String
+        title: "Kubernetes Config File Path"
+        description: "Leave empty if you want to pass the connection parameters"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: url
+        type: String
+        title: "Cluster URL"
+        description: "Kubernetes Cluster URL"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: token
+        type: String
+        title: "Token"
+        required: false
+        description: "Kubernetes API Token"
+        renderingOptions:
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+      - name: verify_ssl
+        type: Boolean
+        title: "Verify ssl"
+        description: "Verify ssl for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - name: ssl_ca_cert
+        type: String
+        title: "SSL Certificate Path"
+        description: "SSL Certificate Path for SSL connections"
+        required: false
+        renderingOptions:
+          groupName: Authentication
+      - type: Boolean
+        name: debug
+        title: Debug?
+        description: "Write debug messages to stderr"
+        required: false
+        renderingOptions:
+          groupName: Config
   - name: Kubernetes-Wait-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Waitfor
@@ -2048,6 +2113,11 @@ providers:
         type: String
         title: "Name"
         description: "Pod Name"
+        required: false
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: Name of the container within the pod. Required if the targeted pod has more than one container.
         required: false
       - name: namespace
         type: String
