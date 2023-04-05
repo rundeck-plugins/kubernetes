@@ -880,7 +880,7 @@ providers:
         values: "python,python2,python3"
         default: "python"
         required: true
-        scope: Instance          
+        scope: Instance
   - name: Kubernetes-Wait-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Waitfor
