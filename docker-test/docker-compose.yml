@@ -1,0 +1,63 @@
+version: '3'
+services:
+    rundeck:
+        container_name: rundeck
+        build:
+          context: rundeck
+          args:
+            RUNDECK_IMAGE: ${RUNDECK_IMAGE:-rundeck/rundeck:SNAPSHOT}
+        links:
+          - mysql
+        environment:
+            RUNDECK_GRAILS_URL: http://rundeck:4440
+            RUNDECK_SERVER_ADDRESS: 0.0.0.0
+            RUNDECK_MULTIURL_ENABLED: "true"
+            RUNDECK_SERVER_FORWARDED: "true"
+            RUNDECK_DATABASE_DRIVER: org.mariadb.jdbc.Driver
+            RUNDECK_DATABASE_USERNAME: rundeck
+            RUNDECK_DATABASE_PASSWORD: rundeck
+            RUNDECK_DATABASE_URL: jdbc:mariadb://mysql/rundeck?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+            RUNDECK_SECURITY_DBLOGIN_ENABLED: 'true'
+            RUNDECK_SECURITY_DBLOGIN_CREATEADMINUSERANDROLES: 'true'
+            RUNDECK_SECURITY_DBLOGIN_ADMINUSERNAME: ${RUNDECK_USER:-admin}
+            RUNDECK_SECURITY_DBLOGIN_ADMINPASSWORD: ${RUNDECK_PASSWORD:-admin}
+            RUNDECK_PLUGIN_CLUSTER_REMOTEEXECUTION_ENABLED: 'false'
+        ports:
+          - 4440:4440
+        volumes:
+          - $HOME/.kube/config:/home/rundeck/.kube/config
+    mysql:
+      container_name: mysql
+      image: mysql:8
+      ports:
+        - 33065:3306
+      cap_add:
+        - SYS_NICE  # CAP_SYS_NICE reduces error messages in console
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: rundeck
+        MYSQL_USER: rundeck
+        MYSQL_PASSWORD: rundeck
+      ulimits:
+        nofile:
+          soft: 20000
+          hard: 40000
+      command: --max-connections=1000
+
+
+    client:
+      container_name: client
+      build:
+        context: client
+        args:
+          BUILD_DEV_IMAGE: ${BUILD_DEV_IMAGE:-rundeckpro/env-builder:latest}
+      environment:
+        CONFIG_FILE: /app/data/import.yml
+        CONFIG_FILES_PATH: /app/data
+        RUNDECK_URL: http://rundeck:4440
+        RUNDECK_API_URL: http://rundeck:4440
+        RUNDECK_USER: ${RUNDECK_USER:-admin}
+        RUNDECK_PASSWORD: ${RUNDECK_PASSWORD:-admin}
+
+
+
