@@ -751,7 +751,7 @@ providers:
     title: Kubernetes / Pod / Describe
     description: 'Describe a Specific Pod'
     plugin-type: script
-    script-interpreter: python -u
+    script-interpreter: ${config.interpreter} -u
     script-file: pod-describe.py
     script-args:
     config:
@@ -811,6 +811,16 @@ providers:
         required: false
         renderingOptions:
           groupName: Config
+      - name: interpreter
+        title: Python Interpreter
+        renderingOptions:
+          groupName: Advanced
+        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
+        type: Select
+        values: "python,python2,python3"
+        default: "python"
+        required: true
+        scope: Instance
   - name: Kubernetes-Wait-Deployment
     service: WorkflowNodeStep
     title: Kubernetes / Deployment / Waitfor
