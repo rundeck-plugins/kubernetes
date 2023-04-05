@@ -1879,6 +1879,11 @@ providers:
         title: "Name"
         description: "Pod Name"
         required: false
+      - name: container_name
+        type: String
+        title: "Container Name"
+        description: Name of the container within the pod. Required if the targeted pod has more than one container.
+        required: false
       - name: namespace
         type: String
         title: "Namespace"
