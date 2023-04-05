@@ -15,7 +15,7 @@ providers:
     service: ResourceModelSource
     plugin-type: script
     resource-format: resourcejson
-    script-interpreter: ${config.interpreter} -u
+    script-interpreter: python -u
     script-file: pods-resource-model.py
     config:
       - type: String
@@ -126,16 +126,6 @@ providers:
         required: false
         renderingOptions:
           groupName: Authentication
-      - name: interpreter
-        title: Python Interpreter
-        renderingOptions:
-          groupName: Advanced
-        description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
-        type: Select
-        values: "python,python2,python3"
-        default: "python"
-        required: true
-        scope: Instance
   - name: Kubernetes-node-executor
     service: NodeExecutor
     title: Kubernetes / Pods / Node Executor
