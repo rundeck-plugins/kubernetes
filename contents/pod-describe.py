@@ -32,22 +32,6 @@ def main():
 
         print(common.parseJson(api_response.status))
 
-#         replicas = api_response.status.replicas
-#         r_replicas = api_response.status.ready_replicas
-#         u_replicas = api_response.status.unavailable_replicas
-#
-#         if(u_replicas is not None):
-#             log.error(
-#                 "unavailable replicas on the deployment: %s\n", u_replicas
-#             )
-#             sys.exit(1)
-#
-#         if (replicas != r_replicas):
-#             log.error(
-#                 "ready replicas doesn't match with replicas: %s\n", r_replicas
-#             )
-#             sys.exit(1)
-
     except ApiException:
         log.exception("Exception deleting deployment:")
         sys.exit(1)
