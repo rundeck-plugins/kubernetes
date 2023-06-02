@@ -118,10 +118,11 @@ def main():
         print(resp.read_stderr())
         sys.exit(1)
 
-    environments_variables, temporary_files = common.handle_rundeck_environment_variables(name,
-                                                                                          namespace,
-                                                                                          container
-                                                                                          )
+    environments_variables, temporary_files = common.handle_rundeck_environment_variables(
+                                                  name=name,
+                                                  namespace=namespace,
+                                                  container=container
+                                              )
 
     # calling exec and wait for response.
     exec_command = environments_variables + invocation.split(" ")
@@ -149,11 +150,12 @@ def main():
         sys.exit(1)
 
     temporary_files.append(full_path)
-    common.clean_up_temporary_files(name=name,
-                                    namespace=namespace,
-                                    container=container,
-                                    files=temporary_files
-                                    )
+    common.clean_up_temporary_files(
+        name=name,
+        namespace=namespace,
+        container=container,
+        files=temporary_files
+    )
 
 
 if __name__ == '__main__':

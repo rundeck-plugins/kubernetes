@@ -594,13 +594,14 @@ def handle_rundeck_environment_variables(name, namespace, container):
 
             try:
                 log.debug("coping script from %s to %s", source_file, full_path)
-                copy_file(name,
-                          namespace,
-                          container,
-                          source_file,
-                          destination_path,
-                          destination_file_name
-                          )
+                copy_file(
+                    name=name,
+                    namespace=namespace,
+                    container=container,
+                    source_file=source_file,
+                    destination_path=destination_path,
+                    destination_file_name=destination_file_name
+                )
             
             finally:
                 rundeck_variables[file_key] = full_path
@@ -618,11 +619,12 @@ def clean_up_temporary_files(name, namespace, container, files):
     rm_command = ["rm"] + files
 
     log.debug("removing file %s", rm_command)
-    resp = run_command(name=name,
-                              namespace=namespace,
-                              container=container,
-                              command=rm_command
-                              )
+    resp = run_command(
+               name=name,
+               namespace=namespace,
+               container=container,
+               command=rm_command
+           )
     
     if resp.peek_stdout():
         log.debug(resp.read_stdout())
