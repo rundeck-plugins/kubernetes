@@ -563,3 +563,70 @@ def delete_pod(data):
         if e.status != 404:
             log.exception("Unknown error:")
             return None
+
+
+def handle_rundeck_environment_variables(name, namespace, container):
+
+    # reduce environment variable array for just rundeck variables
+    rundeck_variables = dict(filter(lambda x: x[0].startswith('RD_'),
+                                    os.environ.items()
+                                    )
+                             )
+    
+    # get variables of temporarily 
+    rundeck_files_variables = dict(filter(lambda x: x[0].startswith('RD_FILE_'),
+                                          rundeck_variables.items()
+                                          )
+                                   )
+
+    destination_path = "/tmp"
+
+    if 'RD_NODE_FILE_COPY_DESTINATION_DIR' in os.environ:
+        destination_path = os.environ.get('RD_NODE_FILE_COPY_DESTINATION_DIR')
+
+    # copy uploaded files to the pod
+    files_copied = []
+    for file_key, file_value in rundeck_files_variables.items():
+        if not file_key.endswith('_SHA') and not file_key.endswith('_FILENAME'):
+            source_file = file_value
+            destination_file_name = rundeck_variables[file_key.replace('RD_FILE', 'RD_OPTION')]
+            full_path = destination_path + "/" + destination_file_name
+
+            try:
+                log.debug("coping script from %s to %s", source_file, full_path)
+                copy_file(name,
+                          namespace,
+                          container,
+                          source_file,
+                          destination_path,
+                          destination_file_name
+                          )
+            
+            finally:
+                rundeck_variables[file_key] = full_path
+                files_copied.append(full_path)
+
+
+    converted_variables = ['env']
+    for key, value in rundeck_variables.items():
+        converted_variables.append(key + '=' + value)
+
+    return converted_variables, files_copied
+
+
+def clean_up_temporary_files(name, namespace, container, files):
+    rm_command = ["rm"] + files
+
+    log.debug("removing file %s", rm_command)
+    resp = run_command(name=name,
+                              namespace=namespace,
+                              container=container,
+                              command=rm_command
+                              )
+    
+    if resp.peek_stdout():
+        log.debug(resp.read_stdout())
+
+    if resp.peek_stderr():
+        log.debug(resp.read_stderr())
+        sys.exit(1)
