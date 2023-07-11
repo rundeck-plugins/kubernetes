@@ -2037,17 +2037,29 @@ providers:
         default: "default"
         description: "Namespace where the job was created"
         required: true
-      - name: retries
+      - name: job_ready_timeout
         type: String
-        title: "Retries"
-        default: "100"
-        description: "Number of retries"
-        required: true
-      - name: sleep
-        type: String
-        title: "Sleep"
+        title: "Job ready timeout"
         default: "10"
-        description: "Sleep between retries"
+        description: "Timeout (sec) waiting for job to be ready "
+        required: true
+      - name: pod_ready_timeout
+        type: String
+        title: "Pod ready timeout"
+        default: "60"
+        description: "Timeout (sec) waiting for job to be ready"
+        required: true
+      - name: pod_execution_timeout
+        type: String
+        title: "Pod execution timeout"
+        default: "1800"
+        description: "Timeout (sec) waiting for pod execution to be completed"
+        required: true
+      - name: job_execution_timeout
+        type: String
+        title: "Job execution timeout"
+        default: "3600"
+        description: "Timeout (sec) waiting for job to be completed (retries included)"
         required: true
       - name: show_log
         type: Boolean
