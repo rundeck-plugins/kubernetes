@@ -257,10 +257,6 @@ def main():
     namespace = environ.get("RD_CONFIG_NAMESPACE")
     show_log = environ.get("RD_CONFIG_SHOW_LOG") == "true"
 
-    job_name = "test-fx"
-    namespace = "rundeck"
-    show_log = False
-
     log.debug("Retrieving job...")
     job = wait_for_job(job_name, namespace)
     log.info("Job found")
