@@ -27,7 +27,7 @@ providers:
       - type: String
         name: mapping
         title: 'Custom Mapping'
-        description: 'Custom mapping, eg: nodename.selector=default:Name'
+        description: 'Custom mapping, eg: nodename.selector=default:name'
         renderingOptions:
           groupName: Config
       - type: String
@@ -1706,7 +1706,7 @@ providers:
           groupName: Metadata
           displayType: MULTI_LINE
           codeSyntaxMode: yaml
-      - name: serviceaccount                                                                                                                                                                                                                  
+      - name: serviceaccount
         type: String
         title: "Service Account"
         description: "Service Account to use for launching Job"
