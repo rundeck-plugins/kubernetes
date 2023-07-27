@@ -51,7 +51,7 @@ Otherwise, you can set the following parameters:
 This plugin allows getting the container pods from kubernetes as rundeck nodes.
 
 * **Default attributes**: List of key=value pairs, example: username=root
-* **Custom Mapping**: Custom mapping adding on the rundeck nodes, for example: ```nodename.selector=default:Name,hostname.selector=default:pod_id```
+* **Custom Mapping**: Custom mapping adding on the rundeck nodes, for example: ```nodename.selector=default:name,hostname.selector=default:pod_id```
 
 * **Tags**: List of tags. You can add static and custom tags, for example:
 ```tag.selector=default:image, tag.selector=default:status, kubernetes```
