@@ -57,12 +57,12 @@ def main():
         sys.exit(1)
 
     if len(temporary_files) > 0:
-    common.clean_up_temporary_files(
-        name=name,
-        namespace=namespace,
-        container=container,
-        files=temporary_files
-    )
+        common.clean_up_temporary_files(
+            name=name,
+            namespace=namespace,
+            container=container,
+            files=temporary_files
+        )
 
 
 if __name__ == '__main__':
