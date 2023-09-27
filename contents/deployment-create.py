@@ -107,6 +107,10 @@ def main():
         rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = rr
 
+    if os.environ.get('RD_CONFIG_RESOURCES_LIMITS'):
+        rl = os.environ.get('RD_CONFIG_RESOURCES_LIMITS')
+        data["resources_limits"] = rl
+
     if os.environ.get('RD_CONFIG_ANNOTATIONS'):
         data["annotations"] = os.environ.get('RD_CONFIG_ANNOTATIONS')
 

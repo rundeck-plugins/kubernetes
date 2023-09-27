@@ -81,6 +81,14 @@ def create_job_object(data):
             requests=tmp
         )
 
+    if "resources_limits" in data:
+        resources_array = data["resources_limits"].split(",")
+        tmp = dict(s.split('=', 1) for s in resources_array)
+        if container.resources is not None:
+            container.resources.limits = tmp
+        else:
+            container.resources = client.V1ResourceRequirements(limits=tmp)
+
     if "volume_mounts" in data:
         mounts = common.create_volume_mount_yaml(data)
         container.volume_mounts = mounts
@@ -241,6 +249,10 @@ def main():
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
         req = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = req
+    
+    if os.environ.get('RD_CONFIG_RESOURCES_LIMITS'):
+        lim = os.environ.get('RD_CONFIG_RESOURCES_LIMITS')
+        data["resources_limits"] = lim
 
     if os.environ.get('RD_CONFIG_VOLUME_MOUNTS'):
         data["volume_mounts"] = os.environ.get('RD_CONFIG_VOLUME_MOUNTS')

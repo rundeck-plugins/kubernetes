@@ -93,6 +93,14 @@ def create_deployment_object(data):
             requests=tmp_resources
         )
 
+    if "resources_limits" in data:
+        resources_array = data["resources_limits"].split(",")
+        tmp = dict(s.split('=', 1) for s in resources_array)
+        if container.resources is not None:
+            container.resources.limits = tmp
+        else:
+            container.resources = client.V1ResourceRequirements(limits=tmp)
+
     labels = None
     if "labels" in data:
         labels_array = data["labels"].split(',')
