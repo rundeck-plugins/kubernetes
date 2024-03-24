@@ -3,9 +3,11 @@ import logging
 import sys
 import os
 import common
+import hashlib
 import json
 import shlex
 import pprint
+import yaml
 
 from kubernetes import client
 
@@ -36,6 +38,58 @@ logging.basicConfig(stream=sys.stderr,
                     )
 log = logging.getLogger('kubernetes-model-source')
 
+def generateConfigFilePath():
+    config_file = os.environ.get('RD_CONFIG_CONFIG_FILE')
+    if config_file:
+        return config_file
+    url = os.environ.get('RD_CONFIG_URL')
+    token = os.environ.get('RD_CONFIG_TOKEN')
+    if not token:
+        token = os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH')
+    if not (url and token):
+        return None
+
+    # WORKAROUND: Create a cached per-node config_file.
+    config_object = {
+        'apiVersion': 'v1',
+        'kind': 'Config',
+        'current-context': 'context',
+        'preferences': {},
+        'clusters': [{
+            'name': 'cluster',
+            'cluster': {
+                'server': url
+            }
+        }],
+        'users': [{
+            'name': 'user',
+            'user': {
+                'token': token
+            }
+        }],
+        'contexts': [{
+            'name': 'context',
+            'context': {
+                'cluster': 'cluster',
+                'user': 'user'
+            }
+        }]
+    }
+    verify_ssl = os.environ.get('RD_CONFIG_VERIFY_SSL')
+    ssl_ca_cert = os.environ.get('RD_CONFIG_SSL_CA_CERT')
+    if verify_ssl != 'true':
+        config_object['clusters'][0]['cluster']['insecure-skip-tls-verify'] = True
+    if ssl_ca_cert:
+        config_object['clusters'][0]['cluster']['certificate-authority'] = ssl_ca_cert
+    filename = hashlib.shake_256(json.dumps(config_object).encode('utf-8')).hexdigest(8)
+    tmpdir = os.path.join(os.environ.get('RD_PLUGIN_VARDIR'), 'tmp')
+    os.makedirs(tmpdir, exist_ok=True)
+    config_file = os.path.join(tmpdir, filename)
+    if not os.path.isfile(config_file):
+        with open(config_file, 'w') as outfile:
+            yaml.dump(config_object, outfile)
+            log.info("Generated %s", config_file)
+    return config_file
 
 def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
     tags = []
@@ -88,7 +142,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
     default_settings = {
         # kubernetes:config_file attribute are kept to avoid breaking existing k8s jobs depend on this configuration-override hack
         # This is just a temporary walkaround solultion and should be replaced by a layered configuration-override mechanism.  
-        'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
+        'kubernetes:config_file': generateConfigFilePath(),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,
         'default:started_at': startedAt,
