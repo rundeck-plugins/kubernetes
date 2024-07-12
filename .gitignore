@@ -25,3 +25,10 @@ gradle-app.setting
 
 
 .DS_Store
+
+# Testing content
+.tox
+
+**/__pycache__
+
+/kubernetes_rundeck_plugin.egg-info/*
