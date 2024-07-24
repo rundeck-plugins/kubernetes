@@ -33,6 +33,22 @@ python setup.py install
 
 Run `gradle build` to build the zip file. Then, copy the zip file to the `$RDECK_BASE\libext` folder.
 
+## Testing
+
+To run the tests specified in the `tox.ini` file, follow these steps:
+
+- Install Tox: Ensure you have Tox installed. You can install it using pip:
+   ```sh
+   pip install tox
+   ```
+- Run Tox: Execute Tox in the directory containing the `tox.ini` file. This will run the tests in all specified environments:
+   ```sh
+   tox
+   ```
+- Run Specific Environment: If you want to run tests for a specific environment (e.g., Python 3.8), you can specify the environment:
+   ```sh
+   tox -e py38
+   ```
 
 ## Authentication
 
