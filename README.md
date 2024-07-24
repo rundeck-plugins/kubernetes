@@ -50,6 +50,7 @@ To run the tests specified in the `tox.ini` file, follow these steps:
    tox -e py38
    ```
 
+
 ## Authentication
 
 By default, and if any authentication parameters are not set, the plugin will check the `~/.kube/config` file to get the authentication parameters.
