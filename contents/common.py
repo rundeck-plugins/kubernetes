@@ -323,11 +323,12 @@ def parseJson(obj):
 
 
 def create_pod_template_spec(data):
-    ports = []
 
-    for port in data["ports"].split(','):
-        portDefinition = client.V1ContainerPort(container_port=int(port))
-        ports.append(portDefinition)
+    ports = []
+    if data["ports"]:
+        for port in data["ports"].split(','):
+            portDefinition = client.V1ContainerPort(container_port=int(port))
+            ports.append(portDefinition)
 
     envs = []
     if "environments" in data:
