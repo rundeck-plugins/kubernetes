@@ -106,11 +106,15 @@ def create_deployment_object(data):
         template.metadata = client.V1ObjectMeta(labels=labels)
 
     # Create the specification of deployment
-    spec = client.ExtensionsV1beta1DeploymentSpec(
+    spec = client.V1DeploymentSpec(
         replicas=int(data["replicas"]),
-        template=template)
+        template=template,
+        selector=client.V1LabelSelector(
+            match_labels={}  # This will match all pods
+        )
+    )
     # Instantiate the deployment object
-    deployment = client.ExtensionsV1beta1Deployment(
+    deployment = client.V1Deployment(
         api_version=data["api_version"],
         kind="Deployment",
         metadata=client.V1ObjectMeta(labels=labels,
