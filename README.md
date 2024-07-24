@@ -29,7 +29,7 @@ python setup.py install
 
 ```
 
-## Build and Install
+## Build and Install 
 
 Run `gradle build` to build the zip file. Then, copy the zip file to the `$RDECK_BASE\libext` folder.
 
