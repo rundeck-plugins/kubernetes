@@ -108,7 +108,11 @@ def create_deployment_object(data):
     # Create the specification of deployment
     spec = client.V1DeploymentSpec(
         replicas=int(data["replicas"]),
-        template=template)
+        template=template,
+        selector=client.V1LabelSelector(
+            match_labels={}  # This will match all pods
+        )
+    )
     # Instantiate the deployment object
     deployment = client.V1Deployment(
         api_version=data["api_version"],
