@@ -195,7 +195,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -267,7 +267,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -285,7 +285,7 @@ providers:
         title: "API Version"
         description: "Kubernetes API Version"
         required: true
-        default: "extensions/v1beta1"
+        default: "apps/v1"
         renderingOptions:
           groupName: Metadata
       - name: name
@@ -476,7 +476,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -494,7 +494,7 @@ providers:
         title: "API Version"
         description: "Kubernetes API Version"
         required: true
-        default: "extensions/v1beta1"
+        default: "apps/v1"
         renderingOptions:
           groupName: Metadata
       - name: name
@@ -652,7 +652,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -727,7 +727,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -802,7 +802,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -877,7 +877,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -964,7 +964,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1051,7 +1051,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1135,7 +1135,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1216,7 +1216,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1369,7 +1369,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1522,7 +1522,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1597,7 +1597,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1858,7 +1858,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -1933,7 +1933,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2013,7 +2013,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2106,7 +2106,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2200,7 +2200,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2393,7 +2393,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2465,7 +2465,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2556,7 +2556,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2644,7 +2644,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2738,7 +2738,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
@@ -2836,7 +2836,7 @@ providers:
           groupName: Advanced
         description: "This plugin is written in python. Use this to define the python interpreter that is used to execute this plugin."
         type: Select
-        values: "python,python2,python3"
+        values: "python,python3"
         default: "python"
         required: true
         scope: Instance
