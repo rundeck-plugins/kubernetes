@@ -1,0 +1,7 @@
+projects:
+  - name: Kubernetes-Demo
+    archive: projects/Kubernetes-Demo.rdproject.jar
+
+users:
+  - username: alice
+    email: alice@rundeck.io
