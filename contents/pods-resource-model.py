@@ -37,7 +37,7 @@ logging.basicConfig(stream=sys.stderr,
 log = logging.getLogger('kubernetes-model-source')
 
 
-def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
+def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon, index):
     tags = []
     tags.extend(taglist.split(','))
 
@@ -104,6 +104,9 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
 
     mappings = []
     custom_attributes = {}
+
+    # Count pods within their owner
+    custom_attributes['index'] = index
 
     # custom mapping attributes
     if mappingList:
@@ -257,6 +260,9 @@ def main():
 
     node_set = []
 
+    # Used to count child pods, particularly of a (possibly autoscaling) ReplicaSet.
+    parents = {}
+
     ret = collect_pods_from_api(namespace_filter, label_selector, field_selector)
 
     for i in ret.items:
@@ -267,12 +273,28 @@ def main():
                       i.metadata.name,
                       container.name)
 
+            # For scalable pods in a deployment, the ReplicaSet of a pod is the pod name with the last dash-separated
+            # token stripped off. If we have seen the ReplicaSet already, increment the counter. Otherwise, initialize
+            # this as the first pod in the ReplicaSet.
+            #
+            # For example, the deployment "my-deployment" might create a ReplicaSet named "my-deployment-5ffd8f676d"
+            # and one of the pods within the ReplicaSet might be identified as "my-deployment-5ffd8f676d-ccwbf". By
+            # removing the suffix that identifies the pod, we index resources within the parent group. In this way, we
+            # can ensure that only one pod per ReplicaSet runs a command by filtering the nodes in Rundeck to include
+            # only those where index is equal to 1.
+            parent_name = '-'.join(i.metadata.name.split('-')[0:-1])
+            if parent_name in parents:
+                parents[parent_name] += 1
+            else:
+                parents[parent_name] = 1
+
             node_data = nodeCollectData(i,
                                         container,
                                         defaults,
                                         tags,
                                         mappingList,
-                                        boEmoticon
+                                        boEmoticon,
+                                        parents[parent_name]
                                         )
 
             if running is False:
