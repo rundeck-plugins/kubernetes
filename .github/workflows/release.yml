@@ -15,15 +15,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
         with:
-          java-version: 1.8
+          distribution: 'corretto'
+          java-version: 8
       - name: Build with Gradle
         run: ./gradlew build
       - name: Get Release Version
         id: get_version
-        run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) && echo ::set-output name=VERSION::$VERSION
+        run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) && echo VERSION=$VERSION >> $GITHUB_OUTPUT
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
