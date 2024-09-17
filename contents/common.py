@@ -396,6 +396,16 @@ def create_pod_template_spec(data):
             requests=tmp_resources
         )
 
+    if "resources_limits" in data:
+        resources_array = data["resources_limits"].split(",")
+        tmp_limits = dict(s.split('=', 1) for s in resources_array)
+        if container.resources is not None:
+            container.resources.limits = tmp_limits
+        else:
+            container.resources = client.V1ResourceRequirements(
+                limits=tmp_limits
+            )
+
     template_spec = client.V1PodSpec(
         containers=[container]
     )
