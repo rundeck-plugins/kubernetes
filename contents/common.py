@@ -45,8 +45,11 @@ def connect():
     url = os.environ.get('RD_CONFIG_URL')
     
     token = os.environ.get('RD_CONFIG_TOKEN')
+
     if not token:
-        token = os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH')
+      if os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH'):
+        with open(os.environ.get('RD_CONFIG_TOKEN_STORAGE_PATH'),"r") as f:
+          token = f.read()
 
     log.debug("config file")
     log.debug(config_file)
