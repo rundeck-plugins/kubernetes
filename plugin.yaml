@@ -407,6 +407,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+      - name: resources_limits
+        type: String
+        title: "Resource Limits"
+        description: "Limit resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
       - name: volume_mounts
         type: String
         title: "Volume Mounts"
@@ -598,6 +605,13 @@ providers:
         type: String
         title: "Resource Requests"
         description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_limits
+        type: String
+        title: "Resource Limits"
+        description: "Limit resources in format cpu=4,memory=1Gi"
         required: false
         renderingOptions:
           groupName: Container
@@ -1789,6 +1803,13 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
+      - name: resources_limits
+        type: String
+        title: "Resource Limits"
+        description: "Limit resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
       - name: volumes
         type: String
         title: "Volumes"
@@ -2323,6 +2344,13 @@ providers:
         type: String
         title: "Resource Requests"
         description: "Request resources in format cpu=4,memory=1Gi"
+        required: false
+        renderingOptions:
+          groupName: Container
+      - name: resources_limits
+        type: String
+        title: "Resource Limits"
+        description: "Limit resources in format cpu=4,memory=1Gi"
         required: false
         renderingOptions:
           groupName: Container
