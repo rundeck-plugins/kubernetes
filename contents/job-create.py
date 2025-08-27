@@ -92,18 +92,22 @@ def create_job_object(data):
         env_from = []
         for env_from_data in env_froms_data:
             if 'configMapRef' in env_from_data:
+                config_map_ref = env_from_data['configMapRef']
                 env_from.append(
                     client.V1EnvFromSource(
                         config_map_ref=client.V1ConfigMapEnvSource(
-                            env_from_data['configMapRef']['name']
+                            name=config_map_ref['name'],
+                            optional=config_map_ref.get('optional')
                         )
                     )
                 )
             elif 'secretRef' in env_from_data:
+                secret_ref = env_from_data['secretRef']
                 env_from.append(
                     client.V1EnvFromSource(
                         secret_ref=client.V1SecretEnvSource(
-                            env_from_data['secretRef']['name']
+                            name=secret_ref['name'],
+                            optional=secret_ref.get('optional')
                         )
                     )
                 )
