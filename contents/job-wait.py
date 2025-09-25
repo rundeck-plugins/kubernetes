@@ -57,6 +57,9 @@ def wait():
                             namespace,
                             label_selector="job-name==" + name
                         )
+                        if not pod_list.items:
+                            raise ApiException(404)
+
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
 
