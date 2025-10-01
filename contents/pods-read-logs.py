@@ -35,7 +35,10 @@ def main():
                                      name=data["name"],
                                      tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                                      follow=False):
-                    print(line.encode('ascii', 'ignore'))
+                    try:
+                        log.info(line)
+                    except:
+                        log.info(line.encode('ascii', 'ignore'))
             else:
                 w = watch.Watch()
                 for line in w.stream(v1.read_namespaced_pod_log,
@@ -44,7 +47,10 @@ def main():
                                      name=data["name"],
                                      tail_lines=os.environ.get('RD_CONFIG_NUMBER_OF_LINES'),
                                      follow=False):
-                    print(line.encode('ascii', 'ignore'))
+                    try:
+                        log.info(line)
+                    except:
+                        log.info(line.encode('ascii', 'ignore'))
         else:
             if data["container_name"]:
                 ret = v1.read_namespaced_pod_log(
