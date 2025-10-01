@@ -124,7 +124,8 @@ def main():
 
     if 'RD_CONFIG_ARGUMENTS' in os.environ:
         arguments = os.environ.get('RD_CONFIG_ARGUMENTS')
-        exec_command.append(arguments)
+        for arg in arguments.split(" "):
+            exec_command.append(arg)
 
     log.debug("running script %s", exec_command)
 
