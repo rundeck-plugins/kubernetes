@@ -97,7 +97,7 @@ def create_job_object(data):
                     client.V1EnvFromSource(
                         config_map_ref=client.V1ConfigMapEnvSource(
                             name=config_map_ref['name'],
-                            optional=config_map_ref.get('optional')
+                            optional=config_map_ref.get('optional', False)
                         )
                     )
                 )
@@ -107,7 +107,7 @@ def create_job_object(data):
                     client.V1EnvFromSource(
                         secret_ref=client.V1SecretEnvSource(
                             name=secret_ref['name'],
-                            optional=secret_ref.get('optional')
+                            optional=secret_ref.get('optional', False)
                         )
                     )
                 )
