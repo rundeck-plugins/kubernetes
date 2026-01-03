@@ -20,7 +20,7 @@ ext.pluginBaseFolder = "."
 scmVersion {
     ignoreUncommittedChanges = true
     tag {
-        prefix = ''
+        prefix = 'v'
         versionSeparator = ''
         def origDeserialize=deserialize
 
