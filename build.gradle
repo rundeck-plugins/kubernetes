@@ -15,7 +15,7 @@ ext.archivesBaseName = "kubernetes"
 ext.pluginBaseFolder = "."
 
 // Override version for Grails 7 upgrade
-project.version = '2.0.15-grails7-upgrade-test'
+project.version = '2.0.16-grails7-upgrade-test'
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
 apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/gradle-5.6/build.gradle'
