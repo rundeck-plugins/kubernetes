@@ -3,9 +3,6 @@ buildscript {
         mavenCentral()
     }
 }
-plugins {
-    id 'pl.allegro.tech.build.axion-release' version '1.14.2'
-}
 
 group = 'com.github.rundeck-plugins'
 
@@ -16,16 +13,6 @@ ext.sopsUrl = "http://rundeck.com"
 ext.buildDateString=new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
 ext.archivesBaseName = "kubernetes"
 ext.pluginBaseFolder = "."
-
-scmVersion {
-    ignoreUncommittedChanges = true
-    tag {
-        prefix = 'v'
-        versionSeparator = ''
-        def origDeserialize=deserialize
-
-    }
-}
 
 // Override version for Grails 7 upgrade
 project.version = '2.0.15-grails7-upgrade-test'
