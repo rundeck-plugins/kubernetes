@@ -27,7 +27,6 @@ scmVersion {
     }
 }
 
-project.version = scmVersion.version
 // Override version for Grails 7 upgrade
 project.version = '2.0.15-grails7-upgrade-test'
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
