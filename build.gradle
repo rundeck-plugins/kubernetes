@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
     repositories {
         mavenCentral()
@@ -60,6 +62,17 @@ task pluginZip(type: Jar) {
 }
 
 pluginZip.doFirst {
+    def assetsMap = new Properties()
+    def tokens = assetsMap + [
+            version    : project.version.toString(),
+            date       : buildDateString,
+            author     : sopsCopyright,
+            url        : sopsUrl,
+            title      : pluginName,
+            description: pluginDescription,
+            name       : archivesBaseName,
+    ]
+
     copy {
         from(file('resources')) {
             include('**/*')
@@ -70,7 +83,10 @@ pluginZip.doFirst {
             into('contents')
         }
 
-        from('plugin.yaml')
+        from('plugin.yaml') {
+            filter(ReplaceTokens, tokens: tokens)
+            exclude('**/*.png')
+        }
 
         into(layout.buildDirectory.dir('zip-contents'))
     }
