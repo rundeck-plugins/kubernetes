@@ -4,7 +4,13 @@ buildscript {
     }
 }
 
-group = 'com.github.rundeck-plugins'
+plugins {
+    id 'base'
+    id 'pl.allegro.tech.build.axion-release' version '1.17.2'
+    id 'maven-publish'
+}
+
+group = 'com.rundeck.plugins'
 
 ext.pluginName = 'kubernetes'
 ext.pluginDescription = "Kubernetes Rundeck Plugin to manage pods , deployments, etc"
@@ -14,9 +20,94 @@ ext.buildDateString=new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
 ext.archivesBaseName = "kubernetes"
 ext.pluginBaseFolder = "."
 
-// Override version for Grails 7 upgrade
-project.version = '2.0.16-grails7-upgrade-test'
-ext.archiveFilename = ext.archivesBaseName + '-' + version 
+scmVersion {
+    ignoreUncommittedChanges = false
+    tag {
+        prefix = ''           // NO "v" prefix - see PLUGIN_TAGGING_ARCHITECTURE.md
+        versionSeparator = ''
+    }
+    versionCreator 'simple'  // Use simple version creator (just tag name)
+}
 
-apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/gradle-5.6/build.gradle'
+version = scmVersion.version  // Dynamic version from git tag
+
+// ZIP plugin task - must use Jar type for proper manifest handling
+task pluginZip(type: Jar) {
+    archiveBaseName = archivesBaseName
+    archiveVersion = version
+    archiveClassifier = ''
+    archiveExtension = 'zip'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+
+    from(layout.buildDirectory.dir('zip-contents')) {
+        include('*.yaml')
+        include('resources/**')
+        include('contents/*')
+        into("${archivesBaseName}-" + project.version.toString())
+    }
+
+    manifest {
+        attributes(
+            'Rundeck-Plugin-Name': pluginName,
+            'Rundeck-Plugin-Description': pluginDescription,
+            'Rundeck-Plugin-Archive': 'true',
+            'Rundeck-Plugin-File-Version': project.version.toString(),
+            'Rundeck-Plugin-Author': sopsCopyright,
+            'Rundeck-Plugin-URL': sopsUrl,
+            'Rundeck-Plugin-Date': buildDateString
+        )
+    }
+}
+
+pluginZip.doFirst {
+    copy {
+        from(file('resources')) {
+            include('**/*')
+            into('resources')
+        }
+
+        from(file('contents')) {
+            into('contents')
+        }
+
+        from('plugin.yaml')
+
+        into(layout.buildDirectory.dir('zip-contents'))
+    }
+}
+
+// Wire into build lifecycle
+assemble.dependsOn pluginZip
+
+publishing {
+    publications {
+        mavenZip(MavenPublication) {
+            groupId = 'com.rundeck.plugins'
+            artifactId = 'kubernetes'
+            version = project.version
+            
+            artifact(pluginZip) {
+                extension = 'jar'  // Publish as .jar to Maven (it's actually a zip)
+            }
+            
+            pom {
+                packaging = 'jar'
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "PackageCloudTest"
+            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+            credentials(HttpHeaderCredentials) {
+                name = "Authorization"
+                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
+            }
+        }
+    }
+}
 
