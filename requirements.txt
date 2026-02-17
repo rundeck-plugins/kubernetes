@@ -1,5 +1,5 @@
 kubernetes
-urllib3>=2.6.0
+urllib3>=2.6.3
 pyyaml
 pytest
 
