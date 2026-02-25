@@ -2,4 +2,5 @@ kubernetes
 urllib3>=2.6.3
 pyyaml
 pytest
+pyasn1>=0.6.2
 
