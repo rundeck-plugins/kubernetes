@@ -188,39 +188,15 @@ def collect_pods_from_api(namespace_filter, label_selector, field_selector):
     log.debug(label_selector)
     log.debug(field_selector)
 
-    ret = []
-    if namespace_filter is None:
-        if field_selector and label_selector:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                field_selector=field_selector,
-                label_selector=label_selector,
-            )
+    kwargs = {'watch': False}
+    if label_selector:
+        kwargs['label_selector'] = label_selector
+    if field_selector:
+        kwargs['field_selector'] = field_selector
 
-        if field_selector and label_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                field_selector=field_selector,
-            )
-
-        if label_selector and field_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                label_selector=label_selector,
-            )
-
-        if label_selector is None and field_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-            )
-    else:
-        ret = v1.list_namespaced_pod(
-            namespace=namespace_filter,
-            watch=False,
-            label_selector=label_selector,
-            field_selector=field_selector,
-        )
-    return ret
+    if namespace_filter:
+        return v1.list_namespaced_pod(namespace=namespace_filter, **kwargs)
+    return v1.list_pod_for_all_namespaces(**kwargs)
 
 
 def main():
