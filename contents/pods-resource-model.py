@@ -5,7 +5,6 @@ import os
 import common
 import json
 import shlex
-import pprint
 
 from kubernetes import client
 
