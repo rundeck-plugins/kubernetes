@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "kubernetes-rundeck-plugin"
+version = "2.0.16"
+description = "kubernetes plugin for rundeck"
+authors = [
+    { name = "Luis Toledo", email = "luis@variacode.com" },
+]
+
+dependencies = [
+    "kubernetes>=35.0.0",
+    "pyyaml",
+    "urllib3>=2.6.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/rundeck-plugins/kubernetes"
+
+[tool.setuptools.packages.find]
+include = ["contents", "contents.tests"]
