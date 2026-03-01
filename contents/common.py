@@ -14,9 +14,9 @@ from kubernetes.stream import stream
 from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
+urllib3.disable_warnings(InsecureRequestWarning)
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s')
