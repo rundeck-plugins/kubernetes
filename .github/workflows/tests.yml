@@ -9,20 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.x' ]
+        python-version: ['3.9', '3.10', '3.14']
 
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
         check-latest: true
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools
         pip install tox tox-gh-actions
     - name: Test with tox
       run: |
-        python -m tox -c tox.ini
+        python -m tox -e dev
