@@ -55,14 +55,13 @@ Further information: [https://github.com/kubernetes-client/python](https://githu
 
 ### Kubernetes Cluster Compatibility
 
-The Python client library version 35.0.0 is compatible with:
+This plugin requires the Kubernetes Python client library version **35.0.0 or newer**.
 
-- **Kubernetes API v1.35.x** (full support)
-- **Kubernetes API v1.34.x** (backwards compatible)
-- **Kubernetes API v1.33.x** (backwards compatible)
-- **Older cluster versions** (generally supported, but some newer client features may not be available)
+The Kubernetes Python client is generally **backwards compatible** with older Kubernetes clusters. For the most accurate and up-to-date information about which Kubernetes API/server versions are supported by a given client version, refer to the upstream compatibility documentation:
 
-The Python client maintains backwards compatibility with older Kubernetes clusters, so upgrading the client library does not require upgrading your Kubernetes cluster.
+- [Kubernetes Python Client Compatibility](https://github.com/kubernetes-client/python#compatibility)
+
+In practice, upgrading the client library typically does not require upgrading your Kubernetes cluster, but you should verify compatibility against the upstream documentation and test in a non-production environment before making changes.
 
 ### Upgrading from Previous Plugin Versions
 
