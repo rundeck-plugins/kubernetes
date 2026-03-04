@@ -1,6 +1,6 @@
-kubernetes
+kubernetes>=35.0.0
 urllib3>=2.6.3
 pyyaml
 pytest
-pyasn1>=0.6.2
+packaging>=20.0
 

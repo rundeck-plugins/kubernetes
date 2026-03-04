@@ -27,6 +27,40 @@ PY = sys.version_info[0]
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
+# Check kubernetes client version and warn if outdated
+try:
+    import kubernetes
+    from packaging import version
+    
+    MIN_KUBERNETES_VERSION = "35.0.0"
+    current_version = kubernetes.__version__
+    
+    if version.parse(current_version) < version.parse(MIN_KUBERNETES_VERSION):
+        log.warning("=" * 80)
+        log.warning("SECURITY WARNING: Outdated Kubernetes Python client detected")
+        log.warning(f"Current version: {current_version}")
+        log.warning(f"Required version: {MIN_KUBERNETES_VERSION}+")
+        log.warning("")
+        log.warning("Your installation is vulnerable to CVE-2026-23490 (CVSS 7.5 HIGH)")
+        log.warning("")
+        log.warning("ACTION REQUIRED: Upgrade the kubernetes Python library on the")
+        log.warning("server where Rundeck is running (or on your Runner if using")
+        log.warning("remote execution):")
+        log.warning("")
+        log.warning(f"  pip install --upgrade 'kubernetes>={MIN_KUBERNETES_VERSION}'")
+        log.warning("  # or: pip3 install --upgrade 'kubernetes>={MIN_KUBERNETES_VERSION}'")
+        log.warning("")
+        log.warning("The plugin will continue to work, but you should upgrade to")
+        log.warning("eliminate the security vulnerability.")
+        log.warning("=" * 80)
+except ImportError:
+    # packaging module not available - skip version check
+    # This is acceptable since it's just a warning
+    pass
+except AttributeError:
+    # kubernetes.__version__ not available - skip check
+    pass
+
 
 def connect():
     config_file = None
