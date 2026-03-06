@@ -10,26 +10,6 @@ import pprint
 from kubernetes import client
 
 
-class JsonQuery(dict):
-    def get(self, path, default=None):
-        keys = path.split(".")
-        val = None
-
-        for key in keys:
-            if val:
-                if isinstance(val, list):
-                    val = [v.get(key, default) if v else None for v in val]
-                else:
-                    val = val.get(key, default)
-            else:
-                val = dict.get(self, key, default)
-
-            if not val:
-                break
-
-        return val
-
-
 logging.basicConfig(stream=sys.stderr,
                     level=logging.INFO,
                     format='%(levelname)s: %(name)s: %(message)s'
@@ -87,7 +67,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
 
     default_settings = {
         # kubernetes:config_file attribute are kept to avoid breaking existing k8s jobs depend on this configuration-override hack
-        # This is just a temporary walkaround solultion and should be replaced by a layered configuration-override mechanism.  
+        # This is just a temporary walkaround solution and should be replaced by a layered configuration-override mechanism.  
         'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,
@@ -120,10 +100,6 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
                     # take the values from default
                     if "default:" in value:
                         custom_attribute = default_settings[value]
-                    else:
-                        # taking the values from docker inspect
-                        for item in json:
-                            custom_attribute = JsonQuery(item).get(value)
 
                     if custom_attribute:
                         custom_attributes[attribute] = custom_attribute
