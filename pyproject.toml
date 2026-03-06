@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+
+[project]
+name = "kubernetes-rundeck-plugin"
+version = "2.0.16"
+description = "kubernetes plugin for rundeck"
+authors = [
+    { name = "Luis Toledo", email = "luis@variacode.com" },
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+dependencies = [
+    "kubernetes>=35.0.0",
+    "pyyaml",
+    # Version 2.6.3 of urllib3 is required to avoid a security vulnerability (CVE-2026-21441)
+    # The lowest version of python that officialy supports urllib3 2.6.3 is Python 3.10, but 3.9 also seems to work.
+    "urllib3>=2.6.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/rundeck-plugins/kubernetes"
+
+[tool.setuptools.packages.find]
+include = ["contents", "contents.tests"]
