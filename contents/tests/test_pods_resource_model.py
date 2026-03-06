@@ -270,8 +270,6 @@ class TestCollectPodsFromApi(unittest.TestCase):
         mock_api.list_namespaced_pod.assert_called_once_with(
             namespace='default',
             watch=False,
-            label_selector=None,
-            field_selector=None,
         )
 
 
