@@ -50,7 +50,7 @@ Further information: [https://github.com/kubernetes-client/python](https://githu
 
 ### Python Version Support
 
-- **Python 3.8+** is required (Python 3.6 and 3.7 are end-of-life)
+- **Python 3.9+** is required (urllib3 2.6.x requires Python 3.9+)
 - **Python 3.10+** is recommended for best performance and security
 
 ### Kubernetes Cluster Compatibility
@@ -112,12 +112,13 @@ To run the tests specified in the `tox.ini` file, follow these steps:
    ```sh
    pip install tox
    ```
-- Run Tox: Execute Tox in the directory containing the `tox.ini` file. This will run the tests in all specified environments (Python 3.8, 3.9, 3.10, 3.11, 3.12):
+- Run Tox: Execute Tox in the directory containing the `tox.ini` file. This will run the tests in all specified environments (Python 3.9, 3.10, 3.11, 3.12):
    ```sh
    tox
    ```
 - Run Specific Environment: If you want to run tests for a specific Python version, you can specify the environment:
    ```sh
+   tox -e py39   # For Python 3.9
    tox -e py310  # For Python 3.10
    tox -e py311  # For Python 3.11
    tox -e py312  # For Python 3.12
