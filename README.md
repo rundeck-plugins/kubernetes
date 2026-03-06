@@ -10,6 +10,12 @@ Use cases:
 
 ## Requirements
 
+### Python Version
+
+This plugin requires **Python 3.10 or newer**. The plugin is tested on Python 3.10, 3.11, 3.12, 3.13, and 3.14.
+
+**Note:** Python 3.9 reached end-of-life in October 2025 and is no longer supported.
+
 ### Python Dependencies
 
 This plugin requires the following Python packages to be installed **on the server where Rundeck executes** (either your Rundeck server or your Runner nodes if using remote execution):
@@ -50,8 +56,9 @@ Further information: [https://github.com/kubernetes-client/python](https://githu
 
 ### Python Version Support
 
-- **Python 3.9+** is required (urllib3 2.6.x requires Python 3.9+)
-- **Python 3.10+** is recommended for best performance and security
+- **Python 3.10+** is required
+- Tested on Python 3.10, 3.11, 3.12, 3.13, and 3.14
+- **Python 3.9** reached end-of-life in October 2025 and is no longer supported
 
 ### Kubernetes Cluster Compatibility
 
