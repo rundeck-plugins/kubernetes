@@ -93,7 +93,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
             mapping_array = dict(s.split('=', 1) for s in mapping.split())
 
             for key, value in mapping_array.items():
-                if key.find(".selector"):
+                if ".selector" in key:
                     attribute = key.replace(".selector", "")
                     custom_attribute = None
                     # take the values from default

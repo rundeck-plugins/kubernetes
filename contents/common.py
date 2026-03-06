@@ -513,7 +513,7 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
             if not sent:
                 chunk = tar_buffer.read(4096)
                 while chunk:
-                    resp.write_stdin(chunk.decode())
+                    resp.write_stdin(chunk)
                     chunk = tar_buffer.read(4096)
                 sent = True
             else:
