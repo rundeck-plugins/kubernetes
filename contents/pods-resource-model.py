@@ -66,7 +66,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
 
     default_settings = {
         # kubernetes:config_file attribute are kept to avoid breaking existing k8s jobs depend on this configuration-override hack
-        # This is just a temporary walkaround solution and should be replaced by a layered configuration-override mechanism.  
+        # This is just a temporary workaround solution and should be replaced by a layered configuration-override mechanism.
         'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,

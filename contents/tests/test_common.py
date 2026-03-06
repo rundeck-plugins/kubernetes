@@ -4,7 +4,6 @@ Unit tests for common.py functions.
 
 import datetime
 import json
-import logging
 import os
 import unittest
 from unittest.mock import patch, MagicMock
