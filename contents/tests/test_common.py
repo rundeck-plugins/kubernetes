@@ -550,5 +550,13 @@ class TestCommon(unittest.TestCase):
             expected_arcname='opt/hello.txt')
 
 
+    def test_copy_file_empty(self):
+        """Test copy_file with a zero-byte file."""
+        self._run_copy_file_test(
+            content=b'',
+            suffix='.bin', dest_path='/tmp', dest_name='empty',
+            expected_arcname='tmp/empty')
+
+
 if __name__ == '__main__':
     unittest.main()
