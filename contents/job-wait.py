@@ -58,7 +58,9 @@ def wait():
                             label_selector="job-name==" + name
                         )
                         if not pod_list.items:
-                            raise ApiException(404)
+                            log.warning("No pods found for job yet, waiting for pod creation")
+                            time.sleep(5)
+                            continue
 
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
