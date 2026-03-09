@@ -5,6 +5,8 @@ Unit tests for common.py functions.
 import datetime
 import json
 import os
+import tarfile
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -454,6 +456,106 @@ class TestCommon(unittest.TestCase):
         mock_api.delete_namespaced_pod.side_effect = ApiException(status=500)
         result = common.delete_pod({'name': 'my-pod', 'namespace': 'default'})
         self.assertIsNone(result)
+
+
+    def _run_copy_file_test(self, content, suffix, dest_path, dest_name, expected_arcname):
+        """Helper to test copy_file with given content and verify the tar archive."""
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common.core_v1_api.CoreV1Api'):
+            mock_resp = MagicMock()
+            mock_resp.is_open.return_value = True
+            mock_resp.peek_stdout.return_value = False
+            mock_resp.peek_stderr.return_value = False
+            mock_stream.return_value = mock_resp
+
+            if isinstance(content, bytes):
+                src = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                src.write(content)
+                src.close()
+                expected_bytes = content
+            else:
+                src = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode='w')
+                src.write(content)
+                src.close()
+                expected_bytes = content.encode()
+
+            try:
+                common.copy_file(
+                    name='my-pod',
+                    namespace='default',
+                    container='app',
+                    source_file=src.name,
+                    destination_path=dest_path,
+                    destination_file_name=dest_name,
+                )
+
+                self.assertGreaterEqual(mock_resp.write_stdin.call_count, 1)
+                tar_data = b''.join(c[0][0] for c in mock_resp.write_stdin.call_args_list)
+                self.assertIsInstance(tar_data, bytes)
+
+                import io
+                tar_buffer = io.BytesIO(tar_data)
+                with tarfile.open(fileobj=tar_buffer, mode='r') as tar:
+                    members = tar.getmembers()
+                    self.assertEqual(1, len(members))
+                    self.assertEqual(expected_arcname, members[0].name)
+                    extracted = tar.extractfile(members[0])
+                    self.assertEqual(expected_bytes, extracted.read())
+
+                mock_resp.close.assert_called_once()
+            finally:
+                os.unlink(src.name)
+
+    def test_copy_file_binary_small(self):
+        """Test copy_file with a binary file smaller than 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 15,  # 3840 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_binary_exact(self):
+        """Test copy_file with a binary file of exactly 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 16,  # 4096 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_binary_large(self):
+        """Test copy_file with a binary file larger than 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 17,  # 4352 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_text_small(self):
+        """Test copy_file with a text file smaller than 4096 bytes."""
+        self._run_copy_file_test(
+            content='Hello, world!\n' * 200,  # 2800 bytes
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+    def test_copy_file_text_exact(self):
+        """Test copy_file with a text file of exactly 4096 bytes."""
+        # 'x' * 4095 + '\n' = 4096 bytes
+        self._run_copy_file_test(
+            content='x' * 4095 + '\n',
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+    def test_copy_file_text_large(self):
+        """Test copy_file with a text file larger than 4096 bytes."""
+        self._run_copy_file_test(
+            content='Hello, world!\n' * 300,  # 4200 bytes
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+
+    def test_copy_file_empty(self):
+        """Test copy_file with a zero-byte file."""
+        self._run_copy_file_test(
+            content=b'',
+            suffix='.bin', dest_path='/tmp', dest_name='empty',
+            expected_arcname='tmp/empty')
 
 
 if __name__ == '__main__':
