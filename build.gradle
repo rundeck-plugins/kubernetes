@@ -9,10 +9,10 @@ buildscript {
 plugins {
     id 'base'
     id 'pl.allegro.tech.build.axion-release' version '1.17.2'
-    id 'maven-publish'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
-group = 'com.rundeck.plugins'
+group = 'org.rundeck.plugins'
 
 ext.pluginName = 'kubernetes'
 ext.pluginDescription = "Kubernetes Rundeck Plugin to manage pods , deployments, etc"
@@ -32,6 +32,11 @@ scmVersion {
 }
 
 version = scmVersion.version  // Dynamic version from git tag
+ext.publishName = "Kubernetes ${project.version}"
+ext.githubSlug = 'rundeck-plugins/kubernetes'
+ext.developers = [
+        [id: 'gschueler', name: 'Greg Schueler', email: 'greg@rundeck.com']
+]
 
 // ZIP plugin task - must use Jar type for proper manifest handling
 task pluginZip(type: Jar) {
@@ -95,35 +100,14 @@ pluginZip.doFirst {
 // Wire into build lifecycle
 assemble.dependsOn pluginZip
 
-publishing {
-    publications {
-        mavenZip(MavenPublication) {
-            groupId = 'com.rundeck.plugins'
-            artifactId = 'kubernetes'
-            version = project.version
-            
-            artifact(pluginZip) {
-                extension = 'jar'  // Publish as .jar to Maven (it's actually a zip)
-            }
-            
-            pom {
-                packaging = 'jar'
-            }
-        }
-    }
-    
+nexusPublishing {
+    packageGroup = 'org.rundeck.plugins'
     repositories {
-        maven {
-            name = "PackageCloudTest"
-            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
-            authentication {
-                header(HttpHeaderAuthentication)
-            }
-            credentials(HttpHeaderCredentials) {
-                name = "Authorization"
-                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
-            }
+        sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }
 
+apply from: "${rootDir}/gradle/publishing.gradle"

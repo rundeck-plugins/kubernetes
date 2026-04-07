@@ -1,0 +1,80 @@
+/**
+ * Zip-based Rundeck plugin publication for Maven Central (artifact uploaded as type jar).
+ * Requires: ext.publishName, ext.githubSlug, ext.developers; task pluginZip
+ */
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+publishing {
+    publications {
+        mavenZip(MavenPublication) {
+            groupId = project.group.toString()
+            artifactId = 'kubernetes'
+            version = project.version.toString()
+
+            artifact(tasks.named('pluginZip')) {
+                extension = 'jar'
+            }
+
+            pom {
+                packaging = 'jar'
+                name = publishName
+                description = project.ext.hasProperty('publishDescription') ? project.ext.publishDescription :
+                        project.description ?: publishName
+                url = "https://github.com/${githubSlug}"
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                scm {
+                    url = "https://github.com/${githubSlug}"
+                    connection = "scm:git:git@github.com/${githubSlug}.git"
+                    developerConnection = "scm:git:git@github.com:${githubSlug}.git"
+                }
+                if (project.ext.developers) {
+                    developers {
+                        project.ext.developers.each { dev ->
+                            developer {
+                                id = dev.id
+                                name = dev.name
+                                email = dev.email
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        def pkgcldWriteToken = System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken")
+        if (pkgcldWriteToken) {
+            maven {
+                name = "PackageCloudTest"
+                url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+                authentication {
+                    header(HttpHeaderAuthentication)
+                }
+                credentials(HttpHeaderCredentials) {
+                    name = "Authorization"
+                    value = "Bearer " + pkgcldWriteToken
+                }
+            }
+        }
+    }
+}
+
+def base64Decode = { String prop ->
+    project.findProperty(prop) ?
+            new String(Base64.getDecoder().decode(project.findProperty(prop).toString())).trim() :
+            null
+}
+
+if (project.hasProperty('signingKey') && project.hasProperty('signingPassword')) {
+    signing {
+        useInMemoryPgpKeys(base64Decode("signingKey"), project.signingPassword)
+        sign(publishing.publications)
+    }
+}
