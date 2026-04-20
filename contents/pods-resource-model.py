@@ -5,29 +5,8 @@ import os
 import common
 import json
 import shlex
-import pprint
 
 from kubernetes import client
-
-
-class JsonQuery(dict):
-    def get(self, path, default=None):
-        keys = path.split(".")
-        val = None
-
-        for key in keys:
-            if val:
-                if isinstance(val, list):
-                    val = [v.get(key, default) if v else None for v in val]
-                else:
-                    val = val.get(key, default)
-            else:
-                val = dict.get(self, key, default)
-
-            if not val:
-                break
-
-        return val
 
 
 logging.basicConfig(stream=sys.stderr,
@@ -87,7 +66,7 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
 
     default_settings = {
         # kubernetes:config_file attribute are kept to avoid breaking existing k8s jobs depend on this configuration-override hack
-        # This is just a temporary walkaround solultion and should be replaced by a layered configuration-override mechanism.  
+        # This is just a temporary workaround solution and should be replaced by a layered configuration-override mechanism.
         'kubernetes:config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
         'default:pod_id': pod.status.pod_ip,
         'default:host_id': pod.status.host_ip,
@@ -114,16 +93,12 @@ def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
             mapping_array = dict(s.split('=', 1) for s in mapping.split())
 
             for key, value in mapping_array.items():
-                if key.find(".selector"):
+                if ".selector" in key:
                     attribute = key.replace(".selector", "")
                     custom_attribute = None
                     # take the values from default
                     if "default:" in value:
                         custom_attribute = default_settings[value]
-                    else:
-                        # taking the values from docker inspect
-                        for item in json:
-                            custom_attribute = JsonQuery(item).get(value)
 
                     if custom_attribute:
                         custom_attributes[attribute] = custom_attribute
@@ -188,39 +163,15 @@ def collect_pods_from_api(namespace_filter, label_selector, field_selector):
     log.debug(label_selector)
     log.debug(field_selector)
 
-    ret = []
-    if namespace_filter is None:
-        if field_selector and label_selector:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                field_selector=field_selector,
-                label_selector=label_selector,
-            )
+    kwargs = {'watch': False}
+    if label_selector:
+        kwargs['label_selector'] = label_selector
+    if field_selector:
+        kwargs['field_selector'] = field_selector
 
-        if field_selector and label_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                field_selector=field_selector,
-            )
-
-        if label_selector and field_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-                label_selector=label_selector,
-            )
-
-        if label_selector is None and field_selector is None:
-            ret = v1.list_pod_for_all_namespaces(
-                watch=False,
-            )
-    else:
-        ret = v1.list_namespaced_pod(
-            namespace=namespace_filter,
-            watch=False,
-            label_selector=label_selector,
-            field_selector=field_selector,
-        )
-    return ret
+    if namespace_filter:
+        return v1.list_namespaced_pod(namespace=namespace_filter, **kwargs)
+    return v1.list_pod_for_all_namespaces(**kwargs)
 
 
 def main():

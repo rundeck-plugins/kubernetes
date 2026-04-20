@@ -1,6 +1,0 @@
-kubernetes>=35.0.0
-urllib3>=2.6.3
-pyyaml
-pytest
-packaging>=20.0
-

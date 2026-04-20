@@ -2,9 +2,13 @@
 Unit tests for common.py functions.
 """
 
+import datetime
 import json
 import os
+import tarfile
+import tempfile
 import unittest
+from unittest.mock import patch, MagicMock
 
 from .. import common
 
@@ -177,6 +181,381 @@ class TestCommon(unittest.TestCase):
         self.assertEqual(data['mountPath'], mount.mount_path)
         self.assertEqual(data['subPath'], mount.sub_path)
         self.assertTrue(mount.read_only)
+
+
+    def test_load_liveness_readiness_probe_http_get(self):
+        data = json.dumps({
+            'httpGet': {'port': 8080, 'path': '/health', 'host': 'localhost'},
+            'initialDelaySeconds': 10,
+            'periodSeconds': 5,
+            'timeoutSeconds': 3,
+        })
+        probe = common.load_liveness_readiness_probe(data)
+        self.assertEqual(8080, probe.http_get.port)
+        self.assertEqual('/health', probe.http_get.path)
+        self.assertEqual('localhost', probe.http_get.host)
+        self.assertEqual(10, probe.initial_delay_seconds)
+        self.assertEqual(5, probe.period_seconds)
+        self.assertEqual(3, probe.timeout_seconds)
+
+    def test_load_liveness_readiness_probe_exec(self):
+        data = json.dumps({
+            'exec': {'command': ['/bin/sh', '-c', 'echo ok']},
+        })
+        probe = common.load_liveness_readiness_probe(data)
+        self.assertEqual(['/bin/sh', '-c', 'echo ok'], probe._exec.command)
+        self.assertIsNone(probe.http_get)
+
+    def test_load_liveness_readiness_probe_http_get_port_only(self):
+        data = json.dumps({'httpGet': {'port': 80}})
+        probe = common.load_liveness_readiness_probe(data)
+        self.assertEqual(80, probe.http_get.port)
+        self.assertIsNone(probe.http_get.path)
+        self.assertIsNone(probe.http_get.host)
+
+    def test_log_pod_parameters(self):
+        logger = MagicMock()
+        data = {'name': 'my-pod', 'namespace': 'default', 'container_name': 'app'}
+        common.log_pod_parameters(logger, data)
+        self.assertEqual(5, logger.debug.call_count)
+
+    def test_create_toleration_all_fields(self):
+        data = {
+            'effect': 'NoSchedule',
+            'key': 'dedicated',
+            'operator': 'Equal',
+            'value': 'special',
+            'toleration_seconds': '300',
+        }
+        toleration = common.create_toleration(data)
+        self.assertEqual('NoSchedule', toleration.effect)
+        self.assertEqual('dedicated', toleration.key)
+        self.assertEqual('Equal', toleration.operator)
+        self.assertEqual('special', toleration.value)
+        self.assertEqual(300, toleration.toleration_seconds)
+
+    def test_create_toleration_partial_fields(self):
+        data = {'key': 'node-role', 'operator': 'Exists'}
+        toleration = common.create_toleration(data)
+        self.assertEqual('node-role', toleration.key)
+        self.assertEqual('Exists', toleration.operator)
+        self.assertIsNone(toleration.effect)
+        self.assertIsNone(toleration.value)
+
+    def test_object_encoder_datetime(self):
+        dt = datetime.datetime(2024, 1, 15, 12, 30, 45)
+        result = json.dumps({'time': dt}, cls=common.ObjectEncoder)
+        self.assertIn('2024-01-15T12:30:45', result)
+
+    def test_object_encoder_object(self):
+        obj = MagicMock()
+        obj.__class__ = type('Obj', (), {})
+        obj._private = 'val1'
+        obj.public = 'val2'
+        # Use vars() directly since ObjectEncoder uses vars()
+        encoder = common.ObjectEncoder()
+        result = encoder.default(obj)
+        self.assertIn('private', result)
+        self.assertIn('public', result)
+
+    def test_parse_json(self):
+        result = common.parseJson({'key': 'value'})
+        parsed = json.loads(result)
+        self.assertEqual('value', parsed['key'])
+
+    def test_parse_json_fallback(self):
+        obj = object()
+        result = common.parseJson(obj)
+        self.assertIs(obj, result)
+
+    def test_create_volume_mount_yaml_list(self):
+        data = {
+            'volume_mounts': json.dumps([
+                {'name': 'vol1', 'mountPath': '/mnt/1'},
+                {'name': 'vol2', 'mountPath': '/mnt/2'},
+            ])
+        }
+        mounts = common.create_volume_mount_yaml(data)
+        self.assertEqual(2, len(mounts))
+        self.assertEqual('vol1', mounts[0].name)
+        self.assertEqual('vol2', mounts[1].name)
+
+    def test_create_volume_mount_yaml_single(self):
+        data = {
+            'volume_mounts': json.dumps({'name': 'vol1', 'mountPath': '/mnt/1'})
+        }
+        mounts = common.create_volume_mount_yaml(data)
+        self.assertEqual(1, len(mounts))
+        self.assertEqual('vol1', mounts[0].name)
+
+    def test_create_pod_template_spec_basic(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': '80,443',
+        }
+        spec = common.create_pod_template_spec(data)
+        container = spec.containers[0]
+        self.assertEqual('app', container.name)
+        self.assertEqual('nginx:latest', container.image)
+        self.assertEqual(2, len(container.ports))
+        self.assertEqual(80, container.ports[0].container_port)
+        self.assertEqual(443, container.ports[1].container_port)
+
+    def test_create_pod_template_spec_no_ports(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+        }
+        spec = common.create_pod_template_spec(data)
+        self.assertEqual([], spec.containers[0].ports)
+
+    def test_create_pod_template_spec_environments(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+            'environments': 'FOO=bar\nBAZ=qux',
+        }
+        spec = common.create_pod_template_spec(data)
+        envs = spec.containers[0].env
+        self.assertEqual(2, len(envs))
+        self.assertEqual('FOO', envs[0].name)
+        self.assertEqual('bar', envs[0].value)
+
+    def test_create_pod_template_spec_environment_secrets(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+            'environments_secrets': 'DB_PASS=my-secret:password',
+        }
+        spec = common.create_pod_template_spec(data)
+        env = spec.containers[0].env[0]
+        self.assertEqual('DB_PASS', env.name)
+        self.assertEqual('my-secret', env.value_from.secret_key_ref.name)
+        self.assertEqual('password', env.value_from.secret_key_ref.key)
+
+    def test_create_pod_template_spec_command_and_args(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+            'container_command': '/bin/sh -c echo',
+            'container_args': 'arg1\narg2',
+        }
+        spec = common.create_pod_template_spec(data)
+        container = spec.containers[0]
+        self.assertEqual(['/bin/sh', '-c', 'echo'], container.command)
+        self.assertEqual(['arg1', 'arg2'], container.args)
+
+    def test_create_pod_template_spec_resources(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+            'resources_requests': 'cpu=100m,memory=128Mi',
+        }
+        spec = common.create_pod_template_spec(data)
+        resources = spec.containers[0].resources
+        self.assertEqual('100m', resources.requests['cpu'])
+        self.assertEqual('128Mi', resources.requests['memory'])
+
+    def test_create_pod_template_spec_image_pull_secrets(self):
+        data = {
+            'container_name': 'app',
+            'image': 'nginx:latest',
+            'ports': None,
+            'image_pull_secrets': 'secret1,secret2',
+        }
+        spec = common.create_pod_template_spec(data)
+        self.assertEqual(2, len(spec.image_pull_secrets))
+        self.assertEqual('secret1', spec.image_pull_secrets[0].name)
+        self.assertEqual('secret2', spec.image_pull_secrets[1].name)
+
+    @patch('contents.common.config')
+    def test_connect_incluster(self, mock_config):
+        os.environ.clear()
+        os.environ['RD_CONFIG_ENV'] = 'incluster'
+        common.connect()
+        mock_config.load_incluster_config.assert_called_once()
+
+    @patch('contents.common.config')
+    def test_connect_config_file(self, mock_config):
+        os.environ.clear()
+        os.environ['RD_CONFIG_CONFIG_FILE'] = '/path/to/config'
+        common.connect()
+        mock_config.load_kube_config.assert_called_once_with(config_file='/path/to/config')
+
+    @patch('contents.common.config')
+    def test_connect_node_config_file(self, mock_config):
+        os.environ.clear()
+        os.environ['RD_NODE_KUBERNETES_CONFIG_FILE'] = '/node/config'
+        common.connect()
+        mock_config.load_kube_config.assert_called_once_with(config_file='/node/config')
+
+    @patch('contents.common.client.Configuration.set_default')
+    @patch('contents.common.config')
+    def test_connect_url_and_token(self, mock_config, mock_set_default):
+        os.environ.clear()
+        os.environ['RD_CONFIG_URL'] = 'https://k8s.example.com'
+        os.environ['RD_CONFIG_TOKEN'] = 'my-token'
+        os.environ['RD_CONFIG_VERIFY_SSL'] = 'true'
+        common.connect()
+        mock_set_default.assert_called_once()
+
+    @patch('contents.common.config')
+    def test_connect_default_fallback(self, mock_config):
+        os.environ.clear()
+        common.connect()
+        mock_config.load_kube_config.assert_called_once_with()
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_verify_pod_exists_found(self, mock_api_class):
+        mock_api = mock_api_class.return_value
+        mock_api.read_namespaced_pod.return_value = MagicMock()
+        common.verify_pod_exists('my-pod', 'default')
+        mock_api.read_namespaced_pod.assert_called_once_with(name='my-pod', namespace='default')
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_verify_pod_exists_not_found(self, mock_api_class):
+        from kubernetes.client.rest import ApiException
+        mock_api = mock_api_class.return_value
+        mock_api.read_namespaced_pod.side_effect = ApiException(status=404)
+        with self.assertRaises(SystemExit):
+            common.verify_pod_exists('missing-pod', 'default')
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_verify_pod_exists_other_error(self, mock_api_class):
+        from kubernetes.client.rest import ApiException
+        mock_api = mock_api_class.return_value
+        mock_api.read_namespaced_pod.side_effect = ApiException(status=500)
+        with self.assertRaises(SystemExit):
+            common.verify_pod_exists('my-pod', 'default')
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_delete_pod_success(self, mock_api_class):
+        mock_api = mock_api_class.return_value
+        mock_api.delete_namespaced_pod.return_value = MagicMock()
+        result = common.delete_pod({'name': 'my-pod', 'namespace': 'default'})
+        self.assertIsNotNone(result)
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_delete_pod_not_found(self, mock_api_class):
+        from kubernetes.client.rest import ApiException
+        mock_api = mock_api_class.return_value
+        mock_api.delete_namespaced_pod.side_effect = ApiException(status=404)
+        result = common.delete_pod({'name': 'my-pod', 'namespace': 'default'})
+        self.assertIsNone(result)
+
+    @patch('contents.common.core_v1_api.CoreV1Api')
+    def test_delete_pod_other_error(self, mock_api_class):
+        from kubernetes.client.rest import ApiException
+        mock_api = mock_api_class.return_value
+        mock_api.delete_namespaced_pod.side_effect = ApiException(status=500)
+        result = common.delete_pod({'name': 'my-pod', 'namespace': 'default'})
+        self.assertIsNone(result)
+
+
+    def _run_copy_file_test(self, content, suffix, dest_path, dest_name, expected_arcname):
+        """Helper to test copy_file with given content and verify the tar archive."""
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common.core_v1_api.CoreV1Api'):
+            mock_resp = MagicMock()
+            mock_resp.is_open.return_value = True
+            mock_resp.peek_stdout.return_value = False
+            mock_resp.peek_stderr.return_value = False
+            mock_stream.return_value = mock_resp
+
+            if isinstance(content, bytes):
+                src = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                src.write(content)
+                src.close()
+                expected_bytes = content
+            else:
+                src = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode='w')
+                src.write(content)
+                src.close()
+                expected_bytes = content.encode()
+
+            try:
+                common.copy_file(
+                    name='my-pod',
+                    namespace='default',
+                    container='app',
+                    source_file=src.name,
+                    destination_path=dest_path,
+                    destination_file_name=dest_name,
+                )
+
+                self.assertGreaterEqual(mock_resp.write_stdin.call_count, 1)
+                tar_data = b''.join(c[0][0] for c in mock_resp.write_stdin.call_args_list)
+                self.assertIsInstance(tar_data, bytes)
+
+                import io
+                tar_buffer = io.BytesIO(tar_data)
+                with tarfile.open(fileobj=tar_buffer, mode='r') as tar:
+                    members = tar.getmembers()
+                    self.assertEqual(1, len(members))
+                    self.assertEqual(expected_arcname, members[0].name)
+                    extracted = tar.extractfile(members[0])
+                    self.assertEqual(expected_bytes, extracted.read())
+
+                mock_resp.close.assert_called_once()
+            finally:
+                os.unlink(src.name)
+
+    def test_copy_file_binary_small(self):
+        """Test copy_file with a binary file smaller than 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 15,  # 3840 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_binary_exact(self):
+        """Test copy_file with a binary file of exactly 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 16,  # 4096 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_binary_large(self):
+        """Test copy_file with a binary file larger than 4096 bytes."""
+        self._run_copy_file_test(
+            content=bytes(range(256)) * 17,  # 4352 bytes
+            suffix='.bin', dest_path='/tmp', dest_name='data.bin',
+            expected_arcname='tmp/data.bin')
+
+    def test_copy_file_text_small(self):
+        """Test copy_file with a text file smaller than 4096 bytes."""
+        self._run_copy_file_test(
+            content='Hello, world!\n' * 200,  # 2800 bytes
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+    def test_copy_file_text_exact(self):
+        """Test copy_file with a text file of exactly 4096 bytes."""
+        # 'x' * 4095 + '\n' = 4096 bytes
+        self._run_copy_file_test(
+            content='x' * 4095 + '\n',
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+    def test_copy_file_text_large(self):
+        """Test copy_file with a text file larger than 4096 bytes."""
+        self._run_copy_file_test(
+            content='Hello, world!\n' * 300,  # 4200 bytes
+            suffix='.txt', dest_path='/opt', dest_name='hello.txt',
+            expected_arcname='opt/hello.txt')
+
+
+    def test_copy_file_empty(self):
+        """Test copy_file with a zero-byte file."""
+        self._run_copy_file_test(
+            content=b'',
+            suffix='.bin', dest_path='/tmp', dest_name='empty',
+            expected_arcname='tmp/empty')
 
 
 if __name__ == '__main__':
