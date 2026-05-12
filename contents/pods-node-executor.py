@@ -41,17 +41,28 @@ def main():
 
     log.debug("Command: %s ", command)
 
-    # calling exec and wait for response.
-    exec_command = [
-        shell,
-        '-c',
-        command]
+    environments_variables, temporary_files = common.handle_rundeck_environment_variables(
+                                                  name=name,
+                                                  namespace=namespace,
+                                                  container=container
+                                              )
 
+    exec_command = environments_variables + [shell, '-c', command]
+
+    # calling exec and wait for response.
     resp, error = common.run_interactive_command(name, namespace, container, exec_command)
 
     if error:
         log.error("error running script")
         sys.exit(1)
+
+    if len(temporary_files) > 0:
+        common.clean_up_temporary_files(
+            name=name,
+            namespace=namespace,
+            container=container,
+            files=temporary_files
+        )
 
 
 if __name__ == '__main__':

@@ -118,8 +118,14 @@ def main():
         print(resp.read_stderr())
         sys.exit(1)
 
+    environments_variables, temporary_files = common.handle_rundeck_environment_variables(
+                                                  name=name,
+                                                  namespace=namespace,
+                                                  container=container
+                                              )
+
     # calling exec and wait for response.
-    exec_command = invocation.split(" ")
+    exec_command = environments_variables + invocation.split(" ")
     exec_command.append(full_path)
 
     if 'RD_CONFIG_ARGUMENTS' in os.environ:
@@ -143,21 +149,13 @@ def main():
             log.info("POD deleted")
         sys.exit(1)
 
-    rm_command = ["rm", full_path]
-
-    log.debug("removing file %s", rm_command)
-    resp = common.run_command(name=name,
-                              namespace=namespace,
-                              container=container,
-                              command=rm_command
-                              )
-
-    if resp.peek_stdout():
-        log.debug(resp.read_stdout())
-
-    if resp.peek_stderr():
-        log.debug(resp.read_stderr())
-        sys.exit(1)
+    temporary_files.append(full_path)
+    common.clean_up_temporary_files(
+        name=name,
+        namespace=namespace,
+        container=container,
+        files=temporary_files
+    )
 
 
 if __name__ == '__main__':
