@@ -82,6 +82,10 @@ def main():
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
         rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = rr
+    
+    if os.environ.get('RD_CONFIG_RESOURCES_LIMITS'):
+        rl = os.environ.get('RD_CONFIG_RESOURCES_LIMITS')
+        data["resources_limits"] = rl
 
     if os.environ.get('RD_CONFIG_WAITREADY'):
         data["waitready"] = os.environ.get('RD_CONFIG_WAITREADY')
