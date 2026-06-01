@@ -2,9 +2,9 @@
 Unit tests for pods-resource-model.py functions.
 """
 
-import datetime
 import importlib
 import os
+import shlex
 import sys
 import unittest
 from unittest.mock import MagicMock, patch
@@ -13,55 +13,54 @@ from unittest.mock import MagicMock, patch
 # pods-resource-model.py has a hyphenated name, so use importlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 pods_resource_model = importlib.import_module('pods-resource-model')
-nodeCollectData = pods_resource_model.nodeCollectData
 collect_pods_from_api = pods_resource_model.collect_pods_from_api
 main = pods_resource_model.main
 
+# nodeCollectData now takes a config dict (parsed once in main) instead of flat config
+# strings. Adapt the flat-argument call shape these tests use to the new signature.
+_nodeCollectData = pods_resource_model.nodeCollectData
+
+
+def nodeCollectData(pod, container, defaults, taglist, mappingList, boEmoticon):
+    config = {
+        'tags': taglist.split(',') if taglist else [],
+        'mappings': mappingList.split(',') if mappingList else [],
+        'defaults': dict(token.split('=') for token in shlex.split(defaults or '')),
+        'emoticon': boEmoticon,
+        'config_file': os.environ.get('RD_CONFIG_CONFIG_FILE'),
+    }
+    return _nodeCollectData(pod, container, config)
+
+
+# The resource model parses raw API JSON into plain dicts (camelCase keys), so
+# fixtures build dicts that mirror the Kubernetes pod JSON rather than client objects.
 def make_container(name='app', image='nginx:latest'):
-    container = MagicMock()
-    container.name = name
-    container.image = image
-    return container
+    return {'name': name, 'image': image}
 
 
 def make_pod(name='my-pod', namespace='default', pod_ip='10.0.0.1',
              host_ip='192.168.1.1', phase='Running', labels=None,
              container_statuses=None, conditions=None):
-    pod = MagicMock()
-    pod.metadata.name = name
-    pod.metadata.namespace = namespace
-    pod.metadata.labels = labels
-    pod.status.pod_ip = pod_ip
-    pod.status.host_ip = host_ip
-    pod.status.phase = phase
-    pod.status.container_statuses = container_statuses
-    pod.status.conditions = conditions
-    return pod
+    status = {'phase': phase, 'podIP': pod_ip, 'hostIP': host_ip}
+    if container_statuses is not None:
+        status['containerStatuses'] = container_statuses
+    if conditions is not None:
+        status['conditions'] = conditions
+    return {
+        'metadata': {'name': name, 'namespace': namespace, 'labels': labels},
+        'spec': {'containers': []},
+        'status': status,
+    }
 
 
 def make_container_status(name='app', running=True, started_at=None,
                           waiting=False, terminated=False, container_id='docker://abc123'):
-    status = MagicMock()
-    status.name = name
-    status.container_id = container_id
-
-    if running:
-        status.state.running = MagicMock()
-        status.state.running.started_at = started_at
-    else:
-        status.state.running = None
-
-    if waiting:
-        status.state.waiting = MagicMock()
-    else:
-        status.state.waiting = None
-
-    if terminated:
-        status.state.terminated = MagicMock()
-    else:
-        status.state.terminated = None
-
-    return status
+    state = {
+        'running': {'startedAt': started_at} if running else None,
+        'waiting': {} if waiting else None,
+        'terminated': {} if terminated else None,
+    }
+    return {'name': name, 'containerID': container_id, 'state': state}
 
 
 class TestNodeCollectData(unittest.TestCase):
@@ -70,7 +69,7 @@ class TestNodeCollectData(unittest.TestCase):
         os.environ.clear()
 
     def test_basic_running_pod(self):
-        started = datetime.datetime(2024, 6, 15, 10, 30, 0)
+        started = '2024-06-15T10:30:00Z'
         container = make_container()
         cs = make_container_status(name='app', running=True, started_at=started)
         pod = make_pod(container_statuses=[cs])
@@ -114,10 +113,11 @@ class TestNodeCollectData(unittest.TestCase):
 
     def test_conditions_not_ready(self):
         container = make_container()
-        condition = MagicMock()
-        condition.status = 'False'
-        condition.reason = 'ContainersNotReady'
-        condition.message = 'containers not ready'
+        condition = {
+            'status': 'False',
+            'reason': 'ContainersNotReady',
+            'message': 'containers not ready',
+        }
         pod = make_pod(container_statuses=None, conditions=[condition])
 
         data = nodeCollectData(pod, container, '', 'kubernetes', None, False)
@@ -181,10 +181,11 @@ class TestNodeCollectData(unittest.TestCase):
 
     def test_status_message_in_description(self):
         container = make_container()
-        condition = MagicMock()
-        condition.status = 'False'
-        condition.reason = 'ContainersNotReady'
-        condition.message = 'waiting for readiness'
+        condition = {
+            'status': 'False',
+            'reason': 'ContainersNotReady',
+            'message': 'waiting for readiness',
+        }
         pod = make_pod(container_statuses=None, conditions=[condition])
 
         data = nodeCollectData(pod, container, '', 'kubernetes', None, False)
@@ -201,14 +202,23 @@ class TestNodeCollectData(unittest.TestCase):
 
 class TestCollectPodsFromApi(unittest.TestCase):
 
+    @staticmethod
+    def _resp(payload='{"items": "result"}'):
+        # collect_pods_from_api requests the raw response (_preload_content=False)
+        # and parses resp.data as JSON, returning the "items" list.
+        resp = MagicMock()
+        resp.data = payload
+        return resp
+
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_all_namespaces_both_selectors(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_pod_for_all_namespaces.return_value = 'result'
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
 
         ret = collect_pods_from_api(None, 'app=web', 'status.phase=Running')
         mock_api.list_pod_for_all_namespaces.assert_called_once_with(
             watch=False,
+            _preload_content=False,
             field_selector='status.phase=Running',
             label_selector='app=web',
         )
@@ -217,11 +227,12 @@ class TestCollectPodsFromApi(unittest.TestCase):
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_all_namespaces_field_selector_only(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_pod_for_all_namespaces.return_value = 'result'
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
 
         ret = collect_pods_from_api(None, None, 'status.phase=Running')
         mock_api.list_pod_for_all_namespaces.assert_called_once_with(
             watch=False,
+            _preload_content=False,
             field_selector='status.phase=Running',
         )
         self.assertEqual('result', ret)
@@ -229,11 +240,12 @@ class TestCollectPodsFromApi(unittest.TestCase):
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_all_namespaces_label_selector_only(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_pod_for_all_namespaces.return_value = 'result'
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
 
         ret = collect_pods_from_api(None, 'app=web', None)
         mock_api.list_pod_for_all_namespaces.assert_called_once_with(
             watch=False,
+            _preload_content=False,
             label_selector='app=web',
         )
         self.assertEqual('result', ret)
@@ -241,21 +253,25 @@ class TestCollectPodsFromApi(unittest.TestCase):
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_all_namespaces_no_selectors(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_pod_for_all_namespaces.return_value = 'result'
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
 
         ret = collect_pods_from_api(None, None, None)
-        mock_api.list_pod_for_all_namespaces.assert_called_once_with(watch=False)
+        mock_api.list_pod_for_all_namespaces.assert_called_once_with(
+            watch=False,
+            _preload_content=False,
+        )
         self.assertEqual('result', ret)
 
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_namespaced(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_namespaced_pod.return_value = 'result'
+        mock_api.list_namespaced_pod.return_value = self._resp()
 
         ret = collect_pods_from_api('prod', 'app=web', 'status.phase=Running')
         mock_api.list_namespaced_pod.assert_called_once_with(
             namespace='prod',
             watch=False,
+            _preload_content=False,
             label_selector='app=web',
             field_selector='status.phase=Running',
         )
@@ -264,13 +280,36 @@ class TestCollectPodsFromApi(unittest.TestCase):
     @patch.object(pods_resource_model.client, 'CoreV1Api')
     def test_namespaced_no_selectors(self, mock_api_class):
         mock_api = mock_api_class.return_value
-        mock_api.list_namespaced_pod.return_value = 'result'
+        mock_api.list_namespaced_pod.return_value = self._resp()
 
         ret = collect_pods_from_api('default', None, None)
         mock_api.list_namespaced_pod.assert_called_once_with(
             namespace='default',
             watch=False,
+            _preload_content=False,
         )
+        self.assertEqual('result', ret)
+
+    @patch.object(pods_resource_model.client, 'CoreV1Api')
+    def test_use_cache_sets_resource_version(self, mock_api_class):
+        mock_api = mock_api_class.return_value
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
+
+        collect_pods_from_api(None, None, None, use_cache=True)
+        mock_api.list_pod_for_all_namespaces.assert_called_once_with(
+            watch=False,
+            _preload_content=False,
+            resource_version='0',
+        )
+
+    @patch.object(pods_resource_model.client, 'CoreV1Api')
+    def test_no_cache_omits_resource_version(self, mock_api_class):
+        mock_api = mock_api_class.return_value
+        mock_api.list_pod_for_all_namespaces.return_value = self._resp()
+
+        collect_pods_from_api(None, None, None)
+        _, kwargs = mock_api.list_pod_for_all_namespaces.call_args
+        self.assertNotIn('resource_version', kwargs)
 
 
 class TestMain(unittest.TestCase):
@@ -279,13 +318,12 @@ class TestMain(unittest.TestCase):
         os.environ.clear()
 
     def _make_pod_list(self, pods):
-        ret = MagicMock()
+        # collect_pods_from_api returns a plain list of pod dicts.
         items = []
         for pod, containers in pods:
-            pod.spec.containers = containers
+            pod['spec']['containers'] = containers
             items.append(pod)
-        ret.items = items
-        return ret
+        return items
 
     @patch.object(pods_resource_model, 'collect_pods_from_api')
     @patch.object(pods_resource_model.common, 'connect')
@@ -353,12 +391,58 @@ class TestMain(unittest.TestCase):
         os.environ['RD_CONFIG_LABEL_SELECTOR'] = 'app=web'
         os.environ['RD_CONFIG_FIELD_SELECTOR'] = 'status.phase=Running'
 
-        mock_collect.return_value = MagicMock(items=[])
+        mock_collect.return_value = []
 
         with patch('builtins.print'):
             main()
 
-        mock_collect.assert_called_once_with('prod', 'app=web', 'status.phase=Running')
+        mock_collect.assert_called_once_with('prod', 'app=web', 'status.phase=Running', use_cache=False)
+
+    @patch.object(pods_resource_model, 'collect_pods_from_api')
+    @patch.object(pods_resource_model.common, 'connect')
+    def test_main_use_cache_flag(self, mock_connect, mock_collect):
+        os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
+        os.environ['RD_CONFIG_ATTRIBUTES'] = ''
+        os.environ['RD_CONFIG_USE_CACHE'] = 'true'
+
+        mock_collect.return_value = []
+
+        with patch('builtins.print'):
+            main()
+
+        _, kwargs = mock_collect.call_args
+        self.assertTrue(kwargs['use_cache'])
+
+    @patch.object(pods_resource_model, 'collect_pods_from_api')
+    @patch.object(pods_resource_model.common, 'connect')
+    def test_main_excludes_namespaces_when_configured(self, mock_connect, mock_collect):
+        os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
+        os.environ['RD_CONFIG_ATTRIBUTES'] = ''
+        os.environ['RD_CONFIG_EXCLUDE_NAMESPACES'] = 'kube-system, kube-public'
+
+        mock_collect.return_value = []
+
+        with patch('builtins.print'):
+            main()
+
+        _, _, field_selector = mock_collect.call_args[0]
+        self.assertIn('metadata.namespace!=kube-system', field_selector)
+        self.assertIn('metadata.namespace!=kube-public', field_selector)
+
+    @patch.object(pods_resource_model, 'collect_pods_from_api')
+    @patch.object(pods_resource_model.common, 'connect')
+    def test_main_no_exclusion_by_default(self, mock_connect, mock_collect):
+        os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
+        os.environ['RD_CONFIG_ATTRIBUTES'] = ''
+
+        mock_collect.return_value = []
+
+        with patch('builtins.print'):
+            main()
+
+        # No RD_CONFIG_EXCLUDE_NAMESPACES set -> field_selector stays None (no change).
+        _, _, field_selector = mock_collect.call_args[0]
+        self.assertIsNone(field_selector)
 
     @patch.object(pods_resource_model, 'collect_pods_from_api')
     @patch.object(pods_resource_model.common, 'connect')
@@ -411,7 +495,7 @@ class TestMain(unittest.TestCase):
         os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
         os.environ['RD_CONFIG_ATTRIBUTES'] = ''
 
-        mock_collect.return_value = MagicMock(items=[])
+        mock_collect.return_value = []
 
         with patch('builtins.print') as mock_print:
             main()

@@ -45,6 +45,21 @@ providers:
         default: ''
         renderingOptions:
           groupName: Config
+      - name: exclude_namespaces
+        type: String
+        title: "Exclude Namespaces"
+        description: "Comma-separated namespaces to exclude server-side, only applied when no Namespace is set. Empty (the default) excludes nothing. Example: kube-system,kube-public,kube-node-lease"
+        required: false
+        default: ''
+        renderingOptions:
+          groupName: Config
+      - type: Boolean
+        name: use_cache
+        title: "Use API Cache?"
+        description: "Serve the pod list from the apiserver's in-memory watch cache (resource_version=0) instead of a quorum read from etcd. Faster on large clusters, but data may be slightly stale. Default false."
+        default: "false"
+        renderingOptions:
+          groupName: Config
       - name: field_selector
         type: String
         title: "Field Selector"
