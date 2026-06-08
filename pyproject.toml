@@ -16,8 +16,8 @@ requires-python = ">=3.10"
 dependencies = [
     "kubernetes>=35.0.0",
     "pyyaml",
-    # Version 2.6.3 of urllib3 is required to avoid a security vulnerability (CVE-2026-21441)
-    "urllib3>=2.6.3",
+    # urllib3>=2.7.0 required to avoid CVE-2026-44431 (CWE-201) - RUN-4507
+    "urllib3>=2.7.0",
     "packaging>=20.0",
 ]
 
