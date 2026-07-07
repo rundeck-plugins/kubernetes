@@ -1789,19 +1789,19 @@ providers:
         required: false
         renderingOptions:
           groupName: Container
-      - name: volumes
+      - name: volume_mounts
         type: String
-        title: "Volumes"
-        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath, nfs, secret and configMap allowed"
+        title: "Volume Mounts"
+        description: "Volume Mounts, yaml format (https://kubernetes.io/docs/tasks/configure-pod-container/configure-volume-storage/#configure-a-volume-for-a-pod)"
         required: false
         renderingOptions:
           groupName: Container
           displayType: MULTI_LINE
           codeSyntaxMode: yaml
-      - name: volume_mounts
+      - name: volumes
         type: String
-        title: "Volume Mounts"
-        description: "Volume Mounts, yaml format (https://kubernetes.io/docs/tasks/configure-pod-container/configure-volume-storage/#configure-a-volume-for-a-pod)"
+        title: "Volumes"
+        description: "Configure Volumes YAML format( https://kubernetes.io/docs/concepts/storage/persistent-volumes/). So far persistentVolumeClaim, hostPath, nfs, secret and configMap allowed"
         required: false
         renderingOptions:
           groupName: Container
