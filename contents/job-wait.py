@@ -50,6 +50,9 @@ def wait():
                 start_time = time.time()
                 timeout = 300 #Revisar si este tiempo es suficiente para pods que no logran ser creados
                 while True:
+                    if timeout and time.time() - start_time > timeout:
+                        raise TimeoutError
+
                     core_v1 = client.CoreV1Api()
                     try:
                         #get available pod
@@ -57,6 +60,11 @@ def wait():
                             namespace,
                             label_selector="job-name==" + name
                         )
+                        if not pod_list.items:
+                            log.warning("No pods found for job yet, waiting for pod creation")
+                            time.sleep(5)
+                            continue
+
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
 
@@ -71,8 +79,6 @@ def wait():
                         else:
                             log.info("waiting for log")
                             time.sleep(15)
-                            if timeout and time.time() - start_time > timeout:  # pragma: no cover
-                                raise TimeoutError
                 
                 log.info("Fetching logs from pod: {0}".format(pod_name))
                 
