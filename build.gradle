@@ -9,7 +9,6 @@ buildscript {
 plugins {
     id 'base'
     id 'pl.allegro.tech.build.axion-release' version '1.21.2'
-    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 group = 'org.rundeck.plugins'
@@ -99,15 +98,5 @@ pluginZip.doFirst {
 
 // Wire into build lifecycle
 assemble.dependsOn pluginZip
-
-nexusPublishing {
-    packageGroup = 'org.rundeck.plugins'
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
-        }
-    }
-}
 
 apply from: "${rootDir}/gradle/publishing.gradle"
