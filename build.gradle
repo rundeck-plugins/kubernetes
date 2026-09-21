@@ -8,7 +8,7 @@ buildscript {
 
 plugins {
     id 'base'
-    id 'pl.allegro.tech.build.axion-release' version '1.21.3'
+    id 'pl.allegro.tech.build.axion-release' version '1.21.4'
 }
 
 group = 'org.rundeck.plugins'
