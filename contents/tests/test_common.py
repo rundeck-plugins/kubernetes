@@ -3,11 +3,14 @@ Unit tests for common.py functions.
 """
 
 import datetime
+import io
 import json
+import logging
 import os
 import tarfile
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch, MagicMock
 
 from .. import common
@@ -563,6 +566,51 @@ class TestCommon(unittest.TestCase):
             content=b'',
             suffix='.bin', dest_path='/tmp', dest_name='empty',
             expected_arcname='tmp/empty')
+
+
+class TestLogInfoToStdout(unittest.TestCase):
+
+    def setUp(self):
+        root = logging.getLogger()
+        saved = root.handlers[:], root.level
+
+        def restore():
+            root.handlers[:] = saved[0]
+            root.setLevel(saved[1])
+        self.addCleanup(restore)
+
+        self.out, self.err = io.StringIO(), io.StringIO()
+        with redirect_stdout(self.out), redirect_stderr(self.err):
+            common.log_info_to_stdout()
+        self.log = logging.getLogger('kubernetes-test')
+        self.addCleanup(self.log.setLevel, logging.NOTSET)
+
+    def test_sends_info_to_stdout_and_warnings_and_errors_to_stderr(self):
+        self.log.info('working')
+        self.log.warning('careful')
+        self.log.error('broken')
+
+        self.assertEqual('INFO: kubernetes-test: working\n', self.out.getvalue())
+        self.assertEqual('WARNING: kubernetes-test: careful\n'
+                         'ERROR: kubernetes-test: broken\n', self.err.getvalue())
+
+    def test_sends_debug_to_stdout_when_it_is_enabled(self):
+        self.log.setLevel(logging.DEBUG)
+
+        self.log.debug('detail')
+
+        self.assertEqual('DEBUG: kubernetes-test: detail\n', self.out.getvalue())
+        self.assertEqual('', self.err.getvalue())
+
+    def test_is_not_used_by_steps_whose_stdout_is_parsed(self):
+        # The resource model prints node data, the node executor and inline
+        # script steps print the command's output, and the file copier prints
+        # the path of the copied file. Log records on stdout would corrupt them.
+        contents = os.path.dirname(os.path.abspath(common.__file__))
+        for script in ('pods-resource-model.py', 'pods-node-executor.py',
+                       'pods-run-script.py', 'pods-copy-file.py'):
+            with open(os.path.join(contents, script)) as f:
+                self.assertNotIn('log_info_to_stdout', f.read(), script)
 
 
 if __name__ == '__main__':

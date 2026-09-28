@@ -502,7 +502,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -685,7 +685,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -760,7 +760,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -835,7 +835,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -910,7 +910,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -997,7 +997,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1084,7 +1084,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1168,7 +1168,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1249,7 +1249,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1402,7 +1402,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1555,7 +1555,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1630,7 +1630,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1898,7 +1898,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -1973,7 +1973,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -2048,7 +2048,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -2146,7 +2146,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
@@ -2240,7 +2240,7 @@ providers:
       - type: Boolean
         name: debug
         title: Debug?
-        description: "Write debug messages to stderr"
+        description: "Write debug messages to the step log"
         required: false
         renderingOptions:
           groupName: Config
