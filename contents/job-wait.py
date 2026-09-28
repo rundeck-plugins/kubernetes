@@ -1,9 +1,11 @@
 #!/usr/bin/env python -u
 import logging
+import re
 import sys
 import common
 import time
 
+from datetime import datetime
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 from kubernetes import watch
@@ -18,6 +20,28 @@ logging.basicConfig(
 )
 log = logging.getLogger("kubernetes-wait-job")
 
+# With timestamps=True the kubelet starts each log line with an RFC 3339
+# timestamp that has up to nine fractional digits, then a space.
+LOG_TIMESTAMP = re.compile(
+    r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,9}))?(Z|[+-]\d\d:\d\d)$")
+
+
+def parse_log_timestamp(stamp):
+    """Return a sortable (datetime, nanoseconds) pair for a kubelet log
+    timestamp, or None if stamp is not one.
+
+    Comparing the strings is not enough because the kubelet trims trailing
+    zeros from the fraction, and datetime.fromisoformat() on Python 3.10
+    accepts neither nanoseconds nor a trailing Z.
+    """
+    match = LOG_TIMESTAMP.match(stamp)
+    if not match:
+        return None
+    seconds, fraction, zone = match.groups()
+    offset = "+00:00" if zone == "Z" else zone
+    return (datetime.fromisoformat(seconds + offset),
+            int((fraction or "").ljust(9, "0")))
+
 
 def wait():
     try:
@@ -30,6 +54,12 @@ def wait():
         # Poll for completion if retries
         retries_count = 0
         completed = False
+
+        # Newest log timestamp printed, per pod. The loop streams the log
+        # again every time round, for example when the container has exited
+        # but the Job is not marked complete yet, and the stream always
+        # starts from the beginning of the log.
+        printed_until = {}
 
 
         while True:
@@ -85,11 +115,24 @@ def wait():
                 if retries_count == 1:
                     log.info("========================== job log start ==========================")
 
+                seen = printed_until.get(pod_name)
                 w = watch.Watch()
                 for line in w.stream(core_v1.read_namespaced_pod_log,
                                         name=pod_name,
-                                        namespace=namespace):
-                    log.info(line.encode('ascii', 'ignore'))
+                                        namespace=namespace,
+                                        timestamps=True):
+                    stamp, _, text = line.partition(" ")
+                    when = parse_log_timestamp(stamp)
+                    if when is None:
+                        text = line
+                    elif seen is not None and when <= seen:
+                        continue  # printed on an earlier pass
+                    else:
+                        # The runtime stamps stdout and stderr separately, so
+                        # a line can be a little older than the one before.
+                        printed_until[pod_name] = max(
+                            when, printed_until.get(pod_name, when))
+                    log.info(text.encode('ascii', 'ignore'))
 
             #check status job
             batch_v1 = client.BatchV1Api()
