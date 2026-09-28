@@ -156,5 +156,93 @@ class TestPodsRunScript(unittest.TestCase):
         self.assertEqual('sidecar', mock_copy.call_args[1]['container'])
 
 
+class TestPodsRunScriptRemovesScript(unittest.TestCase):
+    """The copied script can hold secrets expanded from job options, so it
+    must not be left in the container when a step fails."""
+
+    def setUp(self):
+        os.environ.clear()
+        os.environ['RD_CONFIG_SCRIPT'] = 'echo hello'
+
+    @staticmethod
+    def _resp(stderr=b''):
+        resp = MagicMock()
+        resp.peek_stdout.return_value = False
+        resp.peek_stderr.return_value = bool(stderr)
+        resp.read_stderr.return_value = stderr
+        return resp
+
+    def _run(self, chmod_stderr=b'', script_fails=False, rm_result=None,
+             delete_on_fail=False):
+        """Run main() and return (exit code, run_command mock, delete_pod mock).
+        rm_result is what the rm call returns, or an exception it raises."""
+        if delete_on_fail:
+            os.environ['RD_CONFIG_DELETEONFAIL'] = 'true'
+        with patch.object(pods_run_script.common, 'connect'), \
+                patch.object(pods_run_script.common, 'get_core_node_parameter_list',
+                             return_value=['my-pod', 'default', 'app']), \
+                patch.object(pods_run_script.common, 'verify_pod_exists'), \
+                patch.object(pods_run_script.client, 'CoreV1Api'), \
+                patch.object(pods_run_script.common, 'log_pod_parameters'), \
+                patch.object(pods_run_script.common, 'copy_file'), \
+                patch.object(pods_run_script.common, 'run_command') as run_command, \
+                patch.object(pods_run_script.common, 'run_interactive_command',
+                             return_value=(self._resp(), script_fails)), \
+                patch.object(pods_run_script.common, 'delete_pod') as delete_pod, \
+                redirect_stdout(io.StringIO()):
+            run_command.side_effect = [self._resp(chmod_stderr),
+                                       rm_result if rm_result is not None else self._resp()]
+            code = 0
+            try:
+                pods_run_script.main()
+            except SystemExit as e:
+                code = e.code
+        return code, run_command, delete_pod
+
+    @staticmethod
+    def _commands(run_command):
+        return [c.kwargs['command'] for c in run_command.call_args_list]
+
+    def test_removes_the_script_after_a_successful_run(self):
+        code, run_command, _ = self._run()
+
+        chmod, rm = self._commands(run_command)
+        self.assertEqual(0, code)
+        self.assertEqual(['rm', chmod[2]], rm)
+
+    def test_removes_the_script_when_the_script_fails(self):
+        code, run_command, _ = self._run(script_fails=True)
+
+        chmod, rm = self._commands(run_command)
+        self.assertEqual(1, code)
+        self.assertEqual(['rm', chmod[2]], rm)
+
+    def test_removes_the_script_when_it_cannot_be_made_executable(self):
+        code, run_command, _ = self._run(chmod_stderr=b'chmod: denied')
+
+        chmod, rm = self._commands(run_command)
+        self.assertEqual(1, code)
+        self.assertEqual(['rm', chmod[2]], rm)
+
+    def test_does_not_try_to_remove_the_script_from_a_deleted_pod(self):
+        code, run_command, delete_pod = self._run(script_fails=True, delete_on_fail=True)
+
+        self.assertEqual(1, code)
+        delete_pod.assert_called_once()
+        self.assertEqual(['chmod'], [c[0] for c in self._commands(run_command)])
+
+    def test_keeps_the_script_failure_when_removing_the_script_also_fails(self):
+        code, run_command, _ = self._run(
+            script_fails=True, rm_result=ApiException(status=500, reason='boom'))
+
+        self.assertEqual(1, code)
+        self.assertEqual(2, run_command.call_count)
+
+    def test_still_fails_when_the_script_cannot_be_removed_after_success(self):
+        code, _, _ = self._run(rm_result=self._resp(b'rm: busy'))
+
+        self.assertEqual(1, code)
+
+
 if __name__ == '__main__':
     unittest.main()

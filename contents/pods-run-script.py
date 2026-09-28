@@ -16,6 +16,29 @@ log = logging.getLogger('kubernetes-run-script')
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
+
+def remove_script(name, namespace, container, full_path):
+    """Delete the copied script from the container. Returns False if rm
+    reported an error."""
+    rm_command = ["rm", full_path]
+
+    log.debug("removing file %s", rm_command)
+    resp = common.run_command(name=name,
+                              namespace=namespace,
+                              container=container,
+                              command=rm_command
+                              )
+
+    if resp.peek_stdout():
+        log.debug(resp.read_stdout())
+
+    if resp.peek_stderr():
+        log.debug(resp.read_stderr())
+        return False
+
+    return True
+
+
 def main():
     common.connect()
     api = client.CoreV1Api()
@@ -83,67 +106,68 @@ def main():
     finally:
         temp.close()
 
-    permissions_command = ["chmod", "+x", full_path]
+    # The script can hold values expanded from job options, such as passwords,
+    # so remove it from the container when a later step fails too.
+    pod_deleted = False
+    try:
+        permissions_command = ["chmod", "+x", full_path]
 
-    log.debug("setting permissions %s", permissions_command)
-    resp = common.run_command(name=name,
-                              namespace=namespace,
-                              container=container,
-                              command=permissions_command
-                              )
+        log.debug("setting permissions %s", permissions_command)
+        resp = common.run_command(name=name,
+                                  namespace=namespace,
+                                  container=container,
+                                  command=permissions_command
+                                  )
 
-    if resp.peek_stdout():
-        print(resp.read_stdout())
+        if resp.peek_stdout():
+            print(resp.read_stdout())
 
-    if resp.peek_stderr():
-        print(resp.read_stderr())
-        sys.exit(1)
+        if resp.peek_stderr():
+            print(resp.read_stderr())
+            sys.exit(1)
 
-    # calling exec and wait for response.
-    exec_command = invocation.split(" ")
-    exec_command.append(full_path)
+        # calling exec and wait for response.
+        exec_command = invocation.split(" ")
+        exec_command.append(full_path)
 
-    if 'RD_CONFIG_ARGUMENTS' in os.environ:
-        arguments = os.environ.get('RD_CONFIG_ARGUMENTS')
-        for arg in arguments.split(" "):
-            exec_command.append(arg)
+        if 'RD_CONFIG_ARGUMENTS' in os.environ:
+            arguments = os.environ.get('RD_CONFIG_ARGUMENTS')
+            for arg in arguments.split(" "):
+                exec_command.append(arg)
 
-    log.debug("running script %s", exec_command)
+        log.debug("running script %s", exec_command)
 
-    resp, error = common.run_interactive_command(name=name,
-                                                 namespace=namespace,
-                                                 container=container,
-                                                 command=exec_command
-                                                 )
-    if error:
-        log.error("error running script")
+        resp, error = common.run_interactive_command(name=name,
+                                                     namespace=namespace,
+                                                     container=container,
+                                                     command=exec_command
+                                                     )
+        if error:
+            log.error("error running script")
 
-        if delete_on_fail:
-            log.info("removing POD on fail")
-            data = {"name": name, "namespace": namespace}
-            # Cleanup runs because the script already failed. Report a cleanup
-            # failure without letting it mask the failure that caused it.
+            if delete_on_fail:
+                log.info("removing POD on fail")
+                data = {"name": name, "namespace": namespace}
+                # Cleanup runs because the script already failed. Report a cleanup
+                # failure without letting it mask the failure that caused it.
+                try:
+                    common.delete_pod(data)
+                    pod_deleted = True
+                    log.info("POD deleted")
+                except ApiException:
+                    log.exception("Failed to remove POD %s after script failure:", name)
+            sys.exit(1)
+    except BaseException:
+        # Also reached through sys.exit(1) above. Removing the script must not
+        # replace the failure that got us here.
+        if not pod_deleted:
             try:
-                common.delete_pod(data)
-                log.info("POD deleted")
-            except ApiException:
-                log.exception("Failed to remove POD %s after script failure:", name)
-        sys.exit(1)
+                remove_script(name, namespace, container, full_path)
+            except Exception:
+                log.exception("Failed to remove %s from the container:", full_path)
+        raise
 
-    rm_command = ["rm", full_path]
-
-    log.debug("removing file %s", rm_command)
-    resp = common.run_command(name=name,
-                              namespace=namespace,
-                              container=container,
-                              command=rm_command
-                              )
-
-    if resp.peek_stdout():
-        log.debug(resp.read_stdout())
-
-    if resp.peek_stderr():
-        log.debug(resp.read_stderr())
+    if not remove_script(name, namespace, container, full_path):
         sys.exit(1)
 
 
