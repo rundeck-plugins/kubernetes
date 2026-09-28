@@ -9,8 +9,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 from kubernetes import watch
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                    format='%(message)s')
+common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':

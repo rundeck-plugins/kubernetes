@@ -6,8 +6,7 @@ import common
 
 from kubernetes.client.rest import ApiException
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-delete-pod')
 
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':

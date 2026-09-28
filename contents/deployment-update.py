@@ -9,8 +9,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 
