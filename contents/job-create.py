@@ -96,7 +96,7 @@ def create_job_object(data):
     container.env = envs
 
     if "env_from" in data:
-        env_froms_data = yaml.full_load(data["env_from"])
+        env_froms_data = yaml.safe_load(data["env_from"])
         env_from = []
         for env_from_data in env_froms_data:
             if 'configMapRef' in env_from_data:
