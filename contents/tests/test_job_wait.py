@@ -36,6 +36,24 @@ def pods(*names):
         SimpleNamespace(metadata=SimpleNamespace(name=name)) for name in names])
 
 
+class LogStream:
+    """Stands in for the urllib3 response that read_namespaced_pod_log
+    returns with _preload_content=False: iterating it yields lines."""
+
+    def __init__(self, lines):
+        self.lines = [line.encode() + b'\n' for line in lines]
+        self.released = False
+
+    def __iter__(self):
+        return iter(self.lines)
+
+    def close(self):
+        pass
+
+    def release_conn(self):
+        self.released = True
+
+
 class TestParseLogTimestamp(unittest.TestCase):
 
     def test_orders_stamps_whose_fractions_have_different_lengths(self):
@@ -75,20 +93,28 @@ class TestWait(unittest.TestCase):
         """Run wait(). Each time round its loop, the log stream yields the
         next entry of passes and the Job status is the next entry of statuses.
         Returns the pod log lines printed, in order."""
+        self.streams = [LogStream(p) for p in passes]
+        streams = iter(self.streams)
+
+        def read_log(**kwargs):
+            # Without follow it is the check that the log can be read yet.
+            return next(streams) if kwargs.get('follow') else ''
+
         with patch.object(job_wait.common, 'connect'), \
                 patch.object(job_wait.time, 'sleep'), \
                 patch.object(job_wait.client, 'CoreV1Api') as core, \
                 patch.object(job_wait.client, 'BatchV1Api') as batch, \
-                patch.object(job_wait.watch, 'Watch') as watch_class, \
                 self.assertLogs('kubernetes-wait-job', level='INFO') as logs, \
                 self.assertRaises(SystemExit) as exited:
             core.return_value.list_namespaced_pod.return_value = pods('my-job-abcde')
-            watch_class.return_value.stream.side_effect = [iter(p) for p in passes]
+            core.return_value.read_namespaced_pod_log.side_effect = read_log
             batch.return_value.read_namespaced_job.side_effect = statuses
             job_wait.wait()
 
         self.exit_code = exited.exception.code
-        self.stream_calls = watch_class.return_value.stream.call_args_list
+        self.stream_calls = [
+            c for c in core.return_value.read_namespaced_pod_log.call_args_list
+            if c.kwargs.get('follow')]
         self.log_output = logs.output
         # Pod log lines are the only records logged as bytes.
         return [r.msg.decode() for r in logs.records if isinstance(r.msg, bytes)]
@@ -153,6 +179,16 @@ class TestWait(unittest.TestCase):
 
         self.assertTrue(self.stream_calls[0].kwargs['timestamps'])
         self.assertIn("INFO:kubernetes-wait-job:b'hello'", self.log_output)
+
+    def test_follows_the_raw_stream_and_releases_the_connection(self):
+        # watch.Watch().stream() is avoided: kubernetes 36.0.0 to 36.0.2 pass
+        # it watch=True for pod logs, which read_namespaced_pod_log rejects.
+        self.run_wait([['2026-09-27T20:33:41.1Z hello']], [SUCCEEDED])
+
+        kwargs = self.stream_calls[0].kwargs
+        self.assertEqual(('my-job-abcde', 'default'), (kwargs['name'], kwargs['namespace']))
+        self.assertIs(False, kwargs['_preload_content'])
+        self.assertTrue(all(s.released for s in self.streams))
 
 
 if __name__ == '__main__':

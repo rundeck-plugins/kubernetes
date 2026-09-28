@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 from kubernetes import client
 from kubernetes.client.rest import ApiException
-from kubernetes import watch
 
 
 from os import environ
@@ -116,23 +115,34 @@ def wait():
                     log.info("========================== job log start ==========================")
 
                 seen = printed_until.get(pod_name)
-                w = watch.Watch()
-                for line in w.stream(core_v1.read_namespaced_pod_log,
-                                        name=pod_name,
-                                        namespace=namespace,
-                                        timestamps=True):
-                    stamp, _, text = line.partition(" ")
-                    when = parse_log_timestamp(stamp)
-                    if when is None:
-                        text = line
-                    elif seen is not None and when <= seen:
-                        continue  # printed on an earlier pass
-                    else:
-                        # The runtime stamps stdout and stderr separately, so
-                        # a line can be a little older than the one before.
-                        printed_until[pod_name] = max(
-                            when, printed_until.get(pod_name, when))
-                    log.info(text.encode('ascii', 'ignore'))
+                # Read the stream directly: in kubernetes 36.0.0 to 36.0.2,
+                # watch.Watch().stream() passes watch=True to
+                # read_namespaced_pod_log, which rejects it.
+                response = core_v1.read_namespaced_pod_log(
+                    name=pod_name,
+                    namespace=namespace,
+                    follow=True,
+                    timestamps=True,
+                    _preload_content=False)
+                try:
+                    for raw in response:
+                        line = raw.decode("utf-8", errors="replace").rstrip("\n")
+                        stamp, _, text = line.partition(" ")
+                        when = parse_log_timestamp(stamp)
+                        if when is None:
+                            text = line
+                        elif seen is not None and when <= seen:
+                            continue  # printed on an earlier pass
+                        else:
+                            # The runtime stamps stdout and stderr separately,
+                            # so a line can be a little older than the one
+                            # before.
+                            printed_until[pod_name] = max(
+                                when, printed_until.get(pod_name, when))
+                        log.info(text.encode('ascii', 'ignore'))
+                finally:
+                    response.close()
+                    response.release_conn()
 
             #check status job
             batch_v1 = client.BatchV1Api()
