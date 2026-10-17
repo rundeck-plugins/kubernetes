@@ -605,10 +605,12 @@ class TestLogInfoToStdout(unittest.TestCase):
     def test_is_not_used_by_steps_whose_stdout_is_parsed(self):
         # The resource model prints node data, the node executor and inline
         # script steps print the command's output, and the file copier prints
-        # the path of the copied file. Log records on stdout would corrupt them.
+        # the path of the copied file, and the ephemeral container step can
+        # print the pod spec as JSON. Log records on stdout would corrupt them.
         contents = os.path.dirname(os.path.abspath(common.__file__))
         for script in ('pods-resource-model.py', 'pods-node-executor.py',
-                       'pods-run-script.py', 'pods-copy-file.py'):
+                       'pods-run-script.py', 'pods-copy-file.py',
+                       'debug-ephemeral-container.py'):
             with open(os.path.join(contents, script)) as f:
                 self.assertNotIn('log_info_to_stdout', f.read(), script)
 

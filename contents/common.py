@@ -31,9 +31,9 @@ def log_info_to_stdout():
     with all logging on stderr a step's progress messages show as errors,
     and log filters that only act on normal output (key-value-data,
     quiet-output) never see them. Only call this from steps whose stdout
-    is read by people: the resource model, node executor, file copier and
-    inline script steps keep stdout for the data or command output that
-    Rundeck and job authors parse.
+    is read by people: the resource model, node executor, file copier,
+    inline script and ephemeral container steps keep stdout for the data
+    or command output that Rundeck and job authors parse.
     """
     stdout = logging.StreamHandler(sys.stdout)
     stdout.addFilter(lambda record: record.levelno < logging.WARNING)

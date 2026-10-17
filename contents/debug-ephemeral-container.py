@@ -9,8 +9,9 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 from kubernetes import watch
 
-common.log_info_to_stdout()
-log = logging.getLogger('kubernetes-model-source')
+# Logging stays on stderr (set up by common): with the print pod spec
+# option this step prints the pod spec as JSON on stdout.
+log =logging.getLogger('kubernetes-model-source')
 
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
