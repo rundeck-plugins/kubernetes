@@ -1,6 +1,5 @@
 #!/usr/bin/env python -u
 import logging
-import sys
 import os
 import yaml
 import common
@@ -8,8 +7,7 @@ import common
 from kubernetes import client
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 
