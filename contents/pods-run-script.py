@@ -19,24 +19,20 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
 
 def remove_script(name, namespace, container, full_path):
     """Delete the copied script from the container. Returns False if rm
-    reported an error."""
+    exited with an error."""
     rm_command = ["rm", full_path]
 
     log.debug("removing file %s", rm_command)
-    resp = common.run_command(name=name,
-                              namespace=namespace,
-                              container=container,
-                              command=rm_command
-                              )
+    # run_command() uses a TTY, which merges rm's stderr into stdout, so a
+    # failed rm cannot be told apart from a successful one there.
+    # run_interactive_command() runs without a TTY and checks the exit status.
+    _, error = common.run_interactive_command(name=name,
+                                              namespace=namespace,
+                                              container=container,
+                                              command=rm_command
+                                              )
 
-    if resp.peek_stdout():
-        log.debug(resp.read_stdout())
-
-    if resp.peek_stderr():
-        log.debug(resp.read_stderr())
-        return False
-
-    return True
+    return not error
 
 
 def main():
