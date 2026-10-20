@@ -12,11 +12,7 @@ from kubernetes.client.rest import ApiException
 
 from os import environ
 
-logging.basicConfig(
-    stream=sys.stderr,
-    level=logging.INFO,
-    format="%(levelname)s: %(name)s: %(message)s"
-)
+common.log_info_to_stdout()
 log = logging.getLogger("kubernetes-wait-job")
 
 # With timestamps=True the kubelet starts each log line with an RFC 3339
@@ -175,7 +171,7 @@ def wait():
             log.info("Job succeeded")
             sys.exit(0)
         else:
-            log.info("Job failed")
+            log.error("Job failed")
             sys.exit(1)
 
     except ApiException:
