@@ -413,6 +413,57 @@ class TestCommon(unittest.TestCase):
         self.assertEqual(cluster['insecure-skip-tls-verify'], False)
         self.assertEqual(kubeconfig_dict[0]['users'][0]['user']['token'], 'my-token')
 
+    def _connect_with_url(self, mock_config, verify_ssl=None, ssl_ca_cert=None):
+        """Connect with a URL and token and return the cluster entry built."""
+        os.environ.clear()
+        os.environ['RD_CONFIG_URL'] = 'https://k8s.example.com'
+        os.environ['RD_CONFIG_TOKEN'] = 'my-token'
+        if verify_ssl is not None:
+            os.environ['RD_CONFIG_VERIFY_SSL'] = verify_ssl
+        if ssl_ca_cert is not None:
+            os.environ['RD_CONFIG_SSL_CA_CERT'] = ssl_ca_cert
+        common.connect()
+        kubeconfig_dict = mock_config.load_kube_config_from_dict.call_args[0][0]
+        return kubeconfig_dict['clusters'][0]['cluster']
+
+    @patch('contents.common.config')
+    def test_connect_warns_when_verify_ssl_is_not_set(self, mock_config):
+        with self.assertLogs('kubernetes-plugin', level='WARNING') as logs:
+            cluster = self._connect_with_url(mock_config)
+
+        self.assertEqual(cluster['insecure-skip-tls-verify'], True)
+        self.assertEqual(1, len(logs.records))
+        message = logs.records[0].getMessage()
+        self.assertIn('verification', message)
+        self.assertIn('https://k8s.example.com', message)
+        self.assertNotIn('CA Cert', message)
+
+    @patch('contents.common.config')
+    def test_connect_warns_when_verify_ssl_is_false(self, mock_config):
+        with self.assertLogs('kubernetes-plugin', level='WARNING') as logs:
+            cluster = self._connect_with_url(mock_config, verify_ssl='false')
+
+        self.assertEqual(cluster['insecure-skip-tls-verify'], True)
+        self.assertEqual(1, len(logs.records))
+
+    @patch('contents.common.config')
+    def test_connect_warns_that_the_ca_cert_is_not_used_without_verify_ssl(self, mock_config):
+        with self.assertLogs('kubernetes-plugin', level='WARNING') as logs:
+            cluster = self._connect_with_url(mock_config, ssl_ca_cert='/path/ca.crt')
+
+        # Behaviour is unchanged: the CA is still written but not used.
+        self.assertEqual(cluster['insecure-skip-tls-verify'], True)
+        self.assertEqual(cluster['certificate-authority'], '/path/ca.crt')
+        self.assertIn('CA Cert is not used', logs.records[0].getMessage())
+
+    @patch('contents.common.config')
+    def test_connect_does_not_warn_when_verify_ssl_is_true(self, mock_config):
+        with self.assertNoLogs('kubernetes-plugin', level='WARNING'):
+            cluster = self._connect_with_url(mock_config, verify_ssl='true',
+                                             ssl_ca_cert='/path/ca.crt')
+
+        self.assertEqual(cluster['insecure-skip-tls-verify'], False)
+
     @patch('contents.common.config')
     def test_connect_default_fallback(self, mock_config):
         os.environ.clear()
