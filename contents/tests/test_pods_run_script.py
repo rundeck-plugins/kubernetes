@@ -156,5 +156,101 @@ class TestPodsRunScript(unittest.TestCase):
         self.assertEqual('sidecar', mock_copy.call_args[1]['container'])
 
 
+class TestPodsRunScriptRemovesScript(unittest.TestCase):
+    """The copied script can hold secrets expanded from job options, so it
+    must not be left in the container when a step fails."""
+
+    def setUp(self):
+        os.environ.clear()
+        os.environ['RD_CONFIG_SCRIPT'] = 'echo hello'
+
+    @staticmethod
+    def _resp(stderr=b''):
+        resp = MagicMock()
+        resp.peek_stdout.return_value = False
+        resp.peek_stderr.return_value = bool(stderr)
+        resp.read_stderr.return_value = stderr
+        return resp
+
+    def _run(self, chmod_stderr=b'', script_fails=False, rm_fails=False,
+             delete_on_fail=False):
+        """Run main() and return (exit code, chmod command, rm commands,
+        delete_pod mock). rm_fails is True for an rm that exits with an
+        error, or an exception the rm call raises."""
+        if delete_on_fail:
+            os.environ['RD_CONFIG_DELETEONFAIL'] = 'true'
+
+        rm_commands = []
+
+        def run_interactive_command(command, **_):
+            if command[0] != 'rm':
+                return self._resp(), script_fails
+            rm_commands.append(command)
+            if isinstance(rm_fails, BaseException):
+                raise rm_fails
+            return self._resp(), rm_fails
+
+        with patch.object(pods_run_script.common, 'connect'), \
+                patch.object(pods_run_script.common, 'get_core_node_parameter_list',
+                             return_value=['my-pod', 'default', 'app']), \
+                patch.object(pods_run_script.common, 'verify_pod_exists'), \
+                patch.object(pods_run_script.client, 'CoreV1Api'), \
+                patch.object(pods_run_script.common, 'log_pod_parameters'), \
+                patch.object(pods_run_script.common, 'copy_file'), \
+                patch.object(pods_run_script.common, 'run_command',
+                             return_value=self._resp(chmod_stderr)) as run_command, \
+                patch.object(pods_run_script.common, 'run_interactive_command',
+                             side_effect=run_interactive_command), \
+                patch.object(pods_run_script.common, 'delete_pod') as delete_pod, \
+                redirect_stdout(io.StringIO()):
+            code = 0
+            try:
+                pods_run_script.main()
+            except SystemExit as e:
+                code = e.code
+        chmod = run_command.call_args.kwargs['command']
+        return code, chmod, rm_commands, delete_pod
+
+    def test_removes_the_script_after_a_successful_run(self):
+        code, chmod, rm_commands, _ = self._run()
+
+        self.assertEqual(0, code)
+        self.assertEqual([['rm', chmod[2]]], rm_commands)
+
+    def test_removes_the_script_when_the_script_fails(self):
+        code, chmod, rm_commands, _ = self._run(script_fails=True)
+
+        self.assertEqual(1, code)
+        self.assertEqual([['rm', chmod[2]]], rm_commands)
+
+    def test_removes_the_script_when_it_cannot_be_made_executable(self):
+        code, chmod, rm_commands, _ = self._run(chmod_stderr=b'chmod: denied')
+
+        self.assertEqual(1, code)
+        self.assertEqual([['rm', chmod[2]]], rm_commands)
+
+    def test_does_not_try_to_remove_the_script_from_a_deleted_pod(self):
+        code, _, rm_commands, delete_pod = self._run(script_fails=True, delete_on_fail=True)
+
+        self.assertEqual(1, code)
+        delete_pod.assert_called_once()
+        self.assertEqual([], rm_commands)
+
+    def test_keeps_the_script_failure_when_removing_the_script_also_fails(self):
+        code, _, rm_commands, _ = self._run(
+            script_fails=True, rm_fails=ApiException(status=500, reason='boom'))
+
+        self.assertEqual(1, code)
+        self.assertEqual(1, len(rm_commands))
+
+    def test_still_fails_when_the_script_cannot_be_removed_after_success(self):
+        # rm runs without a TTY, so its failure is reported by the exec exit
+        # status rather than by output on stderr.
+        code, _, rm_commands, _ = self._run(rm_fails=True)
+
+        self.assertEqual(1, code)
+        self.assertEqual(1, len(rm_commands))
+
+
 if __name__ == '__main__':
     unittest.main()
