@@ -18,9 +18,29 @@ import urllib3
 from urllib3.exceptions import InsecureRequestWarning
 urllib3.disable_warnings(InsecureRequestWarning)
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+LOG_FORMAT = '%(levelname)s: %(name)s: %(message)s'
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 log = logging.getLogger('kubernetes-plugin')
+
+
+def log_info_to_stdout():
+    """Send DEBUG and INFO records to stdout and WARNING and above to stderr.
+
+    Rundeck records every line a step writes to stderr at ERROR level, so
+    with all logging on stderr a step's progress messages show as errors,
+    and log filters that only act on normal output (key-value-data,
+    quiet-output) never see them. Only call this from steps whose stdout
+    is read by people: the resource model, node executor, file copier,
+    inline script and ephemeral container steps keep stdout for the data
+    or command output that Rundeck and job authors parse.
+    """
+    stdout = logging.StreamHandler(sys.stdout)
+    stdout.addFilter(lambda record: record.levelno < logging.WARNING)
+    stderr = logging.StreamHandler(sys.stderr)
+    stderr.setLevel(logging.WARNING)
+    logging.basicConfig(handlers=[stdout, stderr], level=logging.INFO,
+                        format=LOG_FORMAT, force=True)
 
 if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
@@ -118,6 +138,18 @@ def connect():
                 kubeconfig_dict['clusters'][0]['cluster']['insecure-skip-tls-verify'] = False
             else:
                 kubeconfig_dict['clusters'][0]['cluster']['insecure-skip-tls-verify'] = True
+                # InsecureRequestWarning is disabled above because urllib3
+                # repeats it on every request, so say it once here instead:
+                # the token is sent to a server whose certificate is not checked.
+                if ssl_ca_cert:
+                    log.warning("TLS certificate verification of the Kubernetes API "
+                                "server %s is off, so the configured SSL CA Cert is "
+                                "not used. Enable \"Verify ssl\" to verify the server "
+                                "against it.", url)
+                else:
+                    log.warning("TLS certificate verification of the Kubernetes API "
+                                "server %s is off. Enable \"Verify ssl\" to verify "
+                                "the server certificate.", url)
 
             if ssl_ca_cert:
                 kubeconfig_dict['clusters'][0]['cluster']['certificate-authority'] = ssl_ca_cert

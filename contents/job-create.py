@@ -9,8 +9,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO,
-                    format='%(levelname)s: %(name)s: %(message)s')
+common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 
@@ -96,7 +95,7 @@ def create_job_object(data):
     container.env = envs
 
     if "env_from" in data:
-        env_froms_data = yaml.full_load(data["env_from"])
+        env_froms_data = yaml.safe_load(data["env_from"])
         env_from = []
         for env_from_data in env_froms_data:
             if 'configMapRef' in env_from_data:
