@@ -192,6 +192,8 @@ def main():
 
     common.connect()
 
+    # Kubernetes client 37 checks field types while the deployment is built,
+    # so a wrongly typed option raises ValueError rather than ApiException.
     try:
         apiV1 = client.AppsV1Api()
         deployment = create_deployment_object(data)
@@ -200,7 +202,7 @@ def main():
         log.debug(deployment)
 
         update_deployment(apiV1, deployment, data)
-    except ApiException:
+    except (ApiException, ValueError):
         log.exception("Exception updating deployment:")
         sys.exit(1)
 

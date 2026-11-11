@@ -100,13 +100,14 @@ def main():
     if os.environ.get('RD_CONFIG_IMAGEPULLSECRETS'):
         data["image_pull_secrets"] = os.environ.get('RD_CONFIG_IMAGEPULLSECRETS')
 
-    pod = create_pod(data)
-
+    # Kubernetes client 37 checks field types while the pod is built, so a
+    # wrongly typed option raises ValueError rather than ApiException.
     try:
+        pod = create_pod(data)
         resp = api.create_namespaced_pod(namespace=data['namespace'],
                                          body=pod,
                                          pretty="True")
-    except ApiException:
+    except (ApiException, ValueError):
         log.exception("Exception creating pod %s:", data['name'])
         sys.exit(1)
 

@@ -52,6 +52,31 @@ class TestCommon(unittest.TestCase):
         port = actual.pop()
         self.assert_port_match(port, entry, named_entry['name'])
 
+    def test_parse_ports_converts_a_quoted_node_port(self):
+        # port and targetPort go through int(), so node_port does too. Without
+        # it, client 37 rejects "30080" and older clients send it to the API
+        # server as a string, which rejects it.
+        listed = common.parsePorts('- port: 80\n  node_port: "30080"\n  protocol: TCP\n')
+        single = common.parsePorts('port: 80\nnode_port: "30081"\n')
+        self.assertEqual(30080, listed[0].node_port)
+        self.assertEqual(30081, single[0].node_port)
+
+    def test_parse_ports_leaves_an_empty_node_port_unset(self):
+        # An empty job option in the Ports YAML gives "node_port:", which
+        # leaves the choice of node port to Kubernetes.
+        listed = common.parsePorts('- port: 80\n  node_port:\n  protocol: TCP\n')
+        single = common.parsePorts('port: 80\nnode_port:\n')
+        self.assertIsNone(listed[0].node_port)
+        self.assertIsNone(single[0].node_port)
+
+    def test_parse_ports_rejects_a_fractional_node_port(self):
+        # int(30080.9) would silently give port 30080, a port nobody asked for.
+        # The ValueError is reported by the step like any other bad option.
+        with self.assertRaises(ValueError):
+            common.parsePorts('- port: 80\n  node_port: 30080.9\n  protocol: TCP\n')
+        with self.assertRaises(ValueError):
+            common.parsePorts('port: 80\nnode_port: 30080.9\n')
+
     def assert_port_match(self, port, expected, name):
         """
         Asserts that a port object matches the input array.
