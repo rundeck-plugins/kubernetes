@@ -5,12 +5,27 @@ import os
 import yaml
 import common
 
-from kubernetes import client
-from kubernetes.client.rest import ApiException
+from kubernetes import client, dynamic
+from kubernetes.dynamic.exceptions import DynamicApiError, ResourceNotFoundError
 
 
 common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
+
+# The API version each type is created with.
+API_VERSIONS = {
+    "Pod": "v1",
+    "Deployment": "apps/v1",
+    "StatefulSet": "apps/v1",
+    "ConfigMap": "v1",
+    "Service": "v1",
+    "Ingress": "networking.k8s.io/v1",
+    "Job": "batch/v1",
+    "StorageClass": "storage.k8s.io/v1",
+    "PersistentVolume": "v1",
+    "PersistentVolumeClaim": "v1",
+    "Secret": "v1",
+}
 
 
 def main():
@@ -25,122 +40,36 @@ def main():
     data["yaml"] = os.environ.get('RD_CONFIG_YAML')
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
+    if data["type"] not in API_VERSIONS:
+        log.error("Unsupported type: %s", data["type"])
+        sys.exit(1)
+
     common.connect()
 
     try:
-        if data["type"] == "Pod":
-            api_instance = client.CoreV1Api()
-            dep = yaml.safe_load(data["yaml"])
-            resp = api_instance.create_namespaced_pod(
-                body=dep,
-                namespace=data["namespace"],
-                pretty="true")
+        dep = yaml.safe_load(data["yaml"])
 
-            print(common.parseJson(resp.status))
+        # The dynamic client sends the YAML as it is and leaves validating it
+        # to the API server. From kubernetes 37 on, the typed create_* methods
+        # validate the body in the client and reject YAML that the API server
+        # accepts, such as "cpu: 1".
+        dyn = dynamic.DynamicClient(client.ApiClient())
+        resource = dyn.resources.get(api_version=API_VERSIONS[data["type"]],
+                                     kind=data["type"])
+        namespace = data["namespace"] if resource.namespaced else None
+        resp = resource.create(body=dep, namespace=namespace)
 
-        if data["type"] == "Deployment":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.AppsV1Api()
-            resp = api_instance.create_namespaced_deployment(
-                body=dep,
-                namespace=data["namespace"],
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-        if data["type"] == "ConfigMap":
-            api_instance = client.CoreV1Api()
-            dep = yaml.safe_load(data["yaml"])
-            resp = api_instance.create_namespaced_config_map(
-                namespace=data["namespace"],
-                body=dep,
-                pretty="true")
-
+        # ConfigMap, Secret and StorageClass have no status
+        if resp.status is None:
             print(common.parseJson(resp.metadata))
-
-        if data["type"] == "StatefulSet":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.AppsV1Api()
-            resp = api_instance.create_namespaced_stateful_set(
-                body=dep,
-                namespace=data["namespace"],
-                pretty="true")
-
+        else:
             print(common.parseJson(resp.status))
 
-        if data["type"] == "Service":
-            api_instance = client.CoreV1Api()
-            dep = yaml.safe_load(data["yaml"])
-            resp = api_instance.create_namespaced_service(
-                namespace=data["namespace"],
-                body=dep,
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-        if data["type"] == "Ingress":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.NetworkingV1Api()
-            resp = api_instance.create_namespaced_ingress(
-                body=dep,
-                namespace=data["namespace"],
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-        if data["type"] == "Job":
-            api_instance = client.BatchV1Api()
-            dep = yaml.safe_load(data["yaml"])
-            resp = api_instance.create_namespaced_job(
-                namespace=data["namespace"],
-                body=dep,
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-        if data["type"] == "StorageClass":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.StorageV1Api()
-
-            resp = api_instance.create_storage_class(body=dep,
-                                                     pretty="true")
-
-            print(common.parseJson(resp.metadata))
-
-        if data["type"] == "PersistentVolumeClaim":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.CoreV1Api()
-
-            resp = api_instance.create_namespaced_persistent_volume_claim(
-                namespace=data["namespace"],
-                body=dep,
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-        if data["type"] == "Secret":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.CoreV1Api()
-
-            resp = api_instance.create_namespaced_secret(
-                namespace=data["namespace"],
-                body=dep,
-                pretty="true")
-
-            print(common.parseJson(resp.metadata))
-
-        if data["type"] == "PersistentVolume":
-            dep = yaml.safe_load(data["yaml"])
-            api_instance = client.CoreV1Api()
-
-            resp = api_instance.create_persistent_volume(
-                body=dep,
-                pretty="true")
-
-            print(common.parseJson(resp.status))
-
-    except ApiException:
-        log.exception("Exception error creating:")
+    except DynamicApiError as e:
+        log.error("Error creating %s: %s", data["type"], e.summary())
+        sys.exit(1)
+    except (yaml.YAMLError, ResourceNotFoundError, ValueError) as e:
+        log.error("Error creating %s: %s", data["type"], e)
         sys.exit(1)
 
 
