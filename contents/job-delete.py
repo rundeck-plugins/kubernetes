@@ -61,7 +61,11 @@ def main():
             body=body,
             pretty=pretty
         )
-        log.debug(common.parseJson(api_response.status))
+        # kubernetes 37 returns a dict here, 36 a V1Status
+        if isinstance(api_response, dict):
+            log.debug(common.parseJson(api_response.get("status")))
+        else:
+            log.debug(common.parseJson(api_response.status))
 
     except ApiException:
         log.exception("Exception when calling delete_namespaced_job:")
