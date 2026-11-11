@@ -543,6 +543,40 @@ class TestCommon(unittest.TestCase):
         with self.assertRaises(ApiException):
             common.delete_pod({'name': 'my-pod', 'namespace': 'default'})
 
+    def run_interactive_command_with_status(self, status):
+        """Run run_interactive_command against a finished stream whose error
+        channel holds status. The CoreV1Api stand-in has an ApiClient without
+        last_response, as kubernetes 37 does, so a lookup of it fails."""
+        resp = MagicMock()
+        resp.is_open.return_value = False
+        resp.read_channel.return_value = json.dumps(status)
+        api = MagicMock()
+        api.api_client = MagicMock(spec=[])
+        with patch('contents.common.core_v1_api.CoreV1Api', return_value=api), \
+                patch('contents.common.stream', return_value=resp):
+            result = common.run_interactive_command(
+                'my-pod', 'default', 'app', ['/bin/sh', '-c', 'true'])
+        resp.read_channel.assert_called_once_with(3)
+        return resp, result
+
+    def test_run_interactive_command_reads_status_from_the_stream(self):
+        resp, (returned, error) = self.run_interactive_command_with_status(
+            {'metadata': {}, 'status': 'Success'})
+        self.assertIs(resp, returned)
+        self.assertFalse(error)
+
+    def test_run_interactive_command_reports_a_failed_command(self):
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            _, (_, error) = self.run_interactive_command_with_status({
+                'metadata': {},
+                'status': 'Failure',
+                'reason': 'NonZeroExitCode',
+                'message': 'command terminated with non-zero exit code',
+                'details': {'causes': [{'reason': 'ExitCode', 'message': '3'}]},
+            })
+        self.assertTrue(error)
+
 
     def _run_copy_file_test(self, content, suffix, dest_path, dest_name, expected_arcname):
         """Helper to test copy_file with given content and verify the tar archive."""

@@ -21,7 +21,11 @@ def delete_deployment(api_instance, data):
             propagation_policy='Foreground',
             grace_period_seconds=5))
 
-    print(common.parseJson(api_response.status))
+    # kubernetes 37 returns a dict here, 36 a V1Status
+    if isinstance(api_response, dict):
+        print(common.parseJson(api_response.get("status")))
+    else:
+        print(common.parseJson(api_response.status))
 
 
 def main():

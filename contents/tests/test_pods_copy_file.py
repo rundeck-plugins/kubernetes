@@ -13,7 +13,7 @@ import sys
 import unittest
 
 from contextlib import redirect_stdout
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -44,6 +44,30 @@ class TestPodsCopyFile(unittest.TestCase):
         mock_copy.assert_called_once_with(
             'my-pod', 'default', 'app', '/local/script.sh', '/tmp', 'script.sh')
         self.assertIn('/tmp/script.sh', out.getvalue())
+
+    @patch.object(pods_copy_file.client, 'CoreV1Api')
+    @patch.object(pods_copy_file.common, 'copy_file')
+    @patch.object(pods_copy_file.common, 'log_pod_parameters')
+    @patch.object(pods_copy_file.common, 'get_core_node_parameter_list')
+    @patch.object(pods_copy_file.common, 'connect')
+    def test_main_copies_to_first_container_when_none_configured(
+            self, mock_connect, mock_params, mock_log, mock_copy, mock_api_class):
+        os.environ['RD_FILE_COPY_FILE'] = '/local/script.sh'
+        os.environ['RD_FILE_COPY_DESTINATION'] = '/tmp/script.sh'
+        mock_params.return_value = ['my-pod', 'default', None]
+        status = MagicMock()
+        status.spec.containers = [MagicMock()]
+        status.spec.containers[0].name = 'sidecar'
+        mock_api_class.return_value.read_namespaced_pod_status.return_value = status
+
+        with redirect_stdout(io.StringIO()):
+            pods_copy_file.main()
+
+        mock_copy.assert_called_once_with(
+            'my-pod', 'default', 'sidecar', '/local/script.sh', '/tmp', 'script.sh')
+        # kubernetes 37 validates arguments and rejects pretty=True: pretty is a string.
+        pretty = mock_api_class.return_value.read_namespaced_pod_status.call_args.kwargs['pretty']
+        self.assertIsInstance(pretty, str)
 
     @patch.object(pods_copy_file.common, 'get_core_node_parameter_list')
     @patch.object(pods_copy_file.common, 'connect')

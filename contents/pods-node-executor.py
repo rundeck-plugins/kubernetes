@@ -31,7 +31,7 @@ def main():
             response = core_v1.read_namespaced_pod_status(
                 name=name,
                 namespace=namespace,
-                pretty=True
+                pretty="true"
             )
         except ApiException as e:
             log.error("Failed to read pod %s in namespace %s: %s", name, namespace, e.reason)
