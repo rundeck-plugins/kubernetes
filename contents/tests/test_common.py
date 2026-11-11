@@ -69,6 +69,14 @@ class TestCommon(unittest.TestCase):
         self.assertIsNone(listed[0].node_port)
         self.assertIsNone(single[0].node_port)
 
+    def test_parse_ports_rejects_a_fractional_node_port(self):
+        # int(30080.9) would silently give port 30080, a port nobody asked for.
+        # The ValueError is reported by the step like any other bad option.
+        with self.assertRaises(ValueError):
+            common.parsePorts('- port: 80\n  node_port: 30080.9\n  protocol: TCP\n')
+        with self.assertRaises(ValueError):
+            common.parsePorts('port: 80\nnode_port: 30080.9\n')
+
     def assert_port_match(self, port, expected, name):
         """
         Asserts that a port object matches the input array.

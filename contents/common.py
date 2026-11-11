@@ -283,8 +283,10 @@ def parsePorts(data):
                     port.name = x["name"]
                 else:
                     port.name = str.lower(x["protocol"] + str(x["port"]))
+                # str() first, so that a fractional node port is rejected rather
+                # than silently truncated to a different port
                 if x.get("node_port") is not None:
-                    port.node_port = int(x["node_port"])
+                    port.node_port = int(str(x["node_port"]))
                 if "protocol" in x:
                     port.protocol = x["protocol"]
                 if "targetPort" in x:
@@ -296,7 +298,7 @@ def parsePorts(data):
         port = client.V1ServicePort(port=int(x["port"]))
 
         if x.get("node_port") is not None:
-            port.node_port = int(x["node_port"])
+            port.node_port = int(str(x["node_port"]))
         if "protocol" in x:
             port.protocol = x["protocol"]
         if "targetPort" in x:
