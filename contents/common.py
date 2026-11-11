@@ -623,8 +623,11 @@ def run_interactive_command(name, namespace, container, command):
         if resp.peek_stderr():
             print(resp.read_stderr())
 
+    # Read the exec status from the stream itself. kubernetes 37.0.0 stopped
+    # setting ApiClient.last_response, which this used to read the same
+    # WSClient from, so that lookup raised AttributeError after every command.
     ERROR_CHANNEL = 3
-    err = api.api_client.last_response.read_channel(ERROR_CHANNEL)
+    err = resp.read_channel(ERROR_CHANNEL)
     err = yaml.safe_load(err)
     if err['status'] != "Success":
         log.error('Failed to run command')
