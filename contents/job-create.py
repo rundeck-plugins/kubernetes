@@ -303,12 +303,13 @@ def main():
     log.debug("Creating job")
     log.debug(data)
 
-    job = create_job_object(data)
-
-    log.debug("new job: ")
-    log.debug(job)
-
+    # Kubernetes client 37 checks field types while the job is built, so a
+    # wrongly typed option raises ValueError rather than ApiException.
     try:
+        job = create_job_object(data)
+
+        log.debug("new job: ")
+        log.debug(job)
 
         k8s_client = client.BatchV1Api()
         api_response = k8s_client.create_namespaced_job(
@@ -318,7 +319,7 @@ def main():
 
         print(api_response.status)
 
-    except ApiException:
+    except (ApiException, ValueError):
         log.exception("Exception creating job:")
         sys.exit(1)
 

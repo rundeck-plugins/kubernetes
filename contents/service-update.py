@@ -112,12 +112,13 @@ def main():
     log.debug("Updating service from data:")
     log.debug(data)
 
-    service = create_service_object(data)
-
-    log.debug("new service: ")
-    log.debug(service)
-
+    # Kubernetes client 37 checks field types while the service is built, so
+    # a wrongly typed option raises ValueError rather than ApiException.
     try:
+        service = create_service_object(data)
+
+        log.debug("new service: ")
+        log.debug(service)
 
         resp = api_instance.patch_namespaced_service(
             name=data["name"],
@@ -127,7 +128,7 @@ def main():
 
         print(common.parseJson(resp.status))
 
-    except ApiException:
+    except (ApiException, ValueError):
         log.exception("Exception when calling create_namespaced_service:")
         sys.exit(1)
 

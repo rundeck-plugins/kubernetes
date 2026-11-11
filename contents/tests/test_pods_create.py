@@ -112,6 +112,27 @@ class TestPodsCreateMain(unittest.TestCase):
     @patch.object(pods_create.core_v1_api, 'CoreV1Api')
     @patch.object(pods_create.common, 'log_pod_parameters')
     @patch.object(pods_create.common, 'connect')
+    def test_main_logs_a_wrongly_typed_option_and_exits(
+            self, mock_connect, mock_log, mock_api_class):
+        # Kubernetes client 37 rejects the string while building the probe and
+        # raises a pydantic ValidationError (a ValueError). Older clients send
+        # it, and the API server rejects it, as the mocked call does here.
+        self._configure()
+        os.environ['RD_CONFIG_LIVENESS_PROBE'] = 'initialDelaySeconds: "5"'
+        mock_api_class.return_value.create_namespaced_pod.side_effect = ApiException(
+            status=400, reason='Bad Request')
+
+        with redirect_stdout(io.StringIO()), \
+                self.assertLogs('kubernetes-create-pod', level='ERROR') as logs, \
+                self.assertRaises(SystemExit) as cm:
+            pods_create.main()
+
+        self.assertEqual(1, cm.exception.code)
+        self.assertIn('Exception creating pod my-pod', logs.output[0])
+
+    @patch.object(pods_create.core_v1_api, 'CoreV1Api')
+    @patch.object(pods_create.common, 'log_pod_parameters')
+    @patch.object(pods_create.common, 'connect')
     def test_main_does_not_report_success_when_nothing_was_created(
             self, mock_connect, mock_log, mock_api_class):
         self._configure()

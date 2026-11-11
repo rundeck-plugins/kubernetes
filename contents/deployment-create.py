@@ -1,10 +1,12 @@
 #!/usr/bin/env python -u
 import logging
+import sys
 import os
 import yaml
 import common
 
 from kubernetes import client
+from kubernetes.client.rest import ApiException
 
 
 common.log_info_to_stdout()
@@ -122,8 +124,14 @@ def main():
 
     apiV1 = client.AppsV1Api()
 
-    deployment = create_deployment_object(data)
-    create_deployment(apiV1, deployment, data)
+    # Kubernetes client 37 checks field types while the deployment is built,
+    # so a wrongly typed option raises ValueError rather than ApiException.
+    try:
+        deployment = create_deployment_object(data)
+        create_deployment(apiV1, deployment, data)
+    except (ApiException, ValueError):
+        log.exception("Exception creating deployment:")
+        sys.exit(1)
 
 
 if __name__ == '__main__':
