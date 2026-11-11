@@ -80,6 +80,9 @@ class TestPodsNodeExecutor(unittest.TestCase):
         pods_node_executor.main()
 
         self.assertEqual('sidecar', mock_run.call_args[0][2])
+        # kubernetes 37 validates arguments and rejects pretty=True: pretty is a string.
+        pretty = mock_api_class.return_value.read_namespaced_pod_status.call_args.kwargs['pretty']
+        self.assertIsInstance(pretty, str)
 
     @patch.object(pods_node_executor.common, 'verify_pod_exists')
     @patch.object(pods_node_executor.common, 'log_pod_parameters')
