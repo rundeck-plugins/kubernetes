@@ -23,8 +23,7 @@ def main():
     container_name = os.environ.get("RD_CONFIG_CONTAINER_NAME")
     container_image = os.environ.get("RD_CONFIG_CONTAINER_IMAGE")
 
-    if os.environ.get("RD_CONFIG_TARGET_CONTAINER"):
-        target_container = os.environ.get("RD_CONFIG_TARGET_CONTAINER")
+    target_container = os.environ.get("RD_CONFIG_TARGET_CONTAINER")
 
     try:
         v1 = client.CoreV1Api()
@@ -50,13 +49,15 @@ def main():
                     {
                         "name": container_name,
                         "image": container_image,
-                        "targetContainerName": target_container,
                         "stdin": True,
                         "tty": True
                     }
                 ]
             }
         }
+        # Without a target container it uses the namespaces of the pod spec
+        if target_container:
+            body["spec"]["ephemeralContainers"][0]["targetContainerName"] = target_container
 
         response = v1.patch_namespaced_pod_ephemeralcontainers(
             name,
