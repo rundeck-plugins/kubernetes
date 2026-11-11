@@ -1693,7 +1693,7 @@ providers:
       - name: selectors
         type: String
         title: "Selectors"
-        description: "Selectors. Add comma separated values (key=value format)"
+        description: "Ignored. Kubernetes generates the selector of a Job, so this option has no effect. Use Labels to label the job and its pods."
         required: false
         renderingOptions:
           groupName: Metadata

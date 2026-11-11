@@ -190,9 +190,11 @@ def create_job_object(data):
     if "completions" in data:
         spec.completions = int(data["completions"])
     if "selectors" in data:
-        selectors_array = data["selectors"].split(',')
-        selectors = dict(s.split('=') for s in selectors_array)
-        spec.selector = selectors
+        # Without manualSelector, the API server replaces any selector with
+        # the controller-uid one it generates, so this never had an effect.
+        log.warning("Selectors are ignored: Kubernetes generates the "
+                    "selector of a Job. Use Labels to label the job "
+                    "and its pods.")
     if "parallelism" in data:
         spec.parallelism = int(data["parallelism"])
     if "active_deadline_seconds" in data:
