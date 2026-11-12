@@ -146,7 +146,27 @@ class TestCreateFromYamlMain(unittest.TestCase):
         with redirect_stdout(out):
             create_from_yaml.main()
 
-        self.assertEqual({'phase': 'Pending'}, json.loads(out.getvalue()))
+        # Same snake_case output as the typed create_namespaced_pod printed
+        self.assertIn("'phase': 'Pending'", out.getvalue())
+        self.assertIn("'pod_ip': None", out.getvalue())
+
+    @patch('kubernetes.dynamic.DynamicClient')
+    @patch.object(create_from_yaml.common, 'connect')
+    def test_main_prints_the_statefulset_status_in_snake_case(
+            self, mock_connect, mock_dynamic):
+        # rundeckpro's StatefulSetOperationsSpec looks for this line
+        self._configure('StatefulSet', 'kind: StatefulSet\n')
+        resource = self._resource(mock_dynamic)
+        resource.create.return_value = created(
+            {'kind': 'StatefulSet', 'metadata': {'name': 'web'},
+             'status': {'replicas': 0, 'availableReplicas': 0}})
+
+        out = io.StringIO()
+        with redirect_stdout(out):
+            create_from_yaml.main()
+
+        self.assertIn("'available_replicas': 0", out.getvalue())
+        self.assertIn("'update_revision': None", out.getvalue())
 
     @patch('kubernetes.dynamic.DynamicClient')
     @patch.object(create_from_yaml.common, 'connect')
@@ -161,7 +181,8 @@ class TestCreateFromYamlMain(unittest.TestCase):
         with redirect_stdout(out):
             create_from_yaml.main()
 
-        self.assertEqual({'name': 'settings'}, json.loads(out.getvalue()))
+        self.assertIn("'name': 'settings'", out.getvalue())
+        self.assertIn("'namespace': None", out.getvalue())
 
     @patch('kubernetes.dynamic.DynamicClient')
     @patch.object(create_from_yaml.common, 'connect')

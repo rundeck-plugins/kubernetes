@@ -28,6 +28,20 @@ API_VERSIONS = {
 }
 
 
+def typed(api_client, data, model_name):
+    """Turn the raw dict the dynamic client returns into the typed model
+    (V1StatefulSetStatus, V1ObjectMeta...), so the step prints the same
+    snake_case output as the typed create_* methods it replaced. Falls back
+    to the raw dict when the model is missing or rejects the data."""
+    if not hasattr(client, model_name):
+        return data
+    try:
+        return api_client._ApiClient__deserialize(data, model_name)
+    except Exception as e:
+        log.debug("Could not convert the response to %s: %s", model_name, e)
+        return data
+
+
 def main():
 
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
@@ -53,7 +67,8 @@ def main():
         # to the API server. From kubernetes 37 on, the typed create_* methods
         # validate the body in the client and reject YAML that the API server
         # accepts, such as "cpu: 1".
-        dyn = dynamic.DynamicClient(client.ApiClient())
+        api_client = client.ApiClient()
+        dyn = dynamic.DynamicClient(api_client)
         resource = dyn.resources.get(api_version=API_VERSIONS[data["type"]],
                                      kind=data["type"])
         namespace = data["namespace"] if resource.namespaced else None
@@ -61,9 +76,12 @@ def main():
 
         # ConfigMap, Secret and StorageClass have no status
         if resp.status is None:
-            print(common.parseJson(resp.metadata))
+            print(common.parseJson(
+                typed(api_client, resp.metadata.to_dict(), 'V1ObjectMeta')))
         else:
-            print(common.parseJson(resp.status))
+            print(common.parseJson(
+                typed(api_client, resp.status.to_dict(),
+                      'V1%sStatus' % data["type"])))
 
     except DynamicApiError as e:
         log.error("Error creating %s: %s", data["type"], e.summary())
