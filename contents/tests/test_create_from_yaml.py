@@ -11,6 +11,7 @@ it up, as kubernetes.dynamic.DynamicClient.
 import datetime
 import importlib
 import io
+import ast
 import json
 import os
 import sys
@@ -63,6 +64,15 @@ provisioner: example.com/fast
 
 def created(instance):
     return ResourceInstance(None, instance)
+
+
+def printed(text):
+    """Parse the step output. Typed models print as JSON on kubernetes
+    client 37 and as a Python dict repr on older clients."""
+    try:
+        return json.loads(text)
+    except ValueError:
+        return ast.literal_eval(text)
 
 
 class TestCreateFromYamlMain(unittest.TestCase):
@@ -146,7 +156,31 @@ class TestCreateFromYamlMain(unittest.TestCase):
         with redirect_stdout(out):
             create_from_yaml.main()
 
-        self.assertEqual({'phase': 'Pending'}, json.loads(out.getvalue()))
+        # Same snake_case output as the typed create_namespaced_pod printed
+        status = printed(out.getvalue())
+        self.assertEqual('Pending', status['phase'])
+        self.assertIn('pod_ip', status)
+        self.assertIsNone(status['pod_ip'])
+
+    @patch('kubernetes.dynamic.DynamicClient')
+    @patch.object(create_from_yaml.common, 'connect')
+    def test_main_prints_the_statefulset_status_in_snake_case(
+            self, mock_connect, mock_dynamic):
+        # rundeckpro's StatefulSetOperationsSpec looks for this line
+        self._configure('StatefulSet', 'kind: StatefulSet\n')
+        resource = self._resource(mock_dynamic)
+        resource.create.return_value = created(
+            {'kind': 'StatefulSet', 'metadata': {'name': 'web'},
+             'status': {'replicas': 0, 'availableReplicas': 0}})
+
+        out = io.StringIO()
+        with redirect_stdout(out):
+            create_from_yaml.main()
+
+        status = printed(out.getvalue())
+        self.assertEqual(0, status['available_replicas'])
+        self.assertIn('update_revision', status)
+        self.assertIsNone(status['update_revision'])
 
     @patch('kubernetes.dynamic.DynamicClient')
     @patch.object(create_from_yaml.common, 'connect')
@@ -161,7 +195,37 @@ class TestCreateFromYamlMain(unittest.TestCase):
         with redirect_stdout(out):
             create_from_yaml.main()
 
-        self.assertEqual({'name': 'settings'}, json.loads(out.getvalue()))
+        metadata = printed(out.getvalue())
+        self.assertEqual('settings', metadata['name'])
+        self.assertIn('namespace', metadata)
+        self.assertIsNone(metadata['namespace'])
+
+    def _run_fallback(self, mock_dynamic):
+        self._configure('StatefulSet', 'kind: StatefulSet\n')
+        resource = self._resource(mock_dynamic)
+        resource.create.return_value = created(
+            {'kind': 'StatefulSet', 'metadata': {'name': 'web'},
+             'status': {'replicas': 0}})
+        out = io.StringIO()
+        with redirect_stdout(out):
+            create_from_yaml.main()  # must not exit: the resource exists
+        resource.create.assert_called_once()
+        return printed(out.getvalue())
+
+    @patch('kubernetes.dynamic.DynamicClient')
+    @patch.object(create_from_yaml.common, 'connect')
+    def test_main_prints_the_raw_status_when_the_model_is_missing(
+            self, mock_connect, mock_dynamic):
+        with patch.object(create_from_yaml, 'client', spec=['ApiClient']):
+            self.assertEqual({'replicas': 0}, self._run_fallback(mock_dynamic))
+
+    @patch('kubernetes.dynamic.DynamicClient')
+    @patch.object(create_from_yaml.common, 'connect')
+    def test_main_prints_the_raw_status_when_conversion_fails(
+            self, mock_connect, mock_dynamic):
+        with patch('kubernetes.client.ApiClient._ApiClient__deserialize',
+                   side_effect=ValueError('bad data')):
+            self.assertEqual({'replicas': 0}, self._run_fallback(mock_dynamic))
 
     @patch('kubernetes.dynamic.DynamicClient')
     @patch.object(create_from_yaml.common, 'connect')
