@@ -1701,7 +1701,8 @@ providers:
         type: Select
         title: "Restart policy"
         description: "The restart policy to apply to the job"
-        required: false
+        required: true
+        default: "Never"
         values: Never,OnFailure
         renderingOptions:
           groupName: Metadata
