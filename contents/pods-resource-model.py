@@ -372,7 +372,9 @@ def main():
             node_data = nodeCollectData(i, container, config)
 
             if running:
-                keep = node_data["status"].lower() == "running"
+                # default:status, not status: with emoticons enabled, status
+                # starts with the emoticon and never equals "running".
+                keep = (node_data["default:status"] or "").lower() == "running"
             else:
                 keep = node_data["terminated"] is False
 
