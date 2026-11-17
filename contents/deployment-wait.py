@@ -14,6 +14,29 @@ common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 
+def rollout_complete(deployment):
+    """True when the rollout of the current spec has finished: the same test
+    as "kubectl rollout status".
+
+    Comparing status.replicas with status.ready_replicas is not enough. Both
+    are unset on a Deployment that was just created, and both still describe
+    the old pods just after an update, until the controller has seen it.
+    """
+    status = deployment.status
+    generation = deployment.metadata.generation or 0
+    if (status.observed_generation or 0) < generation:
+        return False
+
+    wanted = deployment.spec.replicas
+    if wanted is None:
+        wanted = 1
+    updated = status.updated_replicas or 0
+
+    return (updated == wanted
+            and (status.replicas or 0) == updated
+            and (status.available_replicas or 0) == updated)
+
+
 def wait():
 
     data = {}
@@ -22,7 +45,7 @@ def wait():
     data["namespace"] = os.environ.get('RD_CONFIG_NAMESPACE')
 
     retries = int(os.environ.get('RD_CONFIG_RETRIES'))
-    sleep = int(os.environ.get('RD_CONFIG_SLEEP'))
+    sleep = float(os.environ.get('RD_CONFIG_SLEEP'))
 
     try:
         appsV1Api = client.AppsV1Api()
@@ -34,45 +57,29 @@ def wait():
 
         print(common.parseJson(api_response.status))
 
-        unavailable_replicas = api_response.status.unavailable_replicas
-        replicas = api_response.status.replicas
-        ready_replicas = api_response.status.ready_replicas
-
-        if ready_replicas is None:
-            ready_replicas = 0
-        else:
-            ready_replicas = int(ready_replicas)
-
-        if replicas is None:
-            replicas = 0
-        else:
-            replicas = int(replicas)
-
         retries_count = 0
 
-        if (replicas == ready_replicas):
-            log.info("Deployment is ready")
-            sys.exit(0)
-
-        while (unavailable_replicas is not None):
-            log.info("waiting for deployment")
-            time.sleep(float(sleep))
+        while not rollout_complete(api_response):
             retries_count = retries_count+1
 
             if retries_count > retries:
                 log.error("number of retries exceeded")
                 sys.exit(1)
 
+            log.info("waiting for deployment")
+            time.sleep(sleep)
+
             api_response = appsV1Api.read_namespaced_deployment(
                 data["name"],
                 data["namespace"],
                 pretty="True")
-            unavailable_replicas = api_response.status.unavailable_replicas
 
-            log.info("unavailable replicas: " + str(unavailable_replicas))
+            log.info("unavailable replicas: " + str(api_response.status.unavailable_replicas))
+
+        log.info("Deployment is ready")
 
     except ApiException:
-        log.exception("Exception deleting deployment:")
+        log.exception("Exception waiting for deployment:")
         sys.exit(1)
 
 
