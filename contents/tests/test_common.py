@@ -583,9 +583,13 @@ class TestCommon(unittest.TestCase):
         with patch('contents.common.stream') as mock_stream, \
              patch('contents.common.core_v1_api.CoreV1Api'):
             mock_resp = MagicMock()
-            mock_resp.is_open.return_value = True
+            # Open while the archive is sent and once more after it, then
+            # closed, as when tar exits by itself.
+            mock_resp.is_open.side_effect = [True, True, False]
             mock_resp.peek_stdout.return_value = False
             mock_resp.peek_stderr.return_value = False
+            mock_resp.read_channel.return_value = json.dumps(
+                {'metadata': {}, 'status': 'Success'})
             mock_stream.return_value = mock_resp
 
             if isinstance(content, bytes):
@@ -625,6 +629,63 @@ class TestCommon(unittest.TestCase):
                 mock_resp.close.assert_called_once()
             finally:
                 os.unlink(src.name)
+
+    def copy_file_with_status(self, status, stderr=None, is_open=(True, False)):
+        """Run copy_file against a stream that reports the given exec status
+        on its error channel."""
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common.core_v1_api.CoreV1Api'), \
+             tempfile.NamedTemporaryFile() as src:
+            mock_resp = MagicMock()
+            mock_resp.is_open.side_effect = list(is_open)
+            mock_resp.peek_stdout.return_value = False
+            pending = [bool(stderr)]
+            mock_resp.peek_stderr.side_effect = lambda: pending.pop() if pending else False
+            mock_resp.read_stderr.return_value = stderr
+            mock_resp.read_channel.return_value = json.dumps(status) if status else ''
+            mock_stream.return_value = mock_resp
+
+            common.copy_file('my-pod', 'default', 'app', src.name, '/tmp', 'data.bin')
+        return mock_resp
+
+    def test_copy_file_raises_when_tar_cannot_be_started(self):
+        # An image without tar: the exec fails and nothing is extracted.
+        message = ('Internal error occurred: error executing command in '
+                   'container: exec: "tar": executable file not found in $PATH')
+        with self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status(
+                {'metadata': {}, 'status': 'Failure', 'message': message,
+                 'reason': 'InternalError', 'code': 500})
+        self.assertIn('executable file not found', str(raised.exception))
+        self.assertIn('/tmp/data.bin in pod my-pod', str(raised.exception))
+
+    def test_copy_file_raises_with_what_tar_wrote_to_stderr(self):
+        with self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status(
+                {'metadata': {}, 'status': 'Failure', 'reason': 'NonZeroExitCode',
+                 'message': 'command terminated with non-zero exit code'},
+                stderr="tar: can't open 'tmp/data.bin': Read-only file system\n")
+        self.assertIn('Read-only file system', str(raised.exception))
+
+    def test_copy_file_asks_for_stderr(self):
+        resp = self.copy_file_with_status({'metadata': {}, 'status': 'Success'})
+        resp.close.assert_called_once()
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common.core_v1_api.CoreV1Api'), \
+             tempfile.NamedTemporaryFile() as src:
+            mock_stream.return_value.is_open.return_value = False
+            mock_stream.return_value.peek_stderr.return_value = False
+            mock_stream.return_value.read_channel.return_value = ''
+            common.copy_file('my-pod', 'default', 'app', src.name, '/tmp', 'data.bin')
+        self.assertTrue(mock_stream.call_args.kwargs['stderr'])
+
+    def test_copy_file_stops_waiting_for_a_tar_that_does_not_exit(self):
+        # busybox tar waits for the end of its input after a successful
+        # copy, so the stream stays open and there is no status to read.
+        with patch('contents.common.time.monotonic', side_effect=[10.0, 10.5, 11.0]):
+            resp = self.copy_file_with_status(None, is_open=(True, True, True))
+        self.assertEqual(3, resp.update.call_count)
+        resp.close.assert_called_once()
 
     def test_copy_file_binary_small(self):
         """Test copy_file with a binary file smaller than 4096 bytes."""

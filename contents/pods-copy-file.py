@@ -69,6 +69,9 @@ def main():
 
     try:
         common.copy_file(name, namespace, container, source_file, destination_path, destination_file_name)
+    except common.CopyFileError as e:
+        log.error("%s", e)
+        sys.exit(1)
     except Exception:
         log.exception("Failed to copy file to pod %s", name)
         sys.exit(1)

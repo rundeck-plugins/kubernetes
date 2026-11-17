@@ -4,6 +4,7 @@ import sys
 import os
 import tarfile
 import tempfile
+import time
 
 import yaml
 import datetime
@@ -541,6 +542,10 @@ def create_volume_mount_yaml(data):
     return volume_mounts
 
 
+class CopyFileError(Exception):
+    """tar could not be run in the container, or could not write the file."""
+
+
 def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout=False):
     api = core_v1_api.CoreV1Api()
 
@@ -549,9 +554,11 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
     resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
                   command=exec_command,
                   container=container,
-                  stderr=False, stdin=True,
+                  stderr=True, stdin=True,
                   stdout=False, tty=False,
                   _preload_content=False)
+
+    errors = []
 
     with tempfile.TemporaryFile() as tar_buffer:
         with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
@@ -559,6 +566,7 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
 
         tar_buffer.seek(0)
         sent = False
+        deadline = None
 
         while resp.is_open():
             resp.update(timeout=1)
@@ -567,16 +575,40 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
                 if stdout:
                     log.info("%s", resp.read_stdout())
             if resp.peek_stderr():
-                log.error("ERROR: %s", resp.read_stderr())
+                errors.append(resp.read_stderr())
             if not sent:
                 chunk = tar_buffer.read(4096)
                 while chunk:
                     resp.write_stdin(chunk)
                     chunk = tar_buffer.read(4096)
                 sent = True
-            else:
+                # The exec protocol has no way to close stdin, and a tar that
+                # waits for the end of its input (busybox) never exits, so
+                # the stream stays open after a successful copy. A tar that
+                # fails, or that cannot be started, reports it at once, so
+                # give it a moment to do that.
+                deadline = time.monotonic() + 1
+            elif time.monotonic() >= deadline:
                 break
+
+        if resp.peek_stderr():
+            errors.append(resp.read_stderr())
+        # The exit status of tar, or the reason it could not be started,
+        # arrives on the error channel. It is empty while tar is running.
+        ERROR_CHANNEL = 3
+        status = resp.read_channel(ERROR_CHANNEL)
         resp.close()
+
+    status = yaml.safe_load(status) if status else None
+    if isinstance(status, dict) and status.get('status') != "Success":
+        reason = [status.get('message') or status.get('reason') or 'unknown error']
+        reason.extend(e.strip() for e in errors if e.strip())
+        raise CopyFileError("Failed to copy %s to %s/%s in pod %s: %s" % (
+            source_file, destination_path, destination_file_name, name,
+            '; '.join(reason)))
+
+    for error in errors:
+        log.error("ERROR: %s", error)
 
 
 def run_command(name, namespace, container, command):
