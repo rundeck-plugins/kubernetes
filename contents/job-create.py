@@ -265,9 +265,9 @@ def main():
     if os.environ.get('RD_CONFIG_VOLUMES'):
         data["volumes"] = os.environ.get('RD_CONFIG_VOLUMES')
 
-    if os.environ.get('RD_CONFIG_JOB_RESTART_POLICY'):
-        rpolicy = os.environ.get('RD_CONFIG_JOB_RESTART_POLICY')
-        data["job_restart_policy"] = rpolicy
+    # A Job needs Never or OnFailure. Steps saved before the option had a
+    # default can still arrive without one.
+    data["job_restart_policy"] = os.environ.get('RD_CONFIG_JOB_RESTART_POLICY') or 'Never'
 
     if os.environ.get('RD_CONFIG_COMPLETIONS'):
         data["completions"] = os.environ.get('RD_CONFIG_COMPLETIONS')

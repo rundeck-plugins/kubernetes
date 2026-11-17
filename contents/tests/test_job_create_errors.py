@@ -53,6 +53,26 @@ class TestJobCreateMain(unittest.TestCase):
         self.assertEqual(1, cm.exception.code)
         self.assertIn('Exception creating job', logs.output[0])
 
+    @patch.object(job_create.client, 'BatchV1Api')
+    @patch.object(job_create.common, 'connect')
+    def test_main_defaults_the_restart_policy_to_never(self, mock_connect, mock_api_class):
+        # The option was not required and had no default, and a missing one
+        # ended the step with a KeyError traceback.
+        os.environ.update({
+            'RD_CONFIG_API_VERSION': 'batch/v1',
+            'RD_CONFIG_NAME': 'my-job',
+            'RD_CONFIG_NAMESPACE': 'default',
+            'RD_CONFIG_CONTAINER_NAME': 'app',
+            'RD_CONFIG_CONTAINER_IMAGE': 'busybox',
+            'RD_CONFIG_IMAGE_PULL_POLICY': 'IfNotPresent',
+        })
+
+        with redirect_stdout(io.StringIO()):
+            job_create.main()
+
+        job = mock_api_class.return_value.create_namespaced_job.call_args.kwargs['body']
+        self.assertEqual('Never', job.spec.template.spec.restart_policy)
+
 
 if __name__ == '__main__':
     unittest.main()
