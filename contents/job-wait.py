@@ -38,6 +38,15 @@ def parse_log_timestamp(stamp):
             int((fraction or "").ljust(9, "0")))
 
 
+def has_condition(job, condition_type):
+    """True if the Job has the condition and its status is True. A condition
+    can be listed with status False, and that does not count."""
+    for condition in job.status.conditions or []:
+        if condition.type == condition_type and condition.status == "True":
+            return True
+    return False
+
+
 def wait():
     try:
         name = environ.get("RD_CONFIG_NAME")
@@ -150,10 +159,8 @@ def wait():
             )
             log.debug(api_response)
 
-            if api_response.status.conditions:
-                for condition in api_response.status.conditions:
-                    if condition.type == "Failed":
-                        completed = True
+            if has_condition(api_response, "Failed"):
+                completed = True
 
             if api_response.status.completion_time:
                 completed = True
@@ -167,11 +174,18 @@ def wait():
             time.sleep(sleep)
 
 
-        if api_response.status.succeeded:
+        # status.succeeded counts the pods that succeeded, so it is also set
+        # on a Job that failed, or is still running, after some of its
+        # completions. The Job is done when it has a completion time and has
+        # not failed.
+        if has_condition(api_response, "Failed"):
+            log.error("Job failed")
+            sys.exit(1)
+        elif api_response.status.completion_time:
             log.info("Job succeeded")
             sys.exit(0)
         else:
-            log.error("Job failed")
+            log.error("Job did not finish")
             sys.exit(1)
 
     except ApiException:

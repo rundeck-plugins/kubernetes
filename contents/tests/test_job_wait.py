@@ -20,11 +20,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 job_wait = importlib.import_module('job-wait')
 
 
-def job(completed=False, succeeded=None):
+def job(completed=False, succeeded=None, conditions=None):
     return SimpleNamespace(status=SimpleNamespace(
-        conditions=None,
+        conditions=conditions,
         completion_time='2026-09-27T20:40:00Z' if completed else None,
         succeeded=succeeded))
+
+
+def condition(condition_type, status='True'):
+    return SimpleNamespace(type=condition_type, status=status)
 
 
 RUNNING = job()
@@ -179,6 +183,31 @@ class TestWait(unittest.TestCase):
 
         self.assertTrue(self.stream_calls[0].kwargs['timestamps'])
         self.assertIn("INFO:kubernetes-wait-job:b'hello'", self.log_output)
+
+    def test_fails_when_the_job_failed_after_some_pods_succeeded(self):
+        # completions: 3, one pod succeeded, then the backoff limit was hit.
+        self.run_wait([[]], [job(succeeded=1, conditions=[condition('Failed')])])
+
+        self.assertEqual(1, self.exit_code)
+        self.assertIn('ERROR:kubernetes-wait-job:Job failed', self.log_output)
+
+    def test_fails_when_the_retries_run_out_before_the_job_finishes(self):
+        os.environ['RD_CONFIG_RETRIES'] = '2'
+        still_running = job(succeeded=1)
+
+        self.run_wait([[], []], [still_running] * 3)
+
+        self.assertEqual(1, self.exit_code)
+        self.assertIn('ERROR:kubernetes-wait-job:Job did not finish', self.log_output)
+
+    def test_keeps_waiting_while_the_failed_condition_is_false(self):
+        self.run_wait([[], []],
+                      [job(conditions=[condition('Failed', 'False')]),
+                       job(completed=True, succeeded=1,
+                           conditions=[condition('Complete')])])
+
+        self.assertEqual(0, self.exit_code)
+        self.assertEqual(2, len(self.stream_calls))
 
     def test_follows_the_raw_stream_and_releases_the_connection(self):
         # watch.Watch().stream() is avoided: kubernetes 36.0.0 to 36.0.2 pass
