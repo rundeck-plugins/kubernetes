@@ -12,6 +12,15 @@ common.log_info_to_stdout()
 log = logging.getLogger('kubernetes-model-source')
 
 
+# Labels the Job controller adds to a Job and to its pod template.
+GENERATED_LABELS = (
+    'controller-uid',
+    'job-name',
+    'batch.kubernetes.io/controller-uid',
+    'batch.kubernetes.io/job-name',
+)
+
+
 def main():
 
     if os.environ.get('RD_CONFIG_DEBUG') == 'true':
@@ -41,7 +50,13 @@ def main():
         job.metadata.resource_version = None
         job.status = None
         job.spec.selector = None
-        job.spec.template.metadata = None
+        # Kubernetes generates these for each Job and rejects a new Job that
+        # carries the ones of the old Job. The other labels and annotations
+        # of the pod template are the user's, so keep them.
+        for metadata in (job.metadata, job.spec.template.metadata):
+            if metadata and metadata.labels:
+                for label in GENERATED_LABELS:
+                    metadata.labels.pop(label, None)
 
         body = client.V1DeleteOptions(api_version='v1',kind="DeleteOptions",propagation_policy="Background")
         pretty = 'pretty_example'
