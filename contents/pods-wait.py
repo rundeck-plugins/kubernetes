@@ -17,6 +17,12 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
 
+def all_containers_ready(pod):
+    """True when the pod has container statuses and every one is ready."""
+    statuses = pod.status.container_statuses
+    return bool(statuses) and all(status.ready for status in statuses)
+
+
 def wait():
     try:
         data = common.get_code_node_parameter_dictionary()
@@ -38,10 +44,7 @@ def wait():
         )
         log.debug(api_response.status)
 
-        status = False
-
-        if api_response.status.container_statuses:
-            status = api_response.status.container_statuses[0].ready
+        status = all_containers_ready(api_response)
 
         # Poll for completion if retries
         retries_count = 0
@@ -59,8 +62,7 @@ def wait():
                 pretty="True"
             )
 
-            if api_response.status.container_statuses:
-                status = api_response.status.container_statuses[0].ready
+            status = all_containers_ready(api_response)
 
             log.debug(api_response.status.container_statuses)
 
