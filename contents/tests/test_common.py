@@ -578,6 +578,25 @@ class TestCommon(unittest.TestCase):
         self.assertTrue(error)
 
 
+    def test_run_interactive_command_writes_the_output_as_it_arrives(self):
+        # One line can arrive in two chunks, and a chunk can hold several
+        # lines. Neither may gain a line break.
+        chunks = ['one ', 'line\nsecond line\n', None]
+        resp = MagicMock()
+        resp.is_open.side_effect = [True, True, True, False]
+        resp.peek_stdout.side_effect = lambda: chunks[0]
+        resp.read_stdout.side_effect = lambda: chunks.pop(0)
+        resp.peek_stderr.return_value = None
+        resp.read_channel.return_value = json.dumps({'metadata': {}, 'status': 'Success'})
+
+        out = io.StringIO()
+        with patch('contents.common.core_v1_api.CoreV1Api'), \
+                patch('contents.common.stream', return_value=resp), \
+                redirect_stdout(out):
+            common.run_interactive_command('my-pod', 'default', 'app', ['/bin/sh', '-c', 'true'])
+
+        self.assertEqual('one line\nsecond line\n', out.getvalue())
+
     def _run_copy_file_test(self, content, suffix, dest_path, dest_name, expected_arcname):
         """Helper to test copy_file with given content and verify the tar archive."""
         with patch('contents.common.stream') as mock_stream, \
