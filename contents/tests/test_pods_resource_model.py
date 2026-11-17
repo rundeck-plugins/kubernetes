@@ -658,6 +658,37 @@ class TestMain(unittest.TestCase):
 
     @patch.object(pods_resource_model, 'collect_pods_from_api')
     @patch.object(pods_resource_model.common, 'connect')
+    def test_main_keeps_running_pods_when_emoticons_are_enabled(self, mock_connect, mock_collect):
+        # With emoticons the status attribute is "<emoticon> running", which
+        # the running filter compared with "running" and so dropped every pod.
+        os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
+        os.environ['RD_CONFIG_ATTRIBUTES'] = ''
+        os.environ['RD_CONFIG_RUNNING'] = 'true'
+        os.environ['RD_CONFIG_EMOTICON'] = 'true'
+
+        container = make_container()
+        cs_running = make_container_status(name='app', running=True)
+        cs_waiting = make_container_status(name='app', running=False, waiting=True)
+
+        pod_running = make_pod(name='pod-a', container_statuses=[cs_running])
+        pod_waiting = make_pod(name='pod-b', container_statuses=[cs_waiting])
+
+        mock_collect.return_value = self._make_pod_list([
+            (pod_running, [container]),
+            (pod_waiting, [container]),
+        ])
+
+        with patch('builtins.print') as mock_print:
+            main()
+
+        import json
+        output = mock_print.call_args[0][0]
+        nodes = json.loads(output)
+        self.assertEqual(['pod-a-app'], [n['nodename'] for n in nodes])
+        self.assertIn(u'\U0001f44d', nodes[0]['status'])
+
+    @patch.object(pods_resource_model, 'collect_pods_from_api')
+    @patch.object(pods_resource_model.common, 'connect')
     def test_main_emoticon_flag(self, mock_connect, mock_collect):
         os.environ['RD_CONFIG_TAGS'] = 'kubernetes'
         os.environ['RD_CONFIG_ATTRIBUTES'] = ''
