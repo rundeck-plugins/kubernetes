@@ -29,7 +29,7 @@ def create_deployment_object(data):
 
     if "environments" in data:
         envs_array = data["environments"].splitlines()
-        tmp_envs = dict(s.split('=') for s in envs_array)
+        tmp_envs = dict(s.split('=', 1) for s in envs_array)
 
         for key in tmp_envs:
             envs.append(client.V1EnvVar(
@@ -39,7 +39,7 @@ def create_deployment_object(data):
 
     if "environments_secrets" in data:
         envs_array = data["environments_secrets"].splitlines()
-        tmp_envs = dict(s.split('=') for s in envs_array)
+        tmp_envs = dict(s.split('=', 1) for s in envs_array)
 
         for key in tmp_envs:
 
@@ -186,6 +186,10 @@ def main():
     if os.environ.get('RD_CONFIG_RESOURCES_REQUESTS'):
         rr = os.environ.get('RD_CONFIG_RESOURCES_REQUESTS')
         data["resources_requests"] = rr
+
+    if os.environ.get('RD_CONFIG_RESOURCES_LIMITS'):
+        rl = os.environ.get('RD_CONFIG_RESOURCES_LIMITS')
+        data["resources_limits"] = rl
 
     log.debug("Updating Deployment data:")
     log.debug(data)
