@@ -620,10 +620,15 @@ def run_interactive_command(name, namespace, container, command):
     while resp.is_open():
         resp.update(timeout=1)
 
+        # The output arrives in chunks that end anywhere, not at the end of
+        # a line, so write each chunk as it is. print() added a line break
+        # after every chunk.
         if resp.peek_stdout():
-            print("%s" % resp.read_stdout())
+            sys.stdout.write(resp.read_stdout())
+            sys.stdout.flush()
         if resp.peek_stderr():
-            print(resp.read_stderr())
+            sys.stdout.write(resp.read_stderr())
+            sys.stdout.flush()
 
     # Read the exec status from the stream itself. kubernetes 37.0.0 stopped
     # setting ApiClient.last_response, which this used to read the same
