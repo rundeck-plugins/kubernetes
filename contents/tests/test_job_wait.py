@@ -31,9 +31,13 @@ RUNNING = job()
 SUCCEEDED = job(completed=True, succeeded=1)
 
 
-def pods(*names):
+def pods(*names, containers=('app',), annotations=None):
     return SimpleNamespace(items=[
-        SimpleNamespace(metadata=SimpleNamespace(name=name)) for name in names])
+        SimpleNamespace(
+            metadata=SimpleNamespace(name=name, annotations=annotations),
+            spec=SimpleNamespace(containers=[
+                SimpleNamespace(name=container) for container in containers]))
+        for name in names])
 
 
 class LogStream:
@@ -89,7 +93,7 @@ class TestWait(unittest.TestCase):
             'RD_CONFIG_SHOW_LOG': 'true',
         })
 
-    def run_wait(self, passes, statuses):
+    def run_wait(self, passes, statuses, pod_list=None):
         """Run wait(). Each time round its loop, the log stream yields the
         next entry of passes and the Job status is the next entry of statuses.
         Returns the pod log lines printed, in order."""
@@ -106,12 +110,14 @@ class TestWait(unittest.TestCase):
                 patch.object(job_wait.client, 'BatchV1Api') as batch, \
                 self.assertLogs('kubernetes-wait-job', level='INFO') as logs, \
                 self.assertRaises(SystemExit) as exited:
-            core.return_value.list_namespaced_pod.return_value = pods('my-job-abcde')
+            core.return_value.list_namespaced_pod.return_value = (
+                pod_list or pods('my-job-abcde'))
             core.return_value.read_namespaced_pod_log.side_effect = read_log
             batch.return_value.read_namespaced_job.side_effect = statuses
             job_wait.wait()
 
         self.exit_code = exited.exception.code
+        self.log_calls = core.return_value.read_namespaced_pod_log.call_args_list
         self.stream_calls = [
             c for c in core.return_value.read_namespaced_pod_log.call_args_list
             if c.kwargs.get('follow')]
@@ -189,6 +195,23 @@ class TestWait(unittest.TestCase):
         self.assertEqual(('my-job-abcde', 'default'), (kwargs['name'], kwargs['namespace']))
         self.assertIs(False, kwargs['_preload_content'])
         self.assertTrue(all(s.released for s in self.streams))
+
+    def test_names_the_first_container_of_a_pod_with_several(self):
+        # Without a container name the API answers 400 for such a pod.
+        self.run_wait([['2026-09-27T20:33:41.1Z hello']], [SUCCEEDED],
+                      pods('my-job-abcde', containers=('main', 'sidecar')))
+
+        self.assertEqual(['main', 'main'],
+                         [c.kwargs['container'] for c in self.log_calls])
+
+    def test_names_the_default_container_when_the_pod_declares_one(self):
+        self.run_wait(
+            [['2026-09-27T20:33:41.1Z hello']], [SUCCEEDED],
+            pods('my-job-abcde', containers=('proxy', 'main'),
+                 annotations={'kubectl.kubernetes.io/default-container': 'main'}))
+
+        self.assertEqual(['main', 'main'],
+                         [c.kwargs['container'] for c in self.log_calls])
 
 
 if __name__ == '__main__':
