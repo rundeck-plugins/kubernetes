@@ -99,6 +99,9 @@ def main():
                          destination_file_name=destination_file_name
                          )
 
+    except common.CopyFileError as e:
+        log.error("%s", e)
+        sys.exit(1)
     finally:
         temp.close()
 
