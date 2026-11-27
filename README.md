@@ -21,7 +21,8 @@ This plugin requires **Python 3.10 or newer**. The plugin is tested on Python 3.
 This plugin requires the following Python packages to be installed **on the server where Rundeck executes** (either your Rundeck server or your Runner nodes if using remote execution):
 
 - **kubernetes** >= 35.0.0 - The official Kubernetes Python client
-- **urllib3** >= 2.6.3 - HTTP client library
+- **urllib3** >= 2.8.0 - HTTP client library
+- **certifi** >= 2026.10.18 - CA certificate bundle
 - **pyyaml** - YAML parser and emitter
 - **packaging** >= 20.0 - Version comparison utilities
 
@@ -39,7 +40,7 @@ pip install .
 Or install individual packages directly:
 
 ```bash
-pip install 'kubernetes>=35.0.0'
+pip install 'kubernetes>=35.0.0' 'urllib3>=2.8.0' 'certifi>=2026.10.18'
 ```
 
 **Version 35.0.0+ is required** to address security vulnerabilities in transitive dependencies. This version removes the dependency on `google-auth`, which had a vulnerable `pyasn1` dependency (CVE-2026-23490).
@@ -69,9 +70,9 @@ If you're upgrading from a previous version of this plugin (v2.0.16 or earlier),
 **Run this command on each server where Rundeck executes jobs:**
 
 ```bash
-pip install --upgrade 'kubernetes>=35.0.0'
+pip install --upgrade 'kubernetes>=35.0.0' 'urllib3>=2.8.0' 'certifi>=2026.10.18'
 # or if pip3 is your command:
-pip3 install --upgrade 'kubernetes>=35.0.0'
+pip3 install --upgrade 'kubernetes>=35.0.0' 'urllib3>=2.8.0' 'certifi>=2026.10.18'
 ```
 
 **Where to run this command:**
