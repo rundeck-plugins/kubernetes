@@ -114,6 +114,19 @@ class TestWait(unittest.TestCase):
         self.assertIn('ERROR:kubernetes-model-source:number of retries exceeded',
                       self.log_output)
 
+    def test_fails_when_no_pods_could_be_created(self):
+        # The controller has seen the Deployment but could create no pod,
+        # for example because a quota forbids it, so every counter stays
+        # unset. Comparing replicas with ready_replicas called that ready.
+        no_pods = deployment()
+
+        self.assertEqual(1, self.run_wait([no_pods] * 4))
+
+        self.assertEqual(4, self.reads)
+        self.assertNotIn('INFO:kubernetes-model-source:Deployment is ready', self.log_output)
+        self.assertIn('ERROR:kubernetes-model-source:number of retries exceeded',
+                      self.log_output)
+
 
 if __name__ == '__main__':
     unittest.main()
