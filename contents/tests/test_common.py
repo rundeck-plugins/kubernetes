@@ -69,6 +69,20 @@ class TestCommon(unittest.TestCase):
         self.assertEqual(30080, listed[0].node_port)
         self.assertEqual(30081, single[0].node_port)
 
+    def test_parse_ports_prefers_node_port_in_the_kubernetes_spelling(self):
+        # With both spellings, nodePort decides, also when it is empty: an
+        # empty nodePort leaves the choice to Kubernetes and must not fall
+        # back to node_port.
+        listed = common.parsePorts('- port: 80\n  nodePort: 30080\n  node_port: 30090\n  protocol: TCP\n')
+        single = common.parsePorts('port: 80\nnodePort: 30081\nnode_port: 30091\n')
+        self.assertEqual(30080, listed[0].node_port)
+        self.assertEqual(30081, single[0].node_port)
+
+        listed = common.parsePorts('- port: 80\n  nodePort:\n  node_port: 30090\n  protocol: TCP\n')
+        single = common.parsePorts('port: 80\nnodePort:\nnode_port: 30091\n')
+        self.assertIsNone(listed[0].node_port)
+        self.assertIsNone(single[0].node_port)
+
     def test_parse_ports_accepts_a_named_target_port(self):
         listed = common.parsePorts('- port: 80\n  targetPort: http\n  protocol: TCP\n')
         single = common.parsePorts('port: 80\ntargetPort: "8080"\n')

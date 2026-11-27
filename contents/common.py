@@ -271,10 +271,9 @@ def verify_pod_exists(name, namespace):
 
 def _node_port(port):
     """The node port of a port entry, or None. nodePort is how Kubernetes
-    spells it, node_port is the spelling this option has always read."""
-    value = port.get("nodePort")
-    if value is None:
-        value = port.get("node_port")
+    spells it, node_port is the spelling this option has always read.
+    When nodePort is given it decides, also when it is empty."""
+    value = port["nodePort"] if "nodePort" in port else port.get("node_port")
     if value is None:
         return None
     # str() first, so that a fractional node port is rejected rather than
