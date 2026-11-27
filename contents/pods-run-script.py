@@ -17,10 +17,11 @@ if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
     log.setLevel(logging.DEBUG)
 
 
-def remove_script(name, namespace, container, full_path):
+def remove_script(name, namespace, container, full_path, force=False):
     """Delete the copied script from the container. Returns False if rm
-    exited with an error."""
-    rm_command = ["rm", full_path]
+    exited with an error. With force, a script that is not there is not an
+    error."""
+    rm_command = ["rm", "-f", full_path] if force else ["rm", full_path]
 
     log.debug("removing file %s", rm_command)
     # run_command() uses a TTY, which merges rm's stderr into stdout, so a
@@ -101,6 +102,13 @@ def main():
 
     except common.CopyFileError as e:
         log.error("%s", e)
+        # tar may have written part of the script before it failed, and the
+        # script can hold values expanded from job options. Removing it must
+        # not replace the copy failure.
+        try:
+            remove_script(name, namespace, container, full_path, force=True)
+        except Exception:
+            log.exception("Failed to remove %s from the container:", full_path)
         sys.exit(1)
     finally:
         temp.close()
