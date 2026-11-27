@@ -38,6 +38,30 @@ def parse_log_timestamp(stamp):
             int((fraction or "").ljust(9, "0")))
 
 
+def log_container(pod):
+    """The container whose log to show. The API refuses to return the log
+    of a pod with several containers unless one of them is named, so take
+    the one kubectl would: the default-container annotation if it names a
+    container of the pod, or else the first container."""
+    first = pod.spec.containers[0].name
+    annotations = pod.metadata.annotations or {}
+    default = annotations.get("kubectl.kubernetes.io/default-container")
+    if not default:
+        return first
+
+    names = [container.name
+             for containers in (pod.spec.containers,
+                                pod.spec.init_containers,
+                                pod.spec.ephemeral_containers)
+             for container in containers or []]
+    if default in names:
+        return default
+
+    log.warning("Default container %s not found in pod %s, showing the log of %s",
+                default, pod.metadata.name, first)
+    return first
+
+
 def wait():
     try:
         name = environ.get("RD_CONFIG_NAME")
@@ -92,10 +116,12 @@ def wait():
 
                         first_item = pod_list.items[0]
                         pod_name = first_item.metadata.name
+                        container = log_container(first_item)
 
                         #try get available log
                         core_v1.read_namespaced_pod_log(name=pod_name,
-                                                        namespace=namespace)
+                                                        namespace=namespace,
+                                                        container=container)
                         break
                     except ApiException as ex:
                         log.warning("Pod is not ready, status: %d", ex.status)
@@ -117,6 +143,7 @@ def wait():
                 response = core_v1.read_namespaced_pod_log(
                     name=pod_name,
                     namespace=namespace,
+                    container=container,
                     follow=True,
                     timestamps=True,
                     _preload_content=False)
