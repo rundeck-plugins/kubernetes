@@ -269,9 +269,32 @@ def verify_pod_exists(name, namespace):
         sys.exit(1)
 
 
+def _node_port(port):
+    """The node port of a port entry, or None. nodePort is how Kubernetes
+    spells it, node_port is the spelling this option has always read.
+    When nodePort is given it decides, also when it is empty."""
+    value = port["nodePort"] if "nodePort" in port else port.get("node_port")
+    if value is None:
+        return None
+    # str() first, so that a fractional node port is rejected rather than
+    # silently truncated to a different port
+    return int(str(value))
+
+
+def _target_port(value):
+    """A target port is a port number or the name of a container port."""
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
 def parsePorts(data):
-    ports = yaml.safe_load(data)
+    ports = yaml.safe_load(data) if data else None
     portsList = []
+
+    if ports is None:
+        return portsList
 
     if (isinstance(ports, list)):
         for x in ports:
@@ -283,26 +306,26 @@ def parsePorts(data):
                     port.name = x["name"]
                 else:
                     port.name = str.lower(x["protocol"] + str(x["port"]))
-                # str() first, so that a fractional node port is rejected rather
-                # than silently truncated to a different port
-                if x.get("node_port") is not None:
-                    port.node_port = int(str(x["node_port"]))
+                node_port = _node_port(x)
+                if node_port is not None:
+                    port.node_port = node_port
                 if "protocol" in x:
                     port.protocol = x["protocol"]
                 if "targetPort" in x:
-                    port.target_port = int(x["targetPort"])
+                    port.target_port = _target_port(x["targetPort"])
 
                 portsList.append(port)
     else:
         x = ports
         port = client.V1ServicePort(port=int(x["port"]))
 
-        if x.get("node_port") is not None:
-            port.node_port = int(str(x["node_port"]))
+        node_port = _node_port(x)
+        if node_port is not None:
+            port.node_port = node_port
         if "protocol" in x:
             port.protocol = x["protocol"]
         if "targetPort" in x:
-            port.target_port = int(x["targetPort"])
+            port.target_port = _target_port(x["targetPort"])
 
         portsList.append(port)
 
