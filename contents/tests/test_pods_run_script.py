@@ -173,10 +173,12 @@ class TestPodsRunScriptRemovesScript(unittest.TestCase):
         return resp
 
     def _run(self, chmod_stderr=b'', script_fails=False, rm_fails=False,
-             delete_on_fail=False):
+             delete_on_fail=False, copy_fails=False):
         """Run main() and return (exit code, chmod command, rm commands,
         delete_pod mock). rm_fails is True for an rm that exits with an
-        error, or an exception the rm call raises."""
+        error, or an exception the rm call raises. With copy_fails the
+        copy raises CopyFileError, and the copy_file mock is returned in
+        place of the chmod command, which is never run."""
         if delete_on_fail:
             os.environ['RD_CONFIG_DELETEONFAIL'] = 'true'
 
@@ -196,7 +198,9 @@ class TestPodsRunScriptRemovesScript(unittest.TestCase):
                 patch.object(pods_run_script.common, 'verify_pod_exists'), \
                 patch.object(pods_run_script.client, 'CoreV1Api'), \
                 patch.object(pods_run_script.common, 'log_pod_parameters'), \
-                patch.object(pods_run_script.common, 'copy_file'), \
+                patch.object(pods_run_script.common, 'copy_file',
+                             side_effect=pods_run_script.common.CopyFileError('tar failed')
+                             if copy_fails else None) as copy_file, \
                 patch.object(pods_run_script.common, 'run_command',
                              return_value=self._resp(chmod_stderr)) as run_command, \
                 patch.object(pods_run_script.common, 'run_interactive_command',
@@ -208,6 +212,9 @@ class TestPodsRunScriptRemovesScript(unittest.TestCase):
                 pods_run_script.main()
             except SystemExit as e:
                 code = e.code
+        if copy_fails:
+            run_command.assert_not_called()
+            return code, copy_file, rm_commands, delete_pod
         chmod = run_command.call_args.kwargs['command']
         return code, chmod, rm_commands, delete_pod
 
@@ -247,6 +254,24 @@ class TestPodsRunScriptRemovesScript(unittest.TestCase):
         # rm runs without a TTY, so its failure is reported by the exec exit
         # status rather than by output on stderr.
         code, _, rm_commands, _ = self._run(rm_fails=True)
+
+        self.assertEqual(1, code)
+        self.assertEqual(1, len(rm_commands))
+
+    def test_removes_the_script_when_the_copy_fails(self):
+        # tar can fail after writing part of the script, for example when
+        # the disk fills up. rm -f, so that nothing is reported when tar
+        # wrote no file at all.
+        code, copy_file, rm_commands, _ = self._run(copy_fails=True)
+
+        copied = copy_file.call_args.kwargs
+        full_path = os.path.join(copied['destination_path'], copied['destination_file_name'])
+        self.assertEqual(1, code)
+        self.assertEqual([['rm', '-f', full_path]], rm_commands)
+
+    def test_keeps_the_copy_failure_when_removing_the_script_also_fails(self):
+        code, _, rm_commands, _ = self._run(
+            copy_fails=True, rm_fails=ApiException(status=500, reason='boom'))
 
         self.assertEqual(1, code)
         self.assertEqual(1, len(rm_commands))

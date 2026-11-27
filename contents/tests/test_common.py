@@ -581,11 +581,17 @@ class TestCommon(unittest.TestCase):
     def _run_copy_file_test(self, content, suffix, dest_path, dest_name, expected_arcname):
         """Helper to test copy_file with given content and verify the tar archive."""
         with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common._file_size_in_pod',
+                   side_effect=lambda *_: os.path.getsize(src.name)), \
              patch('contents.common.core_v1_api.CoreV1Api'):
             mock_resp = MagicMock()
-            mock_resp.is_open.return_value = True
+            # Open while the archive is sent and once more after it, then
+            # closed, as when tar exits by itself.
+            mock_resp.is_open.side_effect = [True, True, False]
             mock_resp.peek_stdout.return_value = False
             mock_resp.peek_stderr.return_value = False
+            mock_resp.read_channel.return_value = json.dumps(
+                {'metadata': {}, 'status': 'Success'})
             mock_stream.return_value = mock_resp
 
             if isinstance(content, bytes):
@@ -625,6 +631,138 @@ class TestCommon(unittest.TestCase):
                 mock_resp.close.assert_called_once()
             finally:
                 os.unlink(src.name)
+
+    def copy_file_with_status(self, status, stderr=None, is_open=(True, False),
+                              copied=10, destination_path='/tmp'):
+        """Run copy_file for a 10 byte file against a stream that reports the
+        given exec status on its error channel. copied is what the size check
+        finds in the pod: a size, None for no file, or an exception."""
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common._file_size_in_pod', side_effect=[copied]) as size, \
+             patch('contents.common.core_v1_api.CoreV1Api'), \
+             tempfile.NamedTemporaryFile() as src:
+            src.write(b'0123456789')
+            src.flush()
+            self.size_check = size
+            mock_resp = MagicMock()
+            mock_resp.is_open.side_effect = list(is_open)
+            mock_resp.peek_stdout.return_value = False
+            pending = [bool(stderr)]
+            mock_resp.peek_stderr.side_effect = lambda: pending.pop() if pending else False
+            mock_resp.read_stderr.return_value = stderr
+            mock_resp.read_channel.return_value = json.dumps(status) if status else ''
+            mock_stream.return_value = mock_resp
+
+            common.copy_file('my-pod', 'default', 'app', src.name, destination_path, 'data.bin')
+        return mock_resp
+
+    def test_copy_file_raises_when_tar_cannot_be_started(self):
+        # An image without tar: the exec fails and nothing is extracted.
+        message = ('Internal error occurred: error executing command in '
+                   'container: exec: "tar": executable file not found in $PATH')
+        with self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status(
+                {'metadata': {}, 'status': 'Failure', 'message': message,
+                 'reason': 'InternalError', 'code': 500})
+        self.assertIn('executable file not found', str(raised.exception))
+        self.assertIn('/tmp/data.bin in pod my-pod', str(raised.exception))
+
+    def test_copy_file_raises_with_what_tar_wrote_to_stderr(self):
+        with self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status(
+                {'metadata': {}, 'status': 'Failure', 'reason': 'NonZeroExitCode',
+                 'message': 'command terminated with non-zero exit code'},
+                stderr="tar: can't open 'tmp/data.bin': Read-only file system\n")
+        self.assertIn('Read-only file system', str(raised.exception))
+
+    def test_copy_file_asks_for_stderr(self):
+        resp = self.copy_file_with_status({'metadata': {}, 'status': 'Success'})
+        resp.close.assert_called_once()
+        with patch('contents.common.stream') as mock_stream, \
+             patch('contents.common._file_size_in_pod', return_value=0), \
+             patch('contents.common.core_v1_api.CoreV1Api'), \
+             tempfile.NamedTemporaryFile() as src:
+            mock_stream.return_value.is_open.return_value = False
+            mock_stream.return_value.peek_stderr.return_value = False
+            mock_stream.return_value.read_channel.return_value = ''
+            common.copy_file('my-pod', 'default', 'app', src.name, '/tmp', 'data.bin')
+        self.assertTrue(mock_stream.call_args.kwargs['stderr'])
+
+    def test_copy_file_stops_waiting_for_a_tar_that_does_not_exit(self):
+        # busybox tar waits for the end of its input after a successful
+        # copy, so the stream stays open and there is no status to read.
+        with patch('contents.common.time.monotonic', side_effect=[10.0, 10.5, 11.0]):
+            resp = self.copy_file_with_status(None, is_open=(True, True, True))
+        self.assertEqual(3, resp.update.call_count)
+        resp.close.assert_called_once()
+
+    def test_copy_file_raises_when_the_file_is_incomplete_and_tar_reported_no_status(self):
+        # A tar that runs out of space dies, but the stream often stays open
+        # and its exit status never arrives. Only stderr and the file tell.
+        with patch('contents.common.time.monotonic', side_effect=[10.0, 10.5, 11.0]), \
+                self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status(
+                None, is_open=(True, True, True), copied=4,
+                stderr='tar: write error: No space left on device\n')
+        self.assertIn('4 of 10 bytes were written', str(raised.exception))
+        self.assertIn('No space left on device', str(raised.exception))
+
+    def test_copy_file_raises_when_the_file_was_not_written(self):
+        with self.assertRaises(common.CopyFileError) as raised:
+            self.copy_file_with_status({'metadata': {}, 'status': 'Success'}, copied=None)
+        self.assertIn('the file was not written', str(raised.exception))
+
+    def test_copy_file_only_warns_when_the_size_cannot_be_checked(self):
+        # An image that has tar but not wc must keep working.
+        with self.assertLogs('kubernetes-plugin', level='WARNING') as logs:
+            self.copy_file_with_status(
+                {'metadata': {}, 'status': 'Success'},
+                copied=common._SizeUnknown('exec: "wc": executable file not found'))
+        self.assertIn('Could not check the size of /tmp/data.bin', logs.output[0])
+
+    def test_copy_file_checks_the_file_where_tar_extracts_it(self):
+        # tar extracts relative to /, also for a destination that is not absolute.
+        self.copy_file_with_status({'metadata': {}, 'status': 'Success'},
+                                   destination_path='tmp')
+        self.assertEqual('/tmp/data.bin', self.size_check.call_args.args[4])
+
+    def file_size_in_pod(self, status, stdout=''):
+        """Run _file_size_in_pod against a wc that prints stdout and exits
+        with the given exec status."""
+        with patch('contents.common.stream') as mock_stream:
+            resp = mock_stream.return_value
+            resp.is_open.side_effect = [True, False]
+            pending = [bool(stdout)]
+            resp.peek_stdout.side_effect = lambda: pending.pop() if pending else False
+            resp.read_stdout.return_value = stdout
+            resp.peek_stderr.return_value = False
+            resp.read_channel.return_value = json.dumps(status) if status else ''
+            size = common._file_size_in_pod(MagicMock(), 'my-pod', 'default', 'app', '/tmp/data.bin')
+        self.assertEqual(['wc', '-c', '/tmp/data.bin'], mock_stream.call_args.kwargs['command'])
+        return size
+
+    def test_file_size_in_pod_reads_the_size_from_wc(self):
+        self.assertEqual(1119816, self.file_size_in_pod(
+            {'metadata': {}, 'status': 'Success'}, stdout='1119816 /tmp/data.bin\n'))
+
+    def test_file_size_in_pod_is_none_for_a_file_that_is_not_there(self):
+        self.assertIsNone(self.file_size_in_pod(
+            {'metadata': {}, 'status': 'Failure', 'reason': 'NonZeroExitCode',
+             'message': 'command terminated with non-zero exit code',
+             'details': {'causes': [{'reason': 'ExitCode', 'message': '1'}]}}))
+
+    def test_file_size_in_pod_is_unknown_when_wc_cannot_be_run(self):
+        with self.assertRaises(common._SizeUnknown):
+            self.file_size_in_pod(
+                {'metadata': {}, 'status': 'Failure', 'reason': 'InternalError',
+                 'message': 'exec: "wc": executable file not found in $PATH'})
+        with self.assertRaises(common._SizeUnknown):
+            self.file_size_in_pod(None)
+        with self.assertRaises(common._SizeUnknown):
+            self.file_size_in_pod({'metadata': {}, 'status': 'Success'}, stdout='?\n')
+        with patch('contents.common.stream', side_effect=common.ApiException(status=403, reason='Forbidden')), \
+                self.assertRaises(common._SizeUnknown):
+            common._file_size_in_pod(MagicMock(), 'my-pod', 'default', 'app', '/tmp/data.bin')
 
     def test_copy_file_binary_small(self):
         """Test copy_file with a binary file smaller than 4096 bytes."""

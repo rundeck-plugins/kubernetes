@@ -4,6 +4,7 @@ import sys
 import os
 import tarfile
 import tempfile
+import time
 
 import yaml
 import datetime
@@ -541,6 +542,59 @@ def create_volume_mount_yaml(data):
     return volume_mounts
 
 
+class CopyFileError(Exception):
+    """tar could not be run in the container, or could not write the file."""
+
+
+class _SizeUnknown(Exception):
+    """The size of a file in the container could not be found out."""
+
+
+def _file_size_in_pod(api, name, namespace, container, path):
+    """The size in bytes of a file in the container, or None when the file is
+    not there. Raises _SizeUnknown when wc cannot be run or does not answer."""
+    try:
+        resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                      command=['wc', '-c', path],
+                      container=container,
+                      stderr=True, stdin=False,
+                      stdout=True, tty=False,
+                      _preload_content=False)
+    except ApiException as e:
+        raise _SizeUnknown("%s %s" % (e.status, e.reason))
+
+    output = ''
+    deadline = time.monotonic() + 30
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            output += resp.read_stdout()
+        if resp.peek_stderr():
+            resp.read_stderr()
+        if time.monotonic() >= deadline:
+            resp.close()
+            raise _SizeUnknown("wc did not finish")
+    if resp.peek_stdout():
+        output += resp.read_stdout()
+    ERROR_CHANNEL = 3
+    status = resp.read_channel(ERROR_CHANNEL)
+    resp.close()
+
+    status = yaml.safe_load(status) if status else None
+    if not isinstance(status, dict):
+        raise _SizeUnknown("wc reported no exit status")
+    if status.get('status') != "Success":
+        if status.get('reason') == "NonZeroExitCode":
+            # wc ran and could not read the file
+            return None
+        raise _SizeUnknown(status.get('message') or status.get('reason') or 'unknown error')
+
+    try:
+        return int(output.split()[0])
+    except (IndexError, ValueError):
+        raise _SizeUnknown("unexpected answer from wc: %r" % output)
+
+
 def copy_file(name, namespace, container, source_file, destination_path, destination_file_name, stdout=False):
     api = core_v1_api.CoreV1Api()
 
@@ -549,9 +603,11 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
     resp = stream(api.connect_get_namespaced_pod_exec, name, namespace,
                   command=exec_command,
                   container=container,
-                  stderr=False, stdin=True,
+                  stderr=True, stdin=True,
                   stdout=False, tty=False,
                   _preload_content=False)
+
+    errors = []
 
     with tempfile.TemporaryFile() as tar_buffer:
         with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
@@ -559,6 +615,7 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
 
         tar_buffer.seek(0)
         sent = False
+        deadline = None
 
         while resp.is_open():
             resp.update(timeout=1)
@@ -567,16 +624,60 @@ def copy_file(name, namespace, container, source_file, destination_path, destina
                 if stdout:
                     log.info("%s", resp.read_stdout())
             if resp.peek_stderr():
-                log.error("ERROR: %s", resp.read_stderr())
+                errors.append(resp.read_stderr())
             if not sent:
                 chunk = tar_buffer.read(4096)
                 while chunk:
                     resp.write_stdin(chunk)
                     chunk = tar_buffer.read(4096)
                 sent = True
-            else:
+                # The exec protocol has no way to close stdin, and a tar that
+                # waits for the end of its input (busybox) never exits, so
+                # the stream stays open after a successful copy. A tar that
+                # fails, or that cannot be started, reports it at once, so
+                # give it a moment to do that.
+                deadline = time.monotonic() + 1
+            elif time.monotonic() >= deadline:
                 break
+
+        if resp.peek_stderr():
+            errors.append(resp.read_stderr())
+        # The exit status of tar, or the reason it could not be started,
+        # arrives on the error channel. It is empty while tar is running.
+        ERROR_CHANNEL = 3
+        status = resp.read_channel(ERROR_CHANNEL)
         resp.close()
+
+    def failed(reason):
+        reason = [reason]
+        reason.extend(e.strip() for e in errors if e.strip())
+        return CopyFileError("Failed to copy %s to %s/%s in pod %s: %s" % (
+            source_file, destination_path, destination_file_name, name,
+            '; '.join(reason)))
+
+    status = yaml.safe_load(status) if status else None
+    if isinstance(status, dict) and status.get('status') != "Success":
+        raise failed(status.get('message') or status.get('reason') or 'unknown error')
+
+    # No status is not a success. When tar fails after reading part of its
+    # input, the stream often stays open and the status never arrives, just
+    # as for a tar that is still waiting for the end of its input. So check
+    # what tar wrote. tar extracts relative to /, so that is where the file is.
+    expected = os.path.getsize(source_file)
+    copied_path = "/" + (destination_path + "/" + destination_file_name).lstrip("/")
+    try:
+        copied = _file_size_in_pod(api, name, namespace, container, copied_path)
+    except _SizeUnknown as e:
+        # For example an image that has tar but not wc.
+        log.warning("Could not check the size of %s in pod %s: %s", copied_path, name, e)
+    else:
+        if copied is None:
+            raise failed("the file was not written")
+        if copied != expected:
+            raise failed("%d of %d bytes were written" % (copied, expected))
+
+    for error in errors:
+        log.error("ERROR: %s", error)
 
 
 def run_command(name, namespace, container, command):
