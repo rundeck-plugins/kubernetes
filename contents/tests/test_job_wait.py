@@ -31,12 +31,18 @@ RUNNING = job()
 SUCCEEDED = job(completed=True, succeeded=1)
 
 
-def pods(*names, containers=('app',), annotations=None):
+def pods(*names, containers=('app',), init_containers=None, annotations=None):
+    def named(container_names):
+        if container_names is None:
+            return None
+        return [SimpleNamespace(name=container) for container in container_names]
+
     return SimpleNamespace(items=[
         SimpleNamespace(
             metadata=SimpleNamespace(name=name, annotations=annotations),
-            spec=SimpleNamespace(containers=[
-                SimpleNamespace(name=container) for container in containers]))
+            spec=SimpleNamespace(containers=named(containers),
+                                 init_containers=named(init_containers),
+                                 ephemeral_containers=None))
         for name in names])
 
 
@@ -211,6 +217,26 @@ class TestWait(unittest.TestCase):
                  annotations={'kubectl.kubernetes.io/default-container': 'main'}))
 
         self.assertEqual(['main', 'main'],
+                         [c.kwargs['container'] for c in self.log_calls])
+
+    def test_ignores_a_default_container_the_pod_does_not_have(self):
+        # A stale annotation names no container of the pod. Asking for its
+        # log gives 400 on every try, so even a finished Job timed out.
+        self.run_wait(
+            [['2026-09-27T20:33:41.1Z hello']], [SUCCEEDED],
+            pods('my-job-abcde',
+                 annotations={'kubectl.kubernetes.io/default-container': 'gone'}))
+
+        self.assertEqual(['app', 'app'],
+                         [c.kwargs['container'] for c in self.log_calls])
+
+    def test_names_a_default_container_that_is_an_init_container(self):
+        self.run_wait(
+            [['2026-09-27T20:33:41.1Z hello']], [SUCCEEDED],
+            pods('my-job-abcde', init_containers=('setup',),
+                 annotations={'kubectl.kubernetes.io/default-container': 'setup'}))
+
+        self.assertEqual(['setup', 'setup'],
                          [c.kwargs['container'] for c in self.log_calls])
 
 

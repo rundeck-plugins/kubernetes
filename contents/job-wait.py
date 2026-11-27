@@ -41,11 +41,25 @@ def parse_log_timestamp(stamp):
 def log_container(pod):
     """The container whose log to show. The API refuses to return the log
     of a pod with several containers unless one of them is named, so take
-    the one kubectl would: the default-container annotation, or else the
-    first container."""
+    the one kubectl would: the default-container annotation if it names a
+    container of the pod, or else the first container."""
+    first = pod.spec.containers[0].name
     annotations = pod.metadata.annotations or {}
-    return (annotations.get("kubectl.kubernetes.io/default-container")
-            or pod.spec.containers[0].name)
+    default = annotations.get("kubectl.kubernetes.io/default-container")
+    if not default:
+        return first
+
+    names = [container.name
+             for containers in (pod.spec.containers,
+                                pod.spec.init_containers,
+                                pod.spec.ephemeral_containers)
+             for container in containers or []]
+    if default in names:
+        return default
+
+    log.warning("Default container %s not found in pod %s, showing the log of %s",
+                default, pod.metadata.name, first)
+    return first
 
 
 def wait():
